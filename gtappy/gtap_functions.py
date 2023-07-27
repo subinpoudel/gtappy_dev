@@ -9,7 +9,7 @@ import numpy as np
 
 
 def extract_from_basedata_har(p):
-    """Take a GTAP zipfile of code from the project input_dir and extract the base data into user-editable CSVs."""
+    """Take a GTAP zipfile of code from the project input_dir or base_data and extract it into user-editable CSVs."""
 
     if p.run_this:
         
@@ -164,6 +164,20 @@ def create_mapfile_har(p):
                         gtap_invest_integration_functions.indexed_dfs_to_har(index_csv_path, mapfile_har_path)
                                 
             
+def processed_shockfiles(p):
+    
+    if p.run_this:
+        shocks_df = pd.read_csv(p.shocks_csv_path, index_col=0, header=[0, 1, 2], skipinitialspace=True)
+        print('shocks_df', shocks_df)
+        print('shocks_df index', shocks_df.index)
+        print('shocks_df columns', shocks_df.columns)
+ 
+        shocks2_df = shocks_df.unstack()
+        
+        print('shocks2_df', shocks2_df)
+        # print('shocks2_df index', shocks2_df.index)
+        # print('shocks2_df columns', shocks2_df.columns)
+ 
 def run_gtap_v7_executable(p):
     """Run a precompiled gtap exe file by creating a cmf file and calling it.
     """

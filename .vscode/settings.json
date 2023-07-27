@@ -1,27 +1,22 @@
 {
     "python.analysis.extraPaths": [
-        "D:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev",
-        "D:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
-        "D:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev\\hazelbean",
-        "D:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev\\seals",
-        "D:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
+        "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev",
+        "G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
+        "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev\\hazelbean",
+        "G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev\\seals",
+        "G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
     ],
     "python.autoComplete.extraPaths": [
-        "D:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev",
-        "D:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
-        "D:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev\\hazelbean",
-        "D:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev\\seals",
-        "D:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
-    ],
+        "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev",
+        "G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
+        "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev\\hazelbean",
+        "G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev\\seals",
+        "G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
+     ],
     "code-runner.executorMap": { 
     "python": "C:\\Miniconda3\\Scripts\\activate.bat C:\\Miniconda3 & conda activate research_Env_2022 & python"
 },
 "files.autoSave": "onFocusChange",
-"editor.fontSize": 13,
-"pasteImage.path": "${projectRoot}/docs/img",
-"pasteImage.basePath": "${projectRoot}/docs",
-
-"pasteImage.forceUnixStyleSeparator": true,
-// "pasteImage.prefix": "/"
+"editor.fontSize": 13
      
 }

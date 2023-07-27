@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # p.aggregation_labels = [fully_disaggregated_label]
     # p.aggregation_labels = [shareable_and_fast_label, fully_disaggregated_label] # For use will non-test-set
 
-    p.cge_data_dir = r"C:\GTPAg2\GTAP10A\GTAP-MRIO\2014"
+    p.cge_data_dir = "C:/GTPAg2/GTAP10A/GTAP-MRIO/2014"
     
     p.gempack_utils_dir = "C://GP"
 

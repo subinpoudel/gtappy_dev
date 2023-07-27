@@ -13,7 +13,7 @@
             "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "D:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;D:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;D:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
+                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
             }
         },
         {
@@ -28,10 +28,10 @@
             ],
             // "program": "${file}",
             "console": "internalConsole",
-            "justMyCode": true,
+            "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "C:\\Users\\jajohns\\Files\\Research\\hazelbean\\hazelbean_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev\\seals;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev\\gtap_invest;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
+                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
             },
         },
         {
@@ -43,7 +43,7 @@
             "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "C:\\Users\\jajohns\\Files\\Research\\hazelbean\\hazelbean_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev\\seals;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev\\gtap_invest;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
+                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
             }
         },
         {
@@ -55,7 +55,7 @@
             "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "C:\\Users\\jajohns\\Files\\Research\\hazelbean\\hazelbean_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\seals\\seals_dev\\seals;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev\\gtap_invest;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
+                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
             }
         },
     ]
