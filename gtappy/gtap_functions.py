@@ -9,20 +9,26 @@ import numpy as np
 
 
 def extract_from_basedata_har(p):
-    """Take a GTAP zipfile of code from the project input_dir or base_data and extract it into user-editable CSVs."""
+    """Take a GTAP data release from the project input_dir or base_data and extract it into user-editable "indexed CSVs". 
+    This will optionally also write the indexed CSVs back into a harfile to ensure there is no data loss and for
+    later gempack usage."""
 
     if p.run_this:
         
-        # For all aggergations, extract every har file present.
+        # GTAPPY runs for multiple aggregations and follows the philosophy that
+        # for a well-built model, the results will be intuitively similar for different aggregations
+        # and thus it serves as a decent check.
+        # Here, for all aggergations listed, extract every har file present.
         for aggregation_label in p.aggregation_labels:    
             input_har_dir = os.path.join(p.cge_data_dir, aggregation_label)
             hars_to_look_for = hb.list_filtered_paths_nonrecursively(input_har_dir, include_extensions='.har')
-            # hars_to_look_for = ['basedata.har', 'sets.har', 'MapFile.har']            
-            # hars_to_look_for = ['basedata.har', 'baserate.har', 'baseview.har', 'sets.har', 'SHOCKSv7.har']
             
+            # Iterate through all the harfiles found in the aggregation directory
             for har_filename in hars_to_look_for:
                 
-                # Write har to CSVs
+                # Write har to Indexed-CSVs. See other functions, but note that Indexed CSV is a custom
+                # filetype created for GTAPPY that is a single flat CSV describing the contents of a harfile that
+                # have been extracted into a folder of the same name as the indexed CSV.
                 input_har_path = har_filename    
                 har_index_path = os.path.join(p.cur_dir, aggregation_label, hb.file_root(input_har_path) + '.csv')              
                 if hb.path_exists(input_har_path):
@@ -41,35 +47,45 @@ def extract_from_basedata_har(p):
 
 
 def create_mapfile_har(p):
-    """In the TABLO code of a GTAP model, there often are additional HAR files added that aggregate the base data for either shock definition or plotting of aggregated results. 
+    """In the TABLO code of a GTAP model, there often are additional HAR files 
+    added that aggregate the base data for either shock definition or plotting of aggregated results. 
+    Here, we create a mapfile that will summarize the above-defined aggregated data into "temporary"
+    further aggregations that might be used for plotting results (e.g., income groups).
     Create a mapping file here based on the aggregation file present in the input dir."""
     
     if p.run_this:
         for aggregation_label in p.aggregation_labels:
                             
-            # Construct a new inded_dfs etc to make a new har similar to mapfile.har
+            # We will construct a new inded_dfs saved to mapfile.har that will be used for further aggregation
+            # Start by basing it on the basedata.csv index file.
             input_indexed_dfs_path = os.path.join(p.extract_from_basedata_har_dir, aggregation_label, 'basedata.csv')
-            input_basedata_sets_dfs_path = os.path.join(p.extract_from_basedata_har_dir, aggregation_label, 'basedata_sets.csv')
-            # input_sets_sets_dfs_path = os.path.join(p.cur_dir, aggregation_label, 'sets_sets.csv')
-            sets_list = gtap_invest_integration_functions.get_set_labels_from_index_path(input_indexed_dfs_path)
-            
             input_indexed_dfs = pd.read_csv(input_indexed_dfs_path)
-            # input_basedata_sets_dfs = pd.read_csv(input_basedata_sets_dfs_path)
-            # input_sets_sets_dfs = pd.read_csv(input_sets_sets_dfs_path)          
-            
-            # Generatea a "stub" csv which is all the information that should go into the mapping file that can be inferred from the base data (basically everything besides the actuall aggregation to a smaller set.)
+
+            # In the GEMPACK language, sets are used extensively as arguments to functions or for aggregation
+            # We are going to add our new mapfile information to the existing sets list, which we
+            # can extract from the indexed CSV.
+            sets_list = gtap_invest_integration_functions.get_set_labels_from_index_path(input_indexed_dfs_path)
+
+            # Generatea a "stub" csv which is all the information that should go into the mapping file 
+            # that can be inferred from the base data (basically everything besides 
+            # the actuall aggregation to a smaller set.)
             mapfile_stub_index_csv_path = os.path.join(p.cur_dir, aggregation_label, 'mapfile_stub.csv')
             if not hb.path_exists(mapfile_stub_index_csv_path):
                 mapfile_data_dir = os.path.join(p.cur_dir, aggregation_label, 'MapFile')
                 hb.create_directories(mapfile_data_dir)
 
+                # Get rid of unnecessary metadata
                 input_indexed_dfs = input_indexed_dfs.loc[input_indexed_dfs['header'].str.startswith('XX')]
                 
+                # Generate an index_dict, which will be convereted into a dataframe and then saved to Indexed CSV
                 columns = input_indexed_dfs.columns
                 index_dict = {i : list(input_indexed_dfs[i]) for i in columns} 
                 
-                # sets_dict = {}
+                # The new mapfile will be saved as an ndCSV (rename of Indexed CSV?)
                 index_csv_path = os.path.join(p.cur_dir, aggregation_label, 'MapFile.csv')
+
+                # Iterate through the sets, read them from the basedata ndCSV
+                # and save them to into the new MapFile's ndCSV data dir
                 for set_label in sets_list:
                     set_path = os.path.join(p.extract_from_basedata_har_dir, aggregation_label, 'basedata', set_label + '.csv')
                     set_df = pd.read_csv(set_path)
@@ -79,9 +95,7 @@ def create_mapfile_har(p):
                     data_path = os.path.join(mapfile_data_dir, set_label + '.csv')
                     data_df.to_csv(data_path, index=False)
                     
-                    # sets_dict[set_label] = input_basedata_sets_dfs[set_label]
-
-
+                # Write the ndCSV's Index file.
                 for set_label in sets_list:
                     # trimmed_set_col = input_basedata_sets_dfs[set_label].dropna()
                     index_dict['header'].append(set_label)
@@ -93,7 +107,7 @@ def create_mapfile_har(p):
                     index_dict['coefficient_name'].append('')
 
                 
-                
+                ## START HERE: keep documenting, then reorganize into tasks and functions. archive unused.
                 
                 # Now, add new information to add in new mappings. This requires 
                 # 1. adding an entry to the mapfile.csv index for the new set of labels
