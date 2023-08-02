@@ -19,11 +19,19 @@ if __name__ == '__main__':
     # project-level variables are assigned as attributes to the p object (such as in p.base_data_dir = ... below)
     # The only agrument for a project flow object is where the project directory is relative to the current_working_directory.
     user_dir = os.path.expanduser('~')
+    extra_dirs = ['Files', 'Research', 'cge', 'gtappy', 'projects']
+
     script_dir = os.path.dirname(os.path.realpath(__file__))
     
     project_name = 'extract_gtap_aez_results'
-    project_name = 'test_gtappy_project'
-    project_dir = '../../projects/' + project_name
+    project_name = 'test_gtappy_project6'
+
+    # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
+    # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
+    # will either make the run fail or cause it to be very slow. The recommended place is (as coded above)
+    # somewhere in the users's home directory.
+    project_dir = os.path.join(user_dir, os.sep.join(extra_dirs), project_name)
+
     p = hb.ProjectFlow(project_dir)
 
     # The ProjectFlow object p will manage all tasks to be run, enables parallelization over spatial tiles or model runs,
@@ -40,7 +48,9 @@ if __name__ == '__main__':
     # Additionally, if you're clever, you can move files generated in your tasks to the right base_data_dir
     # directory so that they are available for future projects and avoids redundant processing.
     # NOTE THAT the final directory has to be named base_data to match the naming convention on the google cloud bucket.
-    p.base_data_dir = os.path.join('G:/My Drive/Files/Research/base_data')
+    # As with the project dir, this should be a non-cloud-synced directory, and ideally on a fast NVME SSD drive,
+    # as this is primarily io-bound.
+    p.base_data_dir = os.path.join('C:/Users/jajohns/Files/Research/base_data')
 
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
