@@ -17,6 +17,7 @@ def base_data_as_csv(p):
     later gempack usage."""
 
     if p.run_this:
+        hb.timer()
         
         # GTAPPY runs for multiple aggregations and follows the philosophy that
         # for a well-built model, the results will be intuitively similar for different aggregations
@@ -48,7 +49,7 @@ def base_data_as_csv(p):
                         local_har_path = hb.path_rename_change_dir(input_har_path, output_dir)
                         file_io.indexed_dfs_to_har(har_index_path, local_har_path)
 
-
+    hb.timer('finished base_data_as_csv')
 
 def mapfile(p):
     """In the TABLO code of a GTAP model, there often are additional HAR files 
@@ -182,7 +183,7 @@ def mapfile(p):
 
                         ## START HERE: Almost there. Make it sothat the new Harfiole also has the remappings that Erwin calls in the code, eg.g rin4, rindc, minc, mrin.                
                         file_io.indexed_dfs_to_har(index_csv_path, mapfile_har_path)
-                                
+    hb.timer('finished mapfile')                             
  
 def gtap_runs(p):
     """Run a precompiled gtap exe file by creating a cmf file and calling it.
@@ -251,6 +252,8 @@ def gtap_runs(p):
                         finished_results.append(i)
                     worker_pool.close()
                     worker_pool.join()
+
+    hb.timer('finished gtap_runs')
                 
         # Note bug. Currently even when done in parallel, only 1 run can be run per python run. Says it runs out of space to allocate results, which isn't true. I'm assuming is an unreleased shared asset, maybe gtap.exe
                     
@@ -436,6 +439,7 @@ def results_summary(p):
                     har_path = hb.path_replace_extension(indexed_df_path, '.har')
                     if not hb.path_exists(har_path):
                         file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
+    hb.timer('finished results_summary')
                     
     
 
