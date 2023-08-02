@@ -20,11 +20,12 @@ if __name__ == '__main__':
     # The only agrument for a project flow object is where the project directory is relative to the current_working_directory.
     user_dir = os.path.expanduser('~')
     extra_dirs = ['Files', 'Research', 'cge', 'gtappy', 'projects']
-
-    script_dir = os.path.dirname(os.path.realpath(__file__))
     
-    project_name = 'extract_gtap_aez_results'
-    project_name = 'test_gtappy_project6'
+    # The project_name is used to name the project directory below. Also note that
+    # ProjectFlow only calculates tasks that haven't been done yet, so adding 
+    # a new project_name will give a fresh directory and ensure all parts
+    # are run.
+    project_name = 'test_gtappy_project'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -39,7 +40,6 @@ if __name__ == '__main__':
     # works between tasks and between parallel threads. For instance, here we define the local variables above
     # to ProjectFlow attributes.
     p.user_dir = user_dir
-    p.script_dir = script_dir
     p.project_name = project_name
     p.project_dir = project_dir
 
