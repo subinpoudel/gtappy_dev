@@ -19,6 +19,8 @@ if __name__ == '__main__':
     # project-level variables are assigned as attributes to the p object (such as in p.base_data_dir = ... below)
     # The only agrument for a project flow object is where the project directory is relative to the current_working_directory.
     user_dir = os.path.expanduser('~')
+
+    # Specify which extra dirs define where the project_dir will be
     extra_dirs = ['Files', 'Research', 'cge', 'gtappy', 'projects']
     
     # The project_name is used to name the project directory below. Also note that
@@ -51,6 +53,7 @@ if __name__ == '__main__':
     # As with the project dir, this should be a non-cloud-synced directory, and ideally on a fast NVME SSD drive,
     # as this is primarily io-bound.
     p.base_data_dir = os.path.join('C:/Users/jajohns/Files/Research/base_data')
+
 
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
