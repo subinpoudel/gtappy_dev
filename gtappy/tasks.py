@@ -5,6 +5,7 @@ import file_io
 import cmf_generation
 import runner
 
+
 import multiprocessing
 
 import pandas as pd
@@ -427,17 +428,22 @@ def results_summary(p):
                     expected_path = os.path.join(experiment_dir, filename)
                     
                     if not hb.path_exists(expected_path, verbose=True):
-                        raise NameError('Cannot find sl4 file: ' + str(expected_path))
+                        raise NameError('Cannot find file: ' + str(expected_path))
                     
                     indexed_df_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, filename.replace('.', '_') + '.csv')
-                    if not hb.path_exists(indexed_df_path):                    
-                        file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                    if not hb.path_exists(indexed_df_path):     
+                        
+                        # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
+                        if os.path.splitext(filename)[1] == '.sl4':
+                            file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
+                        else:
+                            file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
                         
                         
                     
                     # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
                     har_path = hb.path_replace_extension(indexed_df_path, '.har')
-                    if not hb.path_exists(har_path):
+                    if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4K'  and os.path.splitext(filename)[1] != '.UPKD':
                         file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
     

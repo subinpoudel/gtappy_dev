@@ -668,28 +668,38 @@ class HarFileIO(object):
                 if 'object' in header_type_str:
                     if len(head_arr_obj.array) == 0:
                         raise NameError('Given empty array.')
-                    
-                    array_item_length = len(head_arr_obj.array[0]) 
+
+                    # This section is only partially complete insofar as it does not yet consider types that aren't floats or 12 digit strings.
                     # == 6 implies version number
                     # == 59 implies DREL
-                    if array_item_length > 26 and 0: 
+                    if 0: #NYI 
+                    # if array_item_length > 26 and 0: 
                         header_type_str = '<U' + str(len(head_arr_obj.array[0]))
-                        
+                    elif head_arr_obj.dtype == 'RE':
+                        header_type_str = 'float32'
                     elif head_arr_obj.array.ndim > 1:
                         header_type_str = 'float32'
                     else:
                         if len(head_arr_obj.array) > 0:
-                            implied_length = len(head_arr_obj.array[0])
+                            # implied_length = len(head_arr_obj.array[0])
+                            try:
+                                implied_length = len(head_arr_obj.array[0]) 
+                            except:
+                                implied_length = 12
+
+                            
                         else:
                             implied_length = 12
                         header_type_str = '<U' + str(implied_length)
+
+                    
                 
                 has_sets = head_arr_obj.sets.defined()
                 # HarFileIO._writeHeader(fp, head_arr_obj)
 
                 if header_type_str in ['float32','float64'] and (head_arr_obj.array.ndim != 2 or has_sets):
                     HarFileIO._writeHeader7D(fp, hname, head_arr_obj)
-                elif header_type_str in ['int32','int64', 'float32','float64' ]:
+                elif header_type_str in ['int32','int64', 'float32','float64']:
                     HarFileIO._writeHeader2D(fp, hname, head_arr_obj)
                 elif '<U' in header_type_str or '|S' in header_type_str:
                     if head_arr_obj.array.ndim > 1:
