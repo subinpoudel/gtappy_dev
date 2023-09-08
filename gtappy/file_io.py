@@ -699,7 +699,9 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         # df_sets = pd.DataFrame(data=set_names_dict) # Can't export with pandas cause different lengths
 
 
-def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path):
+def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path, verbose=False):
+
+    
     index_df_dir, index_df_filename = os.path.split(input_indexed_dfs_path)
     index_name = os.path.splitext(index_df_filename)[0]
     index_df = pd.read_csv(input_indexed_dfs_path, index_col=0)
@@ -715,7 +717,7 @@ def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path):
             annotation = split_name[0]
             possible_set_label = split_name[1]
             if annotation == 'Set':
-                print('Found set', possible_set_label)
+                # print('Found set', possible_set_label)
                 set_data = pd.read_csv(os.path.join(index_df_dir, index_name, possible_set_label + '.csv'))
                 sets_data[possible_set_label] = list(set_data.values)
     # Create a new Harfile object.
@@ -838,7 +840,7 @@ def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path):
             else:
                 raise NameError('wtf')   
                      
-            verbose = True
+            
             if verbose:
                 print ('indexed_dfs_to_har is writing ' + str(header), dtype)
                 

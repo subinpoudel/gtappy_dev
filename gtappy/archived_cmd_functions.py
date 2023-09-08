@@ -13,7 +13,7 @@ def extract_vertical_csvs_from_multidimensional_sl4_csv(raw_csv_path, output_dir
                         chunks.append(fp_list[chunk_start: chunk_end + 1])
                         chunk_start = c + 1
 
-    # START HERE, this got super difficlut but it's POSSIBLE i could contimnue for ndim=2,3
+    #  this got super difficlut but it's POSSIBLE i could contimnue for ndim=2,3
     unused = []
     showing = []
     matrices = []
@@ -141,7 +141,7 @@ def extract_raw_csv_from_sl4(sl4_path, csv_path, vars_to_extract=None, additiona
         vars_to_extract = [i for i in vars_to_extract]
         extract_vars_string = '\n'.join(vars_to_extract)
 
-        # START HERE: Clean this, then just switch back to uris' tables. he did it much better than i could
+        # Clean this, then just switch back to uris' tables. he did it much better than i could
 
         extract_vars_string = """qgdp
   1

@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_project5'
+    project_name = 'test_gtappy_project_glassnet_demo'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -59,12 +59,13 @@ if __name__ == '__main__':
     fully_disaggregated_label = '65x141'
     shareable_and_fast_label = '10x10'    
     p.aggregation_labels = [shareable_and_fast_label]
+    
     # p.aggregation_labels = [fully_disaggregated_label]
     # p.aggregation_labels = [shareable_and_fast_label, fully_disaggregated_label] # For use will non-test-set
     
     # Define which scenarios (shocks) will be run
-    # p.experiment_labels = ['agpr20b']
-    p.experiment_labels = ['agpr10', 'agpr20', 'agpr30']
+    # This example uses 1%, 2% and 3% increases in agricultural productivity.
+    p.experiment_labels = ['agpr1', 'agpr2', 'agpr3']
 
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
@@ -98,22 +99,22 @@ if __name__ == '__main__':
     
 
     # Define scenario specific shocks   
-    p.shocks['10x10']['agpr10'] = {
-        'name': 'agri_productivity increases 10p',
+    p.shocks['10x10']['agpr1'] = {
+        'name': 'agri_productivity increases 1p',
         'shortname': 'agpr10',
-        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 10;'
+        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 1;'
     }
  
-    p.shocks['10x10']['agpr20'] = {
-        'name': 'agri_productivity increases 20p',
-        'shortname': 'agpr20',
-        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 20;'
+    p.shocks['10x10']['agpr2'] = {
+        'name': 'agri_productivity increases 2p',
+        'shortname': 'agpr2',
+        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 2;'
     }
 
-    p.shocks['10x10']['agpr30'] = {
-        'name': 'agri_productivity increases 30p',
-        'shortname': 'agpr30',
-        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 30;'
+    p.shocks['10x10']['agpr3'] = {
+        'name': 'agri_productivity increases 3p',
+        'shortname': 'agpr3',
+        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 3;'
     }
 
     # p.shocks['65x141']['agpr20b']= {
@@ -153,6 +154,9 @@ if __name__ == '__main__':
     p.mapping_paths[fully_disaggregated_label] = p.mapping_141_path
     
     p.gempack_utils_dir = "C://GP" # This is where the GEMPACK license is installed too.
+
+
+    p.reg_vars_to_plot = ['qgdp', 'pfactor']
 
     # Set the run_type, which will determine which task tree to load and execute.
     p.run_type = 'extract_and_run'

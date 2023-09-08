@@ -13,7 +13,7 @@
             "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
+                "PYTHONPATH": "C:\\Users\\jajohns\\Files\\Research\\hazelbean\\hazelbean_dev;C:\\Users\\jajohns\\seals\\seals_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
             }
         },
         {
@@ -31,32 +31,9 @@
             "justMyCode": false,
             "cwd": "${fileDirname}",
             "env": {
-                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
+                "PYTHONPATH": "C:\\Users\\jajohns\\Files\\Research\\hazelbean\\hazelbean_dev;C:\\Users\\jajohns\\seals\\seals_dev;C:\\Users\\jajohns\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev",
             },
         },
-        {
-            "name": "integratedTerminal, Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "cwd": "${fileDirname}",
-            "env": {
-                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
-            }
-        },
-        {
-            "name": "externalTerminal, Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "externalTerminal",
-            "justMyCode": false,
-            "cwd": "${fileDirname}",
-            "env": {
-                "PYTHONPATH": "G:\\My Drive\\Files\\Research\\hazelbean\\hazelbean_dev;G:\\My Drive\\Files\\Research\\cge\\gtap_invest\\gtap_invest_dev;G:\\My Drive\\Files\\Research\\cge\\seals\\seals_dev",
-            }
-        },
+
     ]
 }

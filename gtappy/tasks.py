@@ -411,7 +411,7 @@ def gtap_runs(p):
 
 
 
-def results_summary(p):
+def results_as_csv(p):
     
     if p.run_this:
         
@@ -448,12 +448,79 @@ def results_summary(p):
 
     
 
-def process_results(p):
-    
+def vizualization(p):
     if p.run_this:
+        plots = {}
+
+
+        # Do CROSS-Experiment plots
+        csvs_to_merge = []
+        vars_to_plot = p.reg_vars_to_plot
         
         for aggregation_label in p.aggregation_labels:
-            
-            for experiment_label in p.experiment_labels:
+            plots[aggregation_label] = {}
 
-                5
+            for var in vars_to_plot:
+                plots[aggregation_label][var] = {}
+                plots[aggregation_label][var]['file_paths_to_merge'] = []
+                plots[aggregation_label][var]['plot_labels'] = []
+
+                for experiment_label in p.experiment_labels:
+
+                    current_sl4_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
+                    file_path_to_merge = os.path.join(current_sl4_dir, var + '.csv')        
+
+                    plots[aggregation_label][var]['file_paths_to_merge'].append(file_path_to_merge)
+                    plots[aggregation_label][var]['plot_labels'].append(experiment_label)
+
+
+        for aggregation_label in p.aggregation_labels:
+            for var in vars_to_plot:
+                output_csv_path = os.path.join(p.cur_dir, var + '.csv')
+                merged_df = hb.df_merge_list_of_csv_paths(plots[aggregation_label][var]['file_paths_to_merge'] , column_suffix=plots[aggregation_label][var]['plot_labels'], output_csv_path=output_csv_path)
+
+                output_png_path = os.path.join(p.cur_dir, var + '.png')
+
+                hb.df_plot(merged_df, output_png_path, type='bar', legend_labels=plots[aggregation_label][var]['plot_labels'])
+
+
+
+        # Plot the merged_df in a bar graph with numerical value on the vertical axis and the 10 different country indices on the horizontal axis
+        # merged_df.plot.bar(x=index, y=['Baseline', 'Policy'], rot=0)
+        
+
+        # for file_path in csvs_to_merge:
+
+        #     current_df = pd.read_csv(file_path)
+
+        #     if merged_df is None:
+        #         merged_df = current_df
+        #     else:
+        #         merged_df = hb.df_merge(merged_df, current_df)
+
+        print(merged_df.head())
+                    
+                    # experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label)
+                    # expected_path = os.path.join(experiment_dir, filename)
+                    
+                    # if not hb.path_exists(expected_path, verbose=True):
+                    #     raise NameError('Cannot find file: ' + str(expected_path))
+                    
+                    # indexed_df_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, filename.replace('.', '_') + '.csv')
+                    # if not hb.path_exists(indexed_df_path):     
+                        
+                    #     # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
+                    #     if os.path.splitext(filename)[1] == '.sl4':
+                    #         file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
+                    #     else:
+                    #         file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                        
+                        
+                    
+                    # # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
+                    # har_path = hb.path_replace_extension(indexed_df_path, '.har')
+                    # if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4K'  and os.path.splitext(filename)[1] != '.UPKD':
+                    #     file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
+
+    
+

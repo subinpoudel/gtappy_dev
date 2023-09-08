@@ -25,7 +25,8 @@ def build_extract_and_run_task_tree(p):
     p.base_data_as_csv_task = p.add_task(tasks.base_data_as_csv)                
     p.mapfile_task = p.add_task(tasks.mapfile)                
     p.gtap_runs_task = p.add_task(tasks.gtap_runs)
-    p.results_summary_task = p.add_task(tasks.results_summary)
+    p.results_as_csv_task = p.add_task(tasks.results_as_csv)
+    p.visualization_task = p.add_task(tasks.vizualization)
 
 def build_process_aez_results_task_tree(p):
     p.process_aez_results_task = p.add_task(tasks.process_aez_results)
