@@ -1,0 +1,1859 @@
+!===============================================================================
+Filename:       AllRES.tab
+Description:    Clean-up results to create a post-simulation summary
+ELC:            Last updated (July 20, 2022)
+===============================================================================!
+
+!----------
+ A. FILES 
+ ----------!
+File
+    GTAPDATA # Basedata  #;
+    GTAPSETS # Sets file #;
+    SOLFILE  # Results file from ViewSol #;
+    AGGRSETS # Aggregate sets file to summarize simulation results #;
+    GTAPVIEW # GTAPView summary file #;
+File 
+ (new)ALLRES # Output file: all simulation results #;
+
+!--------
+ B. SETS 
+ --------!
+
+Set 
+ SCEN # All Scenarios # (agpr20, rtms5, beef50);
+
+Set 
+ COMM   # commodities          # read elements from file GTAPSETS header "COMM";
+ ACTS   # activities           # read elements from file GTAPSETS header "ACTS";
+ REG    # regions              # read elements from file GTAPSETS header "REG";
+ ENDW   # endowments           # read elements from file GTAPSETS header "ENDW";
+ ENDWM  # mobile endowments    # read elements from file GTAPSETS header "ENDM";
+ ENDWS  # sluggish endowments  # read elements from file GTAPSETS header "ENDS";
+ ENDWMS # mobile & slug endw   # = ENDWM + ENDWS;
+ DEMD   # endw & comm          # = ENDW + COMM;
+ MARG   # margin commodities   # read elements from file GTAPSETS header "MARG";
+Subset
+ MARG   is subset of COMM;
+ ENDWMS is subset of ENDW;
+Set
+ NMRG # non-margin commodities # = COMM - MARG;
+Set
+ ENDWC # Capital Endowment Commodity # (capital);
+Subset
+ ENDWC is subset of ENDW;
+Set
+ ACOM   # aggregate commodities# read elements from file AGGRSETS header "ACOM";
+ AACT   # aggregate activities # read elements from file AGGRSETS header "AACT";
+ AREG   # aggregate regions    # read elements from file AGGRSETS header "AREG";
+ ADEMD  # agg endw & comm        # = ENDW + ACOM;
+
+!----------
+ C. Mapping 
+ ----------!
+Mapping MAPREG from REG to AREG;
+Read (by_elements) MAPREG from file AGGRSETS header "MREG"; 
+
+Mapping MAPCOM from COMM to ACOM;
+Read (by_elements) MAPCOM from file AGGRSETS header "MCOM"; 
+
+Mapping MAPACT from ACTS to AACT;
+Read (by_elements) MAPACT from file AGGRSETS header "MACT"; 
+  
+!--------------------
+ D. GTAP data summary 
+ --------------------!
+
+!< 
+  D.1 GDP calculations 
+  --------------------
+>!
+
+Set 
+ GDPEXPEND # description # (cons, inv, gov, exp, imp);
+ GDPSOURCE # description # (fact, tax, depr);
+Coefficient 
+ (all,r,REG)(all,g,GDPEXPEND) GDPEXP(r,g) # GDP from the expenditure side #;
+! (all,r,REG)(all,g,GDPSOURCE) GDPSRC(r,g) # GDP from the income side #;!
+Read
+ GDPEXP from file GTAPVIEW header "AG01";
+! GDPSRC from file GTAPVIEW header "AG02";!
+Coefficient 
+ (all,r,REG) GDP(r) # GDP from the expenditure side #;
+Formula 
+ (all,r,REG) GDP(r) = sum{g,GDPEXPEND, GDPEXP(r,g)};
+
+! GDP shares relative to aggregate region !
+Coefficient 
+ (all,ar,AREG) GDPAGG(ar) # GDP by aggregate region #;
+ (all,ar,AREG)(all,g,GDPEXPEND) GDPEXPAGG(ar,g) # GDP expenditure by aggregate region #;
+! (all,ar,AREG)(all,g,GDPSOURCE) GDPSRCAGG(ar,g) # GDP income by aggregate region #;!
+Formula 
+ (all,ar,AREG) GDPAGG(ar) = sum{r,REG:MAPREG(r)=ar, GDP(r)};
+ (all,ar,AREG)(all,g,GDPEXPEND) GDPEXPAGG(ar,g) = sum{r,REG:MAPREG(r)=ar, GDPEXP(r,g)};
+! (all,ar,AREG)(all,g,GDPSOURCE) GDPSRCAGG(ar,g) = sum{r,REG:MAPREG(r)=ar, GDPSRC(r,g)};!
+
+Coefficient 
+ (all,r,REG)  GDPSHR(r) # GDP share relative to aggregate region #;
+ (all,r,REG)(all,g,GDPEXPEND) GDPEXPSHR(r,g) # GDP expenditure by aggregate region #;
+! (all,r,REG)(all,g,GDPSOURCE) GDPSRCSHR(r,g) # GDP income by aggregate region #;!
+Formula
+ (all,r,REG) GDPSHR(r)  = GDP(r) / GDPAGG(MAPREG(r));
+ (all,r,REG)(all,g,GDPEXPEND) GDPEXPSHR(r,g) = GDPEXP(r,g) / GDPEXPAGG(MAPREG(r),g); 
+! (all,r,REG)(all,g,GDPSOURCE) GDPSRCSHR(r,g) = GDPSRC(r,g) / GDPSRCAGG(MAPREG(r),g);!
+
+Coefficient 
+ GDPWLD # World GDP from the expenditure side #;
+(all,r,REG) WLDGDPSHR(r) # World GDP shares #;
+Formula 
+ GDPWLD = sum{r,REG, GDP(r)};
+(all,r,REG) WLDGDPSHR(r) = GDP(r) / GDPWLD;
+
+![[!
+Coefficient 
+(all,r,REG)(all,g,GDPEXPEND) GDPEXPWLDSHR(r,g) # GDPexpenditure side shares #;
+(all,r,REG)(all,g,GDPSOURCE) GDPSRCWLDSHR(r,g) # GDP income side shares#;
+Formula
+(all,r,REG)(all,g,GDPEXPEND) GDPEXPWLDSHR(r,g) = GDPEXP(r,g) / sum{gg,GDPEXPEND, GDPEXP(r,gg)};
+(all,r,REG)(all,g,GDPSOURCE) GDPSRCWLDSHR(r,g) = GDPSRC(r,g) / sum{gg,GDPSOURCE, GDPSRC(r,gg)};
+!]]!
+
+!< 
+  D.2 Commodity calculations 
+  --------------------------
+>!
+Coefficient ! Read base data !
+ (all,c,COMM)(all,a,ACTS)(all,r,REG) VDFB(c,a,r) # expenditure on domestic c by act. a in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VDPB(c,r) # private household expenditure on dom. c in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VDGB(c,r) # government expenditure on domestic c in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VDIB(c,r) # investment expenditure on domestic c in r at basic prices #;
+ (all,m,MARG)(all,r,REG) VST(m,r)  # value of exports of margin m from r for int'l transport at basic prices #;
+ (all,c,COMM)(all,a,ACTS)(all,r,REG) VDFP(c,a,r) # expenditure on domestic c by act. a in r at purch prices #;
+ (all,c,COMM)(all,a,ACTS)(all,r,REG) VMFP(c,a,r) # expenditure on imported c by act. a in r at purch prices #;
+! (all,c,COMM)(all,r,REG) VDPP(c,r) # private household expenditure on dom. c in r at purch prices #;
+ (all,c,COMM)(all,r,REG) VDGP(c,r) # government expenditure on domestic c in r at purch prices #;
+ (all,c,COMM)(all,r,REG) VDIP(c,r) # investment expenditure on domestic c in r at purch prices #;
+ (all,c,COMM)(all,a,ACTS)(all,r,REG) VMFB(c,a,r) # expenditure on imported c by act. a in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VMPB(c,r) # private household expenditure on imp. c in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VMGB(c,r) # government expenditure on imported c in r at basic prices #;
+ (all,c,COMM)(all,r,REG) VMIB(c,r) # investment expenditure on imported c in r at basic prices #;!
+! (all,c,COMM)(all,r,REG) VMPP(c,r) # private household expenditure on imp. c in r at purch prices #;
+ (all,c,COMM)(all,r,REG) VMGP(c,r) # government expenditure on imported c in r at purch prices #;
+ (all,c,COMM)(all,r,REG) VMIP(c,r) # investment expenditure on imported c in r at purch prices #;
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG) EVFB(e,a,r) # expenditure on endowment e by a in r at purch. prices #;!
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG) EVFP(e,a,r) # expenditure on endowment e by a in r at producer prices #;
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG) EVOS(e,a,r) # expenditure on endowment e by a in r at supply prices #;
+
+! (all,c,COMM)(all,a,ACTS)(all,r,REG) MAKEB(c,a,r) # 'make' matrix valued at basic prices #;
+ (all,c,COMM)(all,a,ACTS)(all,r,REG) MAKES(c,a,r) # 'make' matrix valued at supply prices #;!
+ (all,c,COMM)(all,s,REG)(all,d,REG)  VXSB(c,s,d)  # value of exports of  c from s to d at basic prices (tradeables only) #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)  VFOB(c,s,d)  # value of exports of  c from s to d at FOB prices (tradeables only) #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)  VCIF(c,s,d)  # value of imports of c from s to d at CIF prices (tradeables only) #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)  VMSB(c,s,d)  # value of imports of c from s to d at domestic (basic) prices #;
+
+Read 
+ VDPB  from file GTAPDATA header "VDPB";
+ VDGB  from file GTAPDATA header "VDGB";
+ VDIB  from file GTAPDATA header "VDIB";
+ VDFB  from file GTAPDATA header "VDFB";
+ VDFP  from file GTAPDATA header "VDFP";
+ VMFP  from file GTAPDATA header "VMFP"; 
+! VMPB  from file GTAPDATA header "VMPB";
+ VMGB  from file GTAPDATA header "VMGB";
+ VMIB  from file GTAPDATA header "VMIB";
+ VMFB  from file GTAPDATA header "VMFB";
+ VDPP  from file GTAPDATA header "VDPP";
+ VDGP  from file GTAPDATA header "VDGP";
+ VDIP  from file GTAPDATA header "VDIP";
+ VMPP  from file GTAPDATA header "VMPP";
+ VMGP  from file GTAPDATA header "VMGP";
+ VMIP  from file GTAPDATA header "VMIP";
+ EVFB from file GTAPDATA header "EVFB";!
+ EVFP from file GTAPDATA header "EVFP";
+ EVOS from file GTAPDATA header "EVOS";   
+
+ VST   from file GTAPDATA header "VST";
+! MAKEB from file GTAPDATA header "MAKB";
+ MAKES from file GTAPDATA header "MAKS";!
+ VFOB  from file GTAPDATA header "VFOB";
+ VXSB  from file GTAPDATA header "VXSB";
+ VCIF  from file GTAPDATA header "VCIF";
+ VMSB  from file GTAPDATA header "VMSB";
+
+Coefficient 
+ (all,c,COMM)(all,r,REG) VDB(c,r) # domestic sales of c in r at basic prices (tradeables only) #;
+ (all,c,COMM)(all,r,REG) VCB(c,r) # supply of commodity c in region r valued at basic prices #;
+ (all,c,COMM)(all,r,REG) VXW(c,r) # value of exports by commodity c and region r at FOB prices #;
+ (all,c,COMM)(all,r,REG) VMW(c,r) # value of exports by commodity c and region r at CIF prices #;
+ (all,c,COMM)(all,r,REG) VMB(c,r) # value of exports by commodity c and region r at basic prices #;
+Formula 
+ (all,c,COMM)(all,r,REG) VDB(c,r) = VDPB(c,r) + VDGB(c,r) + VDIB(c,r) + sum{a,ACTS, VDFB(c,a,r)};
+! (all,c,COMM)(all,r,REG) VCB(c,r) = sum{a,ACTS, MAKEB(c,a,r)};!
+ (all,c,COMM)(all,r,REG) VCB(c,r) = VDB(c,r) + sum{d,REG, VXSB(c,r,d)} + IF[c in MARG, VST(c,r)];
+ (all,c,COMM)(all,r,REG) VXW(c,r) = sum{d,REG, VFOB(c,r,d)} + IF[c in MARG, VST(c,r)];
+ (all,c,COMM)(all,r,REG) VMW(c,r) = sum{s,REG, VCIF(c,s,r)};
+ (all,c,COMM)(all,r,REG) VMB(c,r) = sum{s,REG, VMSB(c,s,r)};
+
+Coefficient 
+ (all,d,DEMD)(all,a,ACTS)(all,r,REG) VFP(d,a,r) # expenditure on d by act. a in r valued at producer prices #;
+Formula 
+(all,e,ENDW)(all,a,ACTS)(all,r,REG) VFP(e,a,r) = EVFP(e,a,r);
+(all,c,COMM)(all,a,ACTS)(all,r,REG) VFP(c,a,r) = VDFP(c,a,r) + VMFP(c,a,r);
+
+Coefficient 
+ (all,a,ACTS)(all,r,REG) VOS(a,r) # output of act. a in r valued at supplier's prices #;
+Formula 
+ (all,a,ACTS)(all,r,REG) VOS(a,r) = sum{d,DEMD, VFP(d,a,r)};
+
+Coefficient (all,e,ENDW)(all,r,REG)
+    VES(e,r) # endowment supply in region r, at supplier's (after tax) prices #;
+Formula (all,e,ENDW)(all,r,REG)
+    VES(e,r) = sum{a,ACTS, EVOS(e,a,r)};
+
+
+
+!------------------
+ D. Results summary 
+ ------------------!
+
+!< 
+  D.1A Regional macro results 
+  ---------------------------
+>!
+Set 
+ MACRES # regional macro # 
+    (rEV, rqgdp, rqprv, rqinv, rqgov, rqexp, rqimp, 
+          rpgdp, rpprv, rpinv, rpgov, rpexp, rpimp, rvgdp);
+
+Coefficient
+ (all,r,REG)(all,sc,SCEN) EV(r,sc)   # regional EV, $USMillion #;
+ (all,r,REG)(all,sc,SCEN) vgdp(r,sc) # % change in value of GDP #;
+ (all,r,REG)(all,sc,SCEN) qgdp(r,sc) # % change in GDP quantity index #;
+ (all,r,REG)(all,sc,SCEN) pgdp(r,sc) # % change in GDP price index #;
+ (all,r,REG)(all,sc,SCEN) qprv(r,sc) # % change in consumption quantity index #;
+ (all,r,REG)(all,sc,SCEN) pprv(r,sc) # % change in consumption price index #;
+ (all,r,REG)(all,sc,SCEN) qinv(r,sc) # % change in investment demand #;
+ (all,r,REG)(all,sc,SCEN) pinv(r,sc) # % change in investment price index #;
+ (all,r,REG)(all,sc,SCEN) qgov(r,sc) # % change in government demand #;
+ (all,r,REG)(all,sc,SCEN) pgov(r,sc) # % change in government price index #;
+ (all,r,REG)(all,sc,SCEN) qexp(r,sc) # % change in exports #;
+ (all,r,REG)(all,sc,SCEN) pexp(r,sc) # % change in export price index #;
+ (all,r,REG)(all,sc,SCEN) qimp(r,sc) # % change in imports (CIF) #;
+ (all,r,REG)(all,sc,SCEN) pimp(r,sc) # % change in import price index (CIF) #;
+Read
+ EV   from file SOLFILE header "EV";
+ vgdp from file SOLFILE header "VGDP";
+ qgdp from file SOLFILE header "QGDP";
+ pgdp from file SOLFILE header "PGDP";
+ qprv from file SOLFILE header "QPRV";
+ pprv from file SOLFILE header "PPRV";
+ qinv from file SOLFILE header "QINV";
+ pinv from file SOLFILE header "PINV";
+ qgov from file SOLFILE header "QGOV";
+ pgov from file SOLFILE header "PGOV";
+ qexp from file SOLFILE header "QEXP";
+ pexp from file SOLFILE header "PEXP";
+ qimp from file SOLFILE header "QIMP";
+ pimp from file SOLFILE header "PIMP";
+
+Coefficient (all,r,REG)(all,g,MACRES)(all,sc,SCEN) 
+ RMAC(r,g,sc) # regional macroeconomic results #;
+Formula (all,r,REG)(all,g,MACRES)(all,sc,SCEN) 
+ RMAC(r,g,sc) = 0.0 
+              + IF[g="rEV"   , EV(r,sc)   ]
+              + IF[g="rqgdp" , qgdp(r,sc) ]
+              + IF[g="rqprv" , qprv(r,sc) ]   
+              + IF[g="rqinv" , qinv(r,sc) ]
+              + IF[g="rqgov" , qgov(r,sc) ]
+              + IF[g="rqexp" , qexp(r,sc) ]
+              + IF[g="rqimp" , qimp(r,sc) ]
+              + IF[g="rpgdp" , pgdp(r,sc) ]
+              + IF[g="rpprv" , pprv(r,sc) ]
+              + IF[g="rpinv" , pinv(r,sc) ]
+              + IF[g="rpgov" , pgov(r,sc) ]
+              + IF[g="rpexp" , pexp(r,sc) ]
+              + IF[g="rpimp" , pimp(r,sc) ]
+              + IF[g="rvgdp" , vgdp(r,sc) ]
+              ;                                    
+Write
+ RMAC to file ALLRES header "RMAC";
+          
+!< 
+  D.2A Macro results by aggregate region 
+  --------------------------------------
+>!
+Coefficient (all,ar,AREG)(all,g,MACRES)(all,sc,SCEN) 
+ RMACAGG(ar,g,sc) # macroeconomic results by aggregate region #;
+Formula (all,ar,AREG)(all,g,MACRES)(all,sc,SCEN) 
+ RMACAGG(ar,g,sc) = sum{r,REG:MAPREG(r)=ar, 
+                         IF[g="rEV"   , EV(r,sc)                         ]
+                       + IF[g="rqgdp" , qgdp(r,sc) * GDPSHR(r)           ]   
+                       + IF[g="rpgdp" , pgdp(r,sc) * GDPSHR(r)           ]
+                       + IF[g="rvgdp" , vgdp(r,sc) * GDPSHR(r)           ]
+                       + IF[g="rqprv" , qprv(r,sc) * GDPEXPSHR(r,"cons") ]
+                       + IF[g="rpprv" , pprv(r,sc) * GDPEXPSHR(r,"cons") ]
+                       + IF[g="rqinv" , qinv(r,sc) * GDPEXPSHR(r,"inv")  ]
+                       + IF[g="rpinv" , pinv(r,sc) * GDPEXPSHR(r,"inv")  ]
+                       + IF[g="rqgov" , qgov(r,sc) * GDPEXPSHR(r,"gov")  ]
+                       + IF[g="rpgov" , pgov(r,sc) * GDPEXPSHR(r,"gov")  ]
+                       + IF[g="rqexp" , qexp(r,sc) * GDPEXPSHR(r,"exp")  ]
+                       + IF[g="rpexp" , pexp(r,sc) * GDPEXPSHR(r,"exp")  ]
+                       + IF[g="rqimp" , qimp(r,sc) * GDPEXPSHR(r,"imp")  ]
+                       + IF[g="rpimp" , pimp(r,sc) * GDPEXPSHR(r,"imp")  ]
+                       };
+
+Set GDPEXPEND2 # GDP expenditure side with total # = GDPEXPEND + "GDP";
+Coefficient (all,ar,AREG)(all,g,GDPEXPEND2)(all,sc,SCEN) 
+ RGDPAGG(ar,g,sc) # GDP expenditure results by aggregate region  #;
+Formula  (all,ar,AREG)(all,g,GDPEXPEND2)(all,sc,SCEN) 
+ RGDPAGG(ar,g,sc) = sum{r,REG:MAPREG(r)=ar,
+                         IF[g="cons" , qprv(r,sc)  * GDPEXPSHR(r,"cons") ]
+                       + IF[g="inv" ,  qinv(r,sc)  * GDPEXPSHR(r,"inv")  ]
+                       + IF[g="gov" ,  qgov(r,sc)  * GDPEXPSHR(r,"gov")  ]
+                       + IF[g="exp" ,  qexp(r,sc)  * GDPEXPSHR(r,"exp")  ]
+                       + IF[g="imp" ,  qimp(r,sc)  * GDPEXPSHR(r,"imp")  ]
+                       } + IF[g="gdp" ,  RMACAGG(ar,"rqgdp",sc)          ]
+                       ;
+                     
+Write
+ RMACAGG to file ALLRES header "RMCA";
+ RGDPAGG to file ALLRES header "RGDP";
+
+!< 
+  D.2 Global results 
+  -------------------
+>!
+Set 
+ GLOBRES # global results # 
+    (wEV, wqgdp, winc, wqinv, wpgdp, wpinv, wqexp, wpexp);
+
+Coefficient 
+ (all,sc,SCEN) WEV(sc)        # equivalent variation for the world #;
+ (all,sc,SCEN) ywld(sc)       # world income #;
+ (all,sc,SCEN) globalcgds(sc) # global supply of capital goods for NET investment #;
+ (all,sc,SCEN) pcgdswld(sc)   # world average price of capital goods #;
+ (all,sc,SCEN) qxwwld(sc)     # volume of world trade #;
+ (all,sc,SCEN) pxwwld(sc)     # price index of world trade #;
+Read
+ WEV        from file SOLFILE header "WEV";
+ ywld       from file SOLFILE header "YWLD";
+ globalcgds from file SOLFILE header "QCGW";
+ pcgdswld   from file SOLFILE header "PCGW";
+ qxwwld     from file SOLFILE header "QXWD";
+ pxwwld     from file SOLFILE header "PXWD";
+
+Coefficient 
+ (all,g,GLOBRES)(all,sc,SCEN) GLOB(g,sc) # Global results summary #;
+Formula (all,g,GLOBRES)(all,sc,SCEN) 
+ GLOB(g,sc) = 0.0
+            + IF[g="wEV"   , WEV(sc)        ]  
+            + IF[g="winc"  , ywld(sc)       ]
+            + IF[g="wqinv" , globalcgds(sc) ]
+            + IF[g="wpinv" , pcgdswld(sc)   ]
+            + IF[g="wqexp" , qxwwld(sc)     ]
+            + IF[g="wpexp" , pxwwld(sc)     ]
+            + IF[g="wqgdp" , sum{r,REG, qgdp(r,sc) * WLDGDPSHR(r)}]
+            + IF[g="wpgdp" , sum{r,REG, pgdp(r,sc) * WLDGDPSHR(r)}]
+            ;
+Write
+ GLOB to file ALLRES header "GLOB";
+
+!< 
+  D.2 Commodity results 
+  ---------------------
+>!
+Set 
+ RCOMRES # Regional commodity variables #
+    (qc, qds, qxw, qmw, pds, pxw, pmw, pms);
+
+Coefficient ! Commodity !
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) qc(c,r,sc)  # total commodity supply in r #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) qds(c,r,sc) # total domestic commodity supply in r #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) qxw(c,r,sc) # aggregate exports of c from r, FOB weights #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) qmw(c,r,sc) # aggregate imports of c into r, CIF weights #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) pds(c,r,sc) # price of domestically supplied commodity c in r #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) pxw(c,r,sc) # exports price of c from region r (FOB price) #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) pmw(c,r,sc) # price of composite import c into r (CIF price)  #;
+ (all,c,COMM)(all,r,REG)(all,sc,SCEN) pms(c,r,sc) # tariff-incl price of composite import c in r (basic price) #;
+Read
+ qc          from file SOLFILE header "QC";
+ qds         from file SOLFILE header "QDS";
+ qxw         from file SOLFILE header "QXW";
+ qmw         from file SOLFILE header "QMW";
+ pds         from file SOLFILE header "PDS";
+ pxw         from file SOLFILE header "PXW";
+ pmw         from file SOLFILE header "PMW";
+ pms         from file SOLFILE header "PMS";
+
+!< 
+  D.3A Weighted calculations 
+  --------------------------
+>!
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG) VCBAGG(ac,ar) # VCB by aggregate commodity and region #;   
+ (all,c,COMM)(all,r,REG)    VCBSHR(c,r)   # VCB share #;   
+Formula 
+ (all,ac,ACOM)(all,ar,AREG) VCBAGG(ac,ar) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, VCB(c,r)}};   
+ (all,c,COMM)(all,r,REG)    VCBSHR(c,r)   = VCB(c,r) / VCBAGG(MAPCOM(c),MAPREG(r));
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG) VDBAGG(ac,ar) # VDB by aggregate commodity and region #;   
+ (all,c,COMM)(all,r,REG)    VDBSHR(c,r)   # VDB share #;   
+Formula 
+ (all,ac,ACOM)(all,ar,AREG) VDBAGG(ac,ar) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, VDB(c,r)}};   
+ (all,c,COMM)(all,r,REG)    VDBSHR(c,r)   = VDB(c,r) / VDBAGG(MAPCOM(c),MAPREG(r));
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG) VXWAGG(ac,ar) # VXW by aggregate commodity and region #;   
+ (all,c,COMM)(all,r,REG)    VXWSHR(c,r)   # VXW share #;   
+Formula 
+ (all,ac,ACOM)(all,ar,AREG) VXWAGG(ac,ar) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, VXW(c,r)}};   
+ (all,c,COMM)(all,r,REG)    VXWSHR(c,r)   = VXW(c,r) / VXWAGG(MAPCOM(c),MAPREG(r));
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG) VMWAGG(ac,ar) # VMW by aggregate commodity and region #;   
+ (all,c,COMM)(all,r,REG)    VMWSHR(c,r)   # VMW share #;   
+Formula 
+ (all,ac,ACOM)(all,ar,AREG) VMWAGG(ac,ar) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, VMW(c,r)}};   
+ (all,c,COMM)(all,r,REG)    VMWSHR(c,r)   = VMW(c,r) / VMWAGG(MAPCOM(c),MAPREG(r));
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG) VMBAGG(ac,ar) # VMB by aggregate commodity and region #;   
+ (all,c,COMM)(all,r,REG)    VMBSHR(c,r)   # VMB share #;   
+Formula 
+ (all,ac,ACOM)(all,ar,AREG) VMBAGG(ac,ar) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, VMB(c,r)}};   
+ (all,c,COMM)(all,r,REG)    VMBSHR(c,r)   = VMB(c,r) / VMBAGG(MAPCOM(c),MAPREG(r));
+
+!< 
+  D.3B Commodity results summary
+  ------------------------------
+>!
+
+Coefficient (all,c,COMM)(all,r,REG)(all,v,RCOMRES)(all,sc,SCEN) 
+ RCOM(c,r,v,sc) # Regional commodity results #;
+Formula (all,c,COMM)(all,r,REG)(all,v,RCOMRES)(all,sc,SCEN)
+ RCOM(c,r,v,sc) = IF[v="qc" , qc(c,r,sc)  ]
+                + IF[v="qds", qds(c,r,sc) ]
+                + IF[v="qxw", qxw(c,r,sc) ]
+                + IF[v="qmw", qmw(c,r,sc) ]
+                + IF[v="pds", pds(c,r,sc) ]
+                + IF[v="pxw", pxw(c,r,sc) ]
+                + IF[v="pmw", pmw(c,r,sc) ]
+                + IF[v="pms", pms(c,r,sc) ]
+                ;
+
+Coefficient (all,ac,ACOM)(all,ar,AREG)(all,v,RCOMRES)(all,sc,SCEN) 
+ RCOMAGG(ac,ar,v,sc) # Regional commodity results #;
+Formula (all,ac,ACOM)(all,ar,AREG)(all,v,RCOMRES)(all,sc,SCEN)
+ RCOMAGG(ac,ar,v,sc) = sum{c,COMM:MAPCOM(c)=ac, sum{r,REG:MAPREG(r)=ar, 
+                            IF[v="qc" , qc(c,r,sc)  * VCBSHR(c,r) ]
+                          + IF[v="qds", qds(c,r,sc) * VDBSHR(c,r) ]
+                          + IF[v="qxw", qxw(c,r,sc) * VXWSHR(c,r) ]
+                          + IF[v="qmw", qmw(c,r,sc) * VMWSHR(c,r) ]
+                          + IF[v="pds", pds(c,r,sc) * VDBSHR(c,r) ]
+                          + IF[v="pxw", pxw(c,r,sc) * VXWSHR(c,r) ]
+                          + IF[v="pmw", pmw(c,r,sc) * VMWSHR(c,r) ]
+                          + IF[v="pms", pms(c,r,sc) * VMBSHR(c,r) ]
+                          }};
+Write 
+ RCOM    to file ALLRES header "RCOM";
+ RCOMAGG to file ALLRES header "RCMA";
+
+!< 
+  D.4 Production results 
+  ----------------------
+>!
+Set RACTRES # Regional production summary # (po, qo);
+
+Coefficient ! Production !
+(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qo(a,r,sc) # qo: output of activity a in region r #;
+(all,a,ACTS)(all,r,REG)(all,sc,SCEN) po(a,r,sc) # po: unit cost/revenue of activity a in region r #;
+Read 
+ qo          from file SOLFILE header "QO";
+ po          from file SOLFILE header "PO";
+
+!< 
+  D.4A Weighted calculations 
+  --------------------------
+>!
+Coefficient 
+ (all,at,AACT)(all,ar,AREG) VOSAGG(at,ar) # VOS by aggregate commodity and region #;   
+ (all,a,ACTS)(all,r,REG)    VOSSHR(a,r)   # VOS share #;   
+Formula 
+ (all,at,AACT)(all,ar,AREG) VOSAGG(at,ar) = sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar, VOS(a,r)}};   
+ (all,a,ACTS)(all,r,REG)    VOSSHR(a,r)   = VOS(a,r) / VOSAGG(MAPACT(a),MAPREG(r));
+
+!< 
+  D.4A Weighted calculations 
+  --------------------------
+>!
+
+Coefficient (all,a,ACTS)(all,r,REG)(all,v,RACTRES)(all,sc,SCEN) 
+ RACT(a,r,v,sc) # Regional activity results #;
+Formula (all,a,ACTS)(all,r,REG)(all,v,RACTRES)(all,sc,SCEN)
+ RACT(a,r,v,sc) = IF[v="qo", qo(a,r,sc) ]
+                + IF[v="po", po(a,r,sc) ];
+
+Coefficient (all,at,AACT)(all,ar,AREG)(all,v,RACTRES)(all,sc,SCEN) 
+ RACTAGG(at,ar,v,sc) # Regional activity results #;
+Formula (all,at,AACT)(all,ar,AREG)(all,v,RACTRES)(all,sc,SCEN)
+ RACTAGG(at,ar,v,sc) = sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar,
+                            IF[v="qo", qo(a,r,sc) * VOSSHR(a,r) ]
+                          + IF[v="po", po(a,r,sc) * VOSSHR(a,r) ]
+                          }};
+Write 
+ RACT    to file ALLRES header "RACT";
+ RACTAGG to file ALLRES header "RACA";
+
+!< 
+  D.5 Bilateral trade 
+  -------------------
+>!
+Set TRADERES # Regional bilateral trade variables # (qxs, pfob, pcif, pmds);
+
+Coefficient 
+ (all,c,COMM)(all,s,REG)(all,d,REG)(all,sc,SCEN) qxs(c,s,d,sc)  # export sales of commodity c from source s to destination d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)(all,sc,SCEN) pfob(c,s,d,sc) # FOB world price of com. c from source s to destination d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)(all,sc,SCEN) pcif(c,s,d,sc) # CIF world price of imported com. c from source s to dest. d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)(all,sc,SCEN) pmds(c,s,d,sc) # price of imported c supplied by source region s to dest. d #;
+Read
+ pfob        from file SOLFILE header "PFOB";
+ pcif        from file SOLFILE header "PCIF";
+ pmds        from file SOLFILE header "PMDS";
+ qxs         from file SOLFILE header "QXS";
+
+!< 
+  D.5A Weighted calculations 
+  --------------------------
+>!
+Coefficient 
+ (all,ac,ACOM)(all,as,AREG)(all,ad,AREG) VFOBAGG(ac,as,ad) # FOB value of aggregate exports of c from s to d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)      VFOBSHR(c,s,d)    # VFOB share #;
+Formula 
+ (all,ac,ACOM)(all,as,AREG)(all,ad,AREG)  
+    VFOBAGG(ac,as,ad) = sum{c,COMM:MAPCOM(c)=ac, sum{s,REG:MAPREG(s)=as, sum{d,REG:MAPREG(d)=ad, VFOB(c,s,d)}}};
+Formula
+ (all,c,COMM)(all,s,REG)(all,d,REG) 
+    VFOBSHR(c,s,d) = VFOB(c,s,d) / VFOBAGG(MAPCOM(c),MAPREG(s),MAPREG(d));
+
+Coefficient 
+ (all,ac,ACOM)(all,as,AREG)(all,ad,AREG) VCIFAGG(ac,as,ad) # CIF value of aggregate exports of c from s to d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)      VCIFSHR(c,s,d)    # CIF share #;
+Formula 
+ (all,ac,ACOM)(all,as,AREG)(all,ad,AREG)  
+    VCIFAGG(ac,as,ad) = sum{c,COMM:MAPCOM(c)=ac, sum{s,REG:MAPREG(s)=as, sum{d,REG:MAPREG(d)=ad, VCIF(c,s,d)}}};
+Formula
+ (all,c,COMM)(all,s,REG)(all,d,REG) 
+    VCIFSHR(c,s,d) = VCIF(c,s,d) / VCIFAGG(MAPCOM(c),MAPREG(s),MAPREG(d));
+
+Coefficient 
+ (all,ac,ACOM)(all,ar,AREG)(all,ad,AREG) VMSBAGG(ac,ar,ad) # tariff-incl value of aggregate exports of c from s to d #;
+ (all,c,COMM)(all,s,REG)(all,d,REG)      VMSBSHR(c,s,d)    # VMSB share #;
+Formula 
+ (all,ac,ACOM)(all,as,AREG)(all,ad,AREG)  
+    VMSBAGG(ac,as,ad) = sum{c,COMM:MAPCOM(c)=ac, sum{s,REG:MAPREG(s)=as, sum{d,REG:MAPREG(d)=ad, VMSB(c,s,d)}}};
+Formula
+ (all,c,COMM)(all,s,REG)(all,d,REG) 
+    VMSBSHR(c,s,d) = VMSB(c,s,d) / VMSBAGG(MAPCOM(c),MAPREG(s),MAPREG(d));
+
+!< 
+  D.5B Trade results summary  
+  --------------------------
+>!
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)(all,t,TRADERES)(all,sc,SCEN) 
+ TRADE(c,s,d,t,sc) # bilateral trade results #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)(all,t,TRADERES)(all,sc,SCEN) 
+ TRADE(c,s,d,t,sc) = IF[t="qxs" ,  qxs(c,s,d,sc)]
+                   + IF[t="pfob" , pfob(c,s,d,sc)]
+                   + IF[t="pcif" , pcif(c,s,d,sc)]
+                   + IF[t="pmds" , pmds(c,s,d,sc)]
+                   ;
+
+Coefficient (all,ac,ACOM)(all,ar,AREG)(all,ad,AREG)(all,t,TRADERES)(all,sc,SCEN) 
+ TRADEAGG(ac,ar,ad,t,sc) # bilateral trade results #;
+Formula (all,ac,ACOM)(all,as,AREG)(all,ad,AREG)(all,t,TRADERES)(all,sc,SCEN) 
+ TRADEAGG(ac,as,ad,t,sc) 
+        = sum{c,COMM:MAPCOM(c)=ac, sum{s,REG:MAPREG(s)=as, sum{d,REG:MAPREG(d)=ad, 
+                IF[t="qxs" ,  qxs(c,s,d,sc)  * VFOBSHR(c,s,d)]
+              + IF[t="pfob" , pfob(c,s,d,sc) * VFOBSHR(c,s,d)]
+              + IF[t="pcif" , pcif(c,s,d,sc) * VCIFSHR(c,s,d)]
+              + IF[t="pmds" , pmds(c,s,d,sc) * VMSBSHR(c,s,d)]
+              }}};
+
+Write
+ TRADE    to file ALLRES header "TRAD";
+ TRADEAGG to file ALLRES header "TRDA";
+ 
+!< 
+  D.6 Factor supply 
+  -----------------
+>!
+Set ENDWRES # Regional endowment summary # (pe, qe);
+Coefficient
+ (all,e,ENDWMS)(all,r,REG)(all,sc,SCEN) pe(e,r,sc) # price of mobile and sluggish endowment e in region r #;
+ (all,e,ENDWMS)(all,r,REG)(all,sc,SCEN) qe(e,r,sc) # supply of mobile and sluggish endowment e in region r #;
+Read
+ pe from file SOLFILE header "PE";
+ qe from file SOLFILE header "QE";
+
+!< 
+  D.6A Weighted calculations 
+  --------------------------
+>!
+Coefficient 
+ (all,e,ENDWMS)(all,ar,AREG) VESAGG(e,ar) # VES value for aggregate region #;
+ (all,e,ENDWMS)(all,r,REG)   VESSHR(e,r)  # VES share #;
+Formula 
+ (all,e,ENDWMS)(all,ar,AREG) VESAGG(e,ar) = sum{r,REG:MAPREG(r)=ar, VES(e,r)};
+ (all,e,ENDWMS)(all,r,REG)   VESSHR(e,r)  = VES(e,r) / VESAGG(e,MAPREG(r)) ;
+
+
+!< 
+  D.6A Factor supply summary 
+  --------------------------
+>!
+Coefficient (all,e,ENDWMS)(all,r,REG)(all,t,ENDWRES)(all,sc,SCEN) 
+ ENDWSUP(e,r,t,sc) # aggregate factor results #;
+Formula (all,e,ENDWMS)(all,r,REG)(all,t,ENDWRES)(all,sc,SCEN) 
+ ENDWSUP(e,r,t,sc) = IF[t="pe" ,  pe(e,r,sc)]
+                   + IF[t="qe" , qe(e,r,sc)]
+                   ;
+Coefficient (all,e,ENDWMS)(all,ar,AREG)(all,t,ENDWRES)(all,sc,SCEN) 
+ ENDWSUPAGG(e,ar,t,sc) # aggregate factor results #;
+Formula (all,e,ENDWMS)(all,ar,AREG)(all,t,ENDWRES)(all,sc,SCEN) 
+ ENDWSUPAGG(e,ar,t,sc) = sum{r,REG:MAPREG(r)=ar,
+                             IF[t="pe" , pe(e,r,sc) * VESSHR(e,r)]
+                           + IF[t="qe" , qe(e,r,sc) * VESSHR(e,r)]
+                           };
+Write
+ ENDWSUP    to file ALLRES header "ENDS";
+ ENDWSUPAGG to file ALLRES header "ENDA";
+
+
+!< 
+  D.7 Factor demand and supply by sector 
+  --------------------------------------
+>!
+Set FACRES # Regional endowment summary # (pfe, qfe, qes);
+Coefficient
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pfe(e,a,r,sc)  # price of endowment e purchased by activity a region r #;
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qfe(e,a,r,sc)  # endowment demand by activity a region r #;
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qes(e,a,r,sc) # supply of endowment e for use by activity a in region r #;
+Read
+ pfe from file SOLFILE header "PFE";
+ qfe from file SOLFILE header "QFE";
+ qes from file SOLFILE header "QES";
+
+!< 
+  D.7A Weighted calculations 
+  --------------------------
+>!
+Coefficient 
+ (all,e,ENDW)(all,at,AACT)(all,ar,AREG) EVFPAGG(e,at,ar) # endowment by aggregate activity and region, purch price #;   
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG)    EVFPSHR(e,a,r)   # EVFP share #; 
+Formula (all,e,ENDW)(all,at,AACT)(all,ar,AREG) 
+ EVFPAGG(e,at,ar) = sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar, EVFP(e,a,r)}};   
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG) 
+ EVFPSHR(e,a,r) = EVFP(e,a,r) / EVFPAGG(e,MAPACT(a),MAPREG(r));   
+
+Coefficient 
+ (all,e,ENDW)(all,at,AACT)(all,ar,AREG) EVOSAGG(e,at,ar) # endowment by aggregate activity and region, supply price #;   
+ (all,e,ENDW)(all,a,ACTS)(all,r,REG)    EVOSSHR(e,a,r)   # EVOS share #; 
+Formula (all,e,ENDW)(all,at,AACT)(all,ar,AREG) 
+ EVOSAGG(e,at,ar) = sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar, EVOS(e,a,r)}};   
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG) 
+ EVOSSHR(e,a,r) = EVOS(e,a,r) / EVOSAGG(e,MAPACT(a),MAPREG(r));   
+
+!< 
+  D.7B Factor demand and supply by sector summary
+  -----------------------------------------------
+>!
+
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,t,FACRES)(all,sc,SCEN) 
+ FACS(e,a,r,t,sc) # factor results #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,t,FACRES)(all,sc,SCEN) 
+ FACS(e,a,r,t,sc) = IF[t="pfe", pfe(e,a,r,sc)]
+                  + IF[t="qfe", qfe(e,a,r,sc)]
+                  + IF[t="qes", qes(e,a,r,sc)]
+                   ;
+
+Coefficient (all,e,ENDW)(all,at,AACT)(all,ar,AREG)(all,t,FACRES)(all,sc,SCEN) 
+ FACSAGG(e,at,ar,t,sc) # aggregate factor results #;
+Formula (all,e,ENDW)(all,at,AACT)(all,ar,AREG)(all,t,FACRES)(all,sc,SCEN) 
+ FACSAGG(e,at,ar,t,sc) = sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar,
+                              IF[t="pfe", pfe(e,a,r,sc) * EVFPSHR(e,a,r)]
+                            + IF[t="qfe", qfe(e,a,r,sc) * EVFPSHR(e,a,r)]
+                            + IF[t="qes", qes(e,a,r,sc) * EVOSSHR(e,a,r)]
+                            }};
+Write
+ FACS    to file ALLRES header "FACS";
+ FACSAGG to file ALLRES header "FACA";
+
+![[!
+!< 
+  D.5 Multi-production results 
+  ----------------------------
+>!
+Set RCOMSUPRES # Regional multi-production summary # (pca, qca);
+
+Coefficient ! Production and commodity supply !
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pca(c,a,r,sc) # pca: basic price of commodity c produced by activity a in r #;
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qca(c,a,r,sc) # qca: supply of commodity c by activity a in r #;
+Read
+ pca         from file SOLFILE header "PCA";
+ qca         from file SOLFILE header "QCA";
+
+Coefficient (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,s,SCEN)
+ AGG_qca(ac,at,ar,s) # MAKE matrix by aggregate activity and region #;
+Formula (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,s,SCEN)
+ AGG_qca(ac,at,ar,s) = sum{c,COMM:MAPCOM(c)=ac, sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar, qca(c,a,r,s) * 
+                       [MAKES(c,a,r) / sum{cc,COMM:MAPCOM(cc)=ac, sum{aa,ACTS:MAPACT(aa)=at, sum{rr,REG:MAPREG(rr)=ar, MAKES(cc,aa,rr)}}}] 
+                       }}};
+Coefficient (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,s,SCEN)
+ AGG_pca(ac,at,ar,s) # MAKE matrix by aggregate activity and region #;
+Formula (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,s,SCEN)
+ AGG_pca(ac,at,ar,s) = sum{c,COMM:MAPCOM(c)=ac, sum{a,ACTS:MAPACT(a)=at, sum{r,REG:MAPREG(r)=ar, pca(c,a,r,s) * 
+                       [MAKES(c,a,r) / sum{cc,COMM:MAPCOM(cc)=ac, sum{aa,ACTS:MAPACT(aa)=at, sum{rr,REG:MAPREG(rr)=ar, MAKES(cc,aa,rr)}}}] 
+                       }}};
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)(all,v,RCOMSUPRES)(all,sc,SCEN) 
+ RMAKE(c,a,r,v,sc) # regional commodity results #;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)(all,v,RCOMSUPRES)(all,sc,SCEN) 
+ RMAKE(c,a,r,v,sc) = IF[v="pca", pca(c,a,r,sc)]
+                   + IF[v="qca", qca(c,a,r,sc)];
+
+Coefficient (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,v,RCOMSUPRES)(all,sc,SCEN) 
+ RMAKEAGG(ac,at,ar,v,sc) # regional commodity results #;
+Formula (all,ac,ACOM)(all,at,AACT)(all,ar,AREG)(all,v,RCOMSUPRES)(all,sc,SCEN) 
+ RMAKEAGG(ac,at,ar,v,sc) = IF[v="pca", agg_pca(ac,at,ar,sc)]
+                         + IF[v="qca", agg_qca(ac,at,ar,sc)];
+
+Write
+ RMAKE    to file ALLRES header "RMAK"; 
+ RMAKEAGG to file ALLRES header "RMKA"; 
+
+!]]!
+
+![[!
+Set 
+ SCEN # All Scenarios # 
+ (presim2030, US_AllXTire, US_LStdXTire, US_CtxDXTire, US_All, US_LStd, US_CtxD);
+Set 
+ LINLEV # description # (PercentCh, PreLevel, PostLevel, OrdCh);
+
+
+Coefficient ! Regional macro variables!
+(all,r,REG)(all,sc,SCEN) EV_ALT(r,sc) # EV_ALT: regional EV computed in alternative way #;
+(all,r,REG)(all,sc,SCEN) vgdp(r,sc)   # vgdp: change in value of GDP #;
+(all,r,REG)(all,sc,SCEN) qgdp(r,sc)   # vgdp: change in GDP quantity index #;
+(all,r,REG)(all,sc,SCEN) pgdp(r,sc)   # pgdp: change in GDP price index #;
+(all,r,REG)(all,sc,SCEN) qxwreg(r,sc) # qxwreg: volume of merchandise exports, by region #;
+(all,r,REG)(all,sc,SCEN) qmwreg(r,sc) # qmwreg: volume of merchandise imports, by region #;
+(all,r,REG)(all,sc,SCEN) pxwreg(r,sc) # pxwreg: price index of merchandise exports, by region #;
+(all,r,REG)(all,sc,SCEN) pmwreg(r,sc) # pmwreg: price index of merchandise imports, by region #;
+(all,r,REG)(all,sc,SCEN) pmsreg(r,sc) # pmsreg: price index of merchandise imports, by region #;
+(all,r,REG)(all,sc,SCEN) qinv(r,sc)   # qinv: demand for investment/capital goods in region r #;
+(all,r,REG)(all,sc,SCEN) pinv(r,sc)   # pinv: price index of investment goods #;
+(all,r,REG)(all,sc,SCEN) rental(r,sc) # rental: rental rate on capital = ps("capital",r) #;
+(all,r,REG)(all,sc,SCEN) rorc(r,sc)   # rorc: current net rate of return on capital stock in r #;
+(all,r,REG)(all,sc,SCEN) rore(r,sc)   # rore: expected net rate of return on capital stock in r #;
+(all,r,REG)(all,sc,SCEN) gco2q(r,sc)  # gco2q: emissions #;
+(all,r,REG)(all,l,LINLEV)(all,sc,SCEN) CO2TR(r,l,sc) # regional emissions, MTCO2 #;
+
+Coefficient ! CO2 !
+(all,r,REG)(all,c,CTAX)(all,sc,SCEN) gco2(r,c,sc) # gco2: carbon dioxide emissions #;
+
+
+
+
+Coefficient ! Endowments !
+(all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pes(e,a,r,sc) # pes: supply (after income tax) price of e for use by a in r #;
+(all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pfe(e,a,r,sc) # pfe: price of endowment e purchased by activity a region r #;
+(all,e,ENDWMS)(all,r,REG)(all,sc,SCEN) pe(e,r,sc) # pe: price of mobile and sluggish endowment e in region r #;
+(all,e,ENDWMS)(all,r,REG)(all,sc,SCEN) qe(e,r,sc) # qe: supply of mobile and sluggish endowment e in region r #;
+(all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qes(e,a,r,sc) # qes: supply of endowment e for use by activity a in region r #;
+(all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qfe(e,a,r,sc) # qfe: demand for endowment e by act. a in region r #;
+(all,e,ENDWMS)(all,r,REG)(all,sc,SCEN) pefactreal(e,r,sc) # real factor prices #;
+
+
+Coefficient ! Consumption !
+(all,a,ALLP)(all,r,REG)(all,sc,SCEN) qpa(a,r,sc)  # qpa: private hhld demand for commodity c in region r #;
+(all,a,ALLG)(all,r,REG)(all,sc,SCEN) qga(a,r,sc) # qga: government hhld demand for commodity c in region r #;
+
+Coefficient ! Firms' inputs !
+(all,c,ALLF)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pfa(c,a,r,sc) # pfa: Firm's Armington price #;
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pfd(c,a,r,sc) # pfd: Firm's domestic demand #;
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) pfm(c,a,r,sc) # pfm: Firm's imported demand #;
+(all,c,ALLF)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qfa(c,a,r,sc) # qfa: Firm's domestic demand #;
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qfd(c,a,r,sc) # qfd: Firm's domestic demand #;
+(all,c,COMM)(all,a,ACTS)(all,r,REG)(all,sc,SCEN) qfm(c,a,r,sc) # qfm: Firm's imported demand #;
+
+Read
+! Global macro variables!
+ WEV         from file SOLFILE header "WEV";
+ ywld        from file SOLFILE header "YWLD";
+ globalcgds  from file SOLFILE header "QCGW";
+ pcgdswld    from file SOLFILE header "PCGW";
+ qxwwld      from file SOLFILE header "QXWD";
+ pxwwld      from file SOLFILE header "PXWD";
+ gco2tw      from file SOLFILE header "QCOW";
+ CO2TW       from file LEVSOLFILE header "CO2W";
+
+! Regional macro variables!
+ EV_ALT      from file SOLFILE header "EQVR";
+ vgdp        from file SOLFILE header "VGDP";
+ pgdp        from file SOLFILE header "PGDP";
+ qgdp        from file SOLFILE header "QGDP";
+ qmwreg      from file SOLFILE header "QMWR";
+ pxwreg      from file SOLFILE header "PXWR";
+ qxwreg      from file SOLFILE header "QXWR";
+ pmwreg      from file SOLFILE header "PMWR";
+ pmsreg      from file SOLFILE header "PMSR";
+ qinv        from file SOLFILE header "QINV";
+ pinv        from file SOLFILE header "PINV";
+ rental      from file SOLFILE header "RENT";
+ rorc        from file SOLFILE header "RORC";
+ rore        from file SOLFILE header "RORE";
+! CO2 !
+ gco2q       from file SOLFILE header "RCO2";
+ gco2        from file SOLFILE header "GCO2";
+ CO2TR       from file LEVSOLFILE header "CO2R";
+
+! Commodity !    
+ qxw         from file SOLFILE header "QXW";
+ qmw         from file SOLFILE header "QMW";
+ pds         from file SOLFILE header "PDS";
+ pmw         from file SOLFILE header "PMW";
+ pms         from file SOLFILE header "PMS";
+ pxw         from file SOLFILE header "PXW";
+ qc          from file SOLFILE header "QC";
+ qds         from file SOLFILE header "QDS";
+ qcabs       from file SOLFILE header "QCAB";
+ pcabs       from file SOLFILE header "PCAB";
+! Production and commodity supply !
+ pca         from file SOLFILE header "PCA";
+ qca         from file SOLFILE header "QCA";
+! bilateral trade !
+ pfob        from file SOLFILE header "PFOB";
+ pcif        from file SOLFILE header "PCIF";
+ pmds        from file SOLFILE header "PMDS";
+ qxs         from file SOLFILE header "QXS";
+! Endowments !
+ pes         from file SOLFILE header "PES";
+ pfe         from file SOLFILE header "PFE";
+ pe          from file SOLFILE header "PE";
+ qe          from file SOLFILE header "QE";
+ qes         from file SOLFILE header "QES";
+ qfe         from file SOLFILE header "QFE";
+ pefactreal    from file SOLFILE header "RPFC";
+! Production ! 
+ qo          from file SOLFILE header "QO";
+ po          from file SOLFILE header "PO";
+! Production and commodity supply !
+ pca         from file SOLFILE header "PCA";
+ qca         from file SOLFILE header "QCA";
+
+! Consumption ! 
+ qga         from file SOLFILE header "QGA";
+ qpa         from file SOLFILE header "QPA";
+
+! Firms !
+ qfa         from file SOLFILE header "QFA";
+ qfd         from file SOLFILE header "QFD";
+ qfm         from file SOLFILE header "QFM";
+ pfa         from file SOLFILE header "PFA";
+ pfd         from file SOLFILE header "PFD";
+ pfm         from file SOLFILE header "PFM";
+
+![[!                          Read Basedata                                 !]]!
+
+!<
+    The following are new sets for GTAPVIEW
+    Supplementary sets for "toggles" in VIEWHAR
+>!
+
+Set GDPEXPEND(cons,inv,gov,exp,imp);
+Set GDPSOURCE(fact,tax,depr);
+Set CAPACCT(save,inv);
+Set CURACCT(exp,imp);
+Set MKTVALUE(fob,trans);
+Set OUT(dom,trans,export);
+!
+July 2003.Changed "prod" to "prd" to be compatible with Release 8.0 of GEMPACK
+!
+Set SALES(prd,cons,gov);
+Set PURCHVALUE(basexp,tax);
+Set DIR(domestic,imported);
+Set OUTVALUE(prodrev,outtax);
+Set EXPVALUE(exprev,xtax);
+Set IMPVALUE(impcost,mtax);
+
+!<
+    ----------------------------
+    READ statements of Base Data
+    ----------------------------
+>!
+
+!<
+    base revenues at supplier prices
+    --------------------------------
+>!
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    EVOS(e,a,r) # value of endowment supply in region r, net of direct tax #;
+Read
+    EVOS from file GTAPDATA header "EVOS";
+
+!<
+    base expenditures at producer prices
+    ------------------------------------
+>!
+
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    EVFP(e,a,r) # primary factor purchases, at producer prices #;
+Read
+    EVFP from file GTAPDATA header "EVFP";
+
+Coefficient (all,r,REG)
+    save(r) # expenditure on NET saving in region r #;
+Read
+    save from file GTAPDATA header "SAVE";
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    VMFP(c,a,r) # imported purchases, by firms, at producer prices #;
+Read
+    VMFP from file GTAPDATA header "VMFP";
+
+Coefficient(all,c,COMM)(all,a,ACTS)(all,r,REG)
+    VDFP(c,a,r) # domestic purchases, by firms, at producer prices #;
+Read
+    VDFP from file GTAPDATA header "VDFP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMPP(c,r) # import purchases, by households, at producer prices #;
+Read
+    VMPP from file GTAPDATA header "VMPP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDPP(c,r) # domestic purchases, by households, at producer prices #;
+Read
+    VDPP from file GTAPDATA header "VDPP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMGP(c,r) # import purchases, by government, at producer prices #;
+Read
+    VMGP from file GTAPDATA header "VMGP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDGP(c,r) # domestic purchases, by government, at producer prices #;
+Read
+    VDGP from file GTAPDATA header "VDGP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMIP(c,r) # import purchases, by investment agent, at producer prices #;
+Read
+    VMIP from file GTAPDATA header "VMIP";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDIP(c,r) # domestic purchases, by investment agent, at producer prices #;
+Read
+    VDIP from file GTAPDATA header "VDIP";
+
+Coefficient (all, r, REG)
+    VKB(r) # value of beginning-of-period capital stock, in region r #;
+Read
+    VKB from file GTAPDATA header "VKB";
+
+Coefficient (all, r, REG)
+    VDEP(r) # value of capital depreciation in r (exogenous) #;
+Read
+    VDEP from file GTAPDATA header "VDEP";
+
+!<
+    base expenditures at basic prices
+    ---------------------------------
+>!
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    VXSB(c,s,d) 
+    # value of exports of  c from s to d at basic prices (tradeables only) #;
+Read
+    VXSB from file GTAPDATA header "VXSB";
+
+Coefficient (all,m,MARG)(all,r,REG)
+    VST(m,r) 
+    # value of exports of margin m from r for int'l transport at basic prices #;
+Read
+    VST from file GTAPDATA header "VST";
+
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    EVFB(e,a,r) # expenditure on endowment e by act. a in r at basic prices #;
+Read
+    EVFB from file GTAPDATA header "EVFB";
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    VMFB(c,a,r) # expenditure on imported c by act. a in r at basic prices #;
+Read
+    VMFB from file GTAPDATA header "VMFB";
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    VDFB(c,a,r) # expenditure on domestic c by act. a in r at basic prices #;
+Read
+    VDFB from file GTAPDATA header "VDFB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMPB(c,r) # private household expenditure on imp. c in r at basic prices #;
+Read
+    VMPB from file GTAPDATA header "VMPB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDPB(c,r) # private household expenditure on dom. c in r at basic prices #;
+Read
+    VDPB from file GTAPDATA header "VDPB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMGB(c,r) # government expenditure on imported c in r at basic prices #;
+Read
+    VMGB from file GTAPDATA header "VMGB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDGB(c,r) # government expenditure on domestic c in r at basic prices #;
+Read
+    VDGB from file GTAPDATA header "VDGB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDIB(c,r) # government expenditure on domestic c in r at basic prices #;
+Read
+    VDIB from file GTAPDATA header "VDIB";
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VMIB(c,r) # investment expenditure on imported c in r at basic prices #;
+Read
+    VMIB from file GTAPDATA header "VMIB";
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    VMSB(c,s,d) 
+    # value of imports of c from s to d at domestic (basic) prices #;
+Read
+    VMSB from file GTAPDATA header "VMSB";
+
+!<
+    base revenues and expenditures at world prices
+    ----------------------------------------------
+>!
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    VFOB(c,s,d) 
+    # value of exports of c from s to d at FOB prices (tradeables only) #;
+Read
+    VFOB from file GTAPDATA header "VFOB";
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    VCIF(c,s,d) 
+    # value of imports of c from s to d at CIF prices (tradeables only) #;
+Read
+    VCIF from file GTAPDATA header "VCIF";
+
+!<
+    'make' matrix at supplier and basic prices
+    ------------------------------------------
+>!
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)  
+    MAKEB(c,a,r) # 'make' matrix valued at basic prices #;
+Read   
+    MAKEB from file GTAPDATA header "MAKB";
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    MAKES(c,a,r) # 'make' matrix valued at supplier's prices #;
+Read
+    MAKES from file GTAPDATA header "MAKS";
+
+!<
+    ----------------------------
+    DERIVATIVES OF THE BASE DATA
+    ----------------------------
+
+    1. Macro variables ( Reg )
+    --------------------------
+        GDPEXP
+        GDPSRC
+        CAPITALACCT
+        CURRENTACCT
+
+>!
+
+!< Private consumption expenditure, PRIVEXP >!
+Coefficient (all,c,COMM)(all,r,REG)
+    VPP(c,r) # private household expenditure on c in r at producer prices #;
+Formula (all,c,COMM)(all,r,REG)
+    VPP(c,r) = VDPP(c,r) + VMPP(c,r);
+Coefficient (all,r,REG)
+    PRIVEXP(r) # aggregate private consumption expenditure in region r #;
+Formula (all,r,REG)
+    PRIVEXP(r) = sum{c,COMM, VPP(c,r)};
+
+!< Government consumption expenditure, GOVEXP >!
+Coefficient (all,c,COMM)(all,r,REG)
+    VGP(c,r) # government cons. expenditure on c in r at producer prices #;
+Formula (all,c,COMM)(all,r,REG)
+    VGP(c,r) = VDGP(c,r) + VMGP(c,r);
+Coefficient (all,r,REG)
+    GOVEXP(r) # aggregate government expenditure in region r #;
+Formula (all,r,REG)
+    GOVEXP(r) = sum{c,COMM, VGP(c,r)};
+
+!< Investment consumption expenditure >!
+Coefficient (all,c,COMM)(all,r,REG)
+    VIP(c,r) # expenditure on investment c valued at producer prices #;
+Formula (all,c,COMM)(all,r,REG)
+    VIP(c,r) = VDIP(c,r) + VMIP(c,r);
+!< Regional investment expenditure >!
+Coefficient (all,r,REG)
+    REGINV(r) # regional GROSS investment in r #;
+Formula (all,r,REG)
+    REGINV(r) = sum{c,COMM, VIP(c,r)};
+
+!<  Intermediate and endowment expenditure by firms at producer prices >!
+Coefficient (all,d,DEMD)(all,a,ACTS)(all,r,REG)
+    VFP(d,a,r) # expenditure on d by act. a in r valued at producer prices #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    VFP(e,a,r) = EVFP(e,a,r);
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    VFP(c,a,r) = VDFP(c,a,r) + VMFP(c,a,r);
+
+!<  Value of output at supplier's prices >!
+Coefficient (all,a,ACTS)(all,r,REG)
+    VOS(a,r) # output of act. a in r valued at supplier's prices #;
+Formula (all,a,ACTS)(all,r,REG)
+    VOS(a,r) = sum{d,DEMD, VFP(d,a,r)};
+
+!<  Endowments >!
+Coefficient (all,e,ENDW)(all,r,REG)
+    VES(e,r) # endowment supply in region r, at supplier's (after tax) prices #;
+Formula (all,e,ENDW)(all,r,REG)
+    VES(e,r) = sum{a,ACTS, EVOS(e,a,r)};
+
+Coefficient (all,r,REG)
+    VEXPORTS(r)
+    # Value of merchandise and services sales to the world market from r #;
+Formula (all,r,REG)
+    VEXPORTS(r)
+        = sum{n,NMRG, sum{d,REG, VFOB(n,r,d)}}
+        + sum{m,MARG, sum{d,REG, VFOB(m,r,d)} + VST(m,r)};
+
+Coefficient (all,s,REG)
+    VIMPORTS(s)
+    # Value of merchandise and services purchases from world market by s #;
+Formula (all,r,REG)
+    VIMPORTS(r) = sum{c,COMM, sum{s,REG, VCIF(c,s,r)}};
+
+!<
+    Tax revenues
+    ------------
+>!
+
+!< Production tax revenue >!
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    PTAX(c,a,r) # revenue from tax on commodity c produced by activity a in r #;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    PTAX(c,a,r) = MAKEB(c,a,r) - MAKES(c,a,r);
+
+!< Endowment income tax revenue <!
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    INCTAX(e,a,r) # tax revenue from endowment income tax in region r #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    INCTAX(e,a,r) = EVFB(e,a,r) - EVOS(e,a,r);
+
+!< Endowment tax revenue >!
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    ETAX(e,a,r) # tax revenue from use of endowment e by act. a in region r #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    ETAX(e,a,r) = VFP(e,a,r) - EVFB(e,a,r);
+
+!< Intermediate consumption tax revenue >!
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    DFTAX(c,a,r) # tax revenue from use of dom. intermediate c by act. a in r #;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    DFTAX(c,a,r) = VDFP(c,a,r) - VDFB(c,a,r);
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    MFTAX(c,a,r) # tax revenue from use of imp. intermediate c by act. a in r #;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    MFTAX(c,a,r) = VMFP(C,a,r) - VMFB(c,a,r);
+
+!< Government consumption tax revenue >!
+Coefficient (all,c,COMM)(all,r,REG)
+    DGTAX(c,r) # tax revenue from gov't cons. of domestic c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    DGTAX(c,r) = VDGP(c,r) - VDGB(c,r);
+Coefficient (all,c,COMM)(all,r,REG)
+    MGTAX(c,r) # tax revenue from gov't consumption of imported c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    MGTAX(c,r) = VMGP(c,r) - VMGB(c,r);
+
+!< Private household consumption tax revenue >!
+Coefficient (all,c,COMM)(all,r,REG)
+    DPTAX(c,r) # tax revenue from priv. hhld cons. of domestic c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    DPTAX(c,r) = VDPP(c,r) - VDPB(c,r);
+Coefficient (all,c,COMM)(all,r,REG)
+    MPTAX(c,r) # tax revenue from priv. hhld cons. of imported c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    MPTAX(c,r) = VMPP(c,r) - VMPB(c,r);
+
+!< Investment consumption tax revenue >!
+Coefficient (all,c,COMM)(all,r,REG)
+    DITAX(c,r) # tax revenue from investment cons. of domestic c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    DITAX(c,r) = VDIP(c,r) - VDIB(c,r);
+Coefficient (all,c,COMM)(all,r,REG)
+    MITAX(c,r) # tax revenue from investment cons. of imported c in region r #;
+Formula (all,c,COMM)(all,r,REG)
+    MITAX(c,r) = VMIP(c,r) - VMIB(c,r);
+
+!< Exports tax revenue <!
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    XTAXD(c,s,d) # tax rev. from exports of c from source s to destination d #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    XTAXD(c,s,d) = VFOB(c,s,d) - VXSB(c,s,d);
+
+!< Import tariff revenue >!
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)
+    MTAX(c,s,d) # tax rev from imports of c from source s to destination d #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    MTAX(c,s,d) = VMSB(c,s,d) - VCIF(c,s,d);
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VDB(c,r) # domestic sales of c in r at basic prices (tradeables only) #;
+Formula (all,c,COMM)(all,r,REG)
+    VDB(c,r) = VDPB(c,r) + VDGB(c,r) + VDIB(c,r) + sum{a,ACTS, VDFB(c,a,r)};
+
+!<  Commodity supply = Commodity demand >!
+Coefficient (all,c,COMM)(all,r,REG)
+    VCB(c,r) # supply of commodity c in region r valued at basic prices #;
+Formula (all,c,COMM)(all,r,REG)
+    VCB(c,r) = VDB(c,r) + sum{d,REG, VXSB(c,r,d)} + IF[c in MARG, VST(c,r)];
+
+!<  GDP expenditure >!
+Coefficient  (all,r,REG)(all,k,GDPEXPEND)
+    GDPEXP(r,k) # Composition of GDP from the expenditure side #;
+Formula  (all,r,REG)
+    GDPEXP(r,"cons") = PRIVEXP(r);
+Formula  (all,r,REG)
+    GDPEXP(r,"inv") = REGINV(r);
+Formula  (all,r,REG)
+    GDPEXP(r,"gov") = GOVEXP(r);
+Formula  (all,r,REG)
+    GDPEXP(r,"exp") = VEXPORTS(r);
+Formula  (all,r,REG)
+    GDPEXP(r,"imp") = - VIMPORTS(r);
+
+Coefficient (all,r,REG)
+    NETFACTINC(r) # Factor income, net of depreciation #;
+Formula (all,r,REG)
+    NETFACTINC(r) = sum{e,ENDW, VES(e,r)} - VDEP(r);
+
+Coefficient (all,r,REG)
+    NETAXES(r) # Net tax revenues in r #;
+Formula (all,r,REG)
+    NETAXES(r)
+        = sum{c,COMM, sum{a,ACTS, PTAX(c,a,r)}}
+        + sum{e,ENDW, sum{a,ACTS, INCTAX(e,a,r)}} 
+        + sum{e,ENDW, sum{a,ACTS, ETAX(e,a,r)}}
+        + sum{c,COMM, sum{a,ACTS, DFTAX(c,a,r) + MFTAX(c,a,r)}}
+        + sum{c,COMM, DGTAX(c,r) + MGTAX(c,r)}
+        + sum{c,COMM, DPTAX(c,r) + MPTAX(c,r)}
+        + sum{c,COMM, DITAX(c,r) + MITAX(c,r)}
+        + sum{c,COMM, sum{d,REG,  XTAXD(c,r,d)}}
+        + sum{c,COMM, sum{s,REG,  MTAX(c,s,r)}};
+
+Coefficient (all,r,REG)(all,k,GDPSOURCE)
+    GDPSRC(r,k) # Composition of GDP from the sources side #;
+Formula (all,r,REG)
+    GDPSRC(r,"fact") = NETFACTINC(r);
+Formula (all,r,REG)
+    GDPSRC(r,"tax") = NETAXES(r);
+Formula (all,r,REG)
+    GDPSRC(r,"depr") = VDEP(r);
+
+Coefficient (all, r, REG)
+    NETINV(r) # Regional net investment in region r #;
+Formula (all, r, REG)
+    NETINV(r) = REGINV(r) - VDEP(r);
+
+Coefficient (all,r,REG)(all,k,CAPACCT)
+    CAPITALACCT(r,k) # S - I = X - M #;
+Formula (all,r,REG)
+    CAPITALACCT(r,"save") = save(r);
+Formula (all,r,REG)
+    CAPITALACCT(r,"inv") = - NETINV(r);
+
+Coefficient (all,r,REG)(all,k,CURACCT)(all,c,COMM)
+    CURRENTACCT(r,k,c) # X - M = S - I #;
+Formula (all,r,REG)(all,m,MARG)
+    CURRENTACCT(r,"exp",m) = sum{d,REG, VFOB(m,r,d)} + VST(m,r);
+Formula (all,r,REG)(all,c,NMRG)
+    CURRENTACCT(r,"exp",c) = sum{d,REG, VFOB(c,r,d)};
+Formula  (all,r,REG)(all,c,COMM)
+    CURRENTACCT(r,"imp",c) = - sum{s,REG, VCIF(c,s,r)};
+
+!<
+    2.Trade, Transport and Protection ( Reg x Reg )
+    -----------------------------------------------
+        VALEXPORTS
+        VALIMPORTS
+        CIFDECOMP
+
+>!
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)(all,k,EXPVALUE)
+    VALEXPORTS(c,s,d,k) # value of exports at basic prices #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    VALEXPORTS(c,s,d,"exprev") = VXSB(c,s,d);
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    VALEXPORTS(c,s,d,"xtax") = XTAXD(c,s,d);
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)(all,k,IMPVALUE)
+    VALIMPORTS(c,s,d,k) # value of imports at domestic basic prices #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    VALIMPORTS(c,s,d,"impcost") = VCIF(c,s,d);
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    VALIMPORTS(c,s,d,"mtax") = MTAX(c,s,d);
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)(all,j,MKTVALUE)
+    CIFDECOMP(c,s,d,j) # value of tradables from source s to destination d #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    CIFDECOMP(c,s,d,"fob") = VFOB(c,s,d);
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)
+    CIFDECOMP(c,s,d,"trans") = VCIF(c,s,d) - VFOB(c,s,d);
+
+!<
+    3. Commodities ( Comm x Reg )
+    -----------------------------
+        OUTDISP
+        DOMSALESDISP
+        IMPSALESDISP
+        VALOUTPUT
+        SUFFICIENCY
+
+>!
+
+Coefficient (all,c,COMM)(all,o,OUT)(all,r,REG)
+    OUTDISP(c,o,r)
+    # value of sales of comm c to different markets at dom basic market price #;
+Formula (all,c,COMM)(all,o,OUT)(all,r,REG)
+    OUTDISP(c,o,r) = 0.0;
+Formula (all,c,COMM)(all,r,REG)
+    OUTDISP(c,"dom",r) = VDB(c,r);
+Formula (all,m,MARG)(all,r,REG)
+    OUTDISP(m,"trans",r) = VST(m,r);
+Formula (all,c,COMM)(all,r,REG)
+    OUTDISP(c,"export",r) = sum{d, REG, VXSB(c,r,d)};
+
+Coefficient (all,c,COMM)(all,s,SALES)(all,r,REG)
+    DOMSALESDISP(c,s,r)
+    # value of domestic sales of tradables at dom basic price #;
+!
+July 2003.Changed "prod" to "prd" to be compatible with Release 8.0 of GEMPACK
+!
+Formula (all,c,COMM)(all,r,REG)
+    DOMSALESDISP(c,"prd",r) = sum{a,ACTS, VDFB(c,a,r)};
+Formula  (all,c,COMM)(all,r,REG)
+    DOMSALESDISP(c,"cons",r) = VDPB(c,r);
+Formula  (all,c,COMM)(all,r,REG)
+    DOMSALESDISP(c,"gov",r) = VDGB(c,r);
+
+Coefficient (all,c,COMM)(all,s,SALES)(all,r,REG)
+    IMPSALESDISP(c,s,r)
+    # value of sales of tradables to different markets at dom basic price #;
+!
+July 2003.Changed "prod" to "prd" to be compatible with Release 8.0 of GEMPACK
+!
+Formula (all,c,COMM)(all,r,REG)
+    IMPSALESDISP(c,"prd",r) = sum{a,ACTS, VMFB(c,a,r)};
+Formula (all,c,COMM)(all,r,REG)
+    IMPSALESDISP(c,"cons",r) = VMPB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    IMPSALESDISP(c,"gov",r) = VMGB(c,r);
+
+!<
+    Finally, calculate some policy instruments of interest.
+    Note that this approach produces positive taxes,
+    but GROSS tax rates.
+>!
+Coefficient (all,a,ACTS)(all,r,REG)(all,k,OUTVALUE)
+    VALOUTPUT(a,r,k) # value of output at basic prices #;
+Formula (all,a,ACTS)(all,r,REG)
+    VALOUTPUT(a,r,"prodrev") = VOS(a,r);
+Formula (all,a,ACTS)(all,r,REG)
+    VALOUTPUT(a,r,"outtax") = sum{c,COMM, PTAX(c,a,r)};
+
+Zerodivide (zero_by_zero) default 0;
+Zerodivide (NONZERO_BY_ZERO) default 0;
+
+Coefficient (all,c,COMM)(all,r,REG)
+    SUFFICIENCY(c,r) # region r rate of self-sufficiency for commodity c #;
+Formula (all,c,COMM)(all,r,REG)
+    SUFFICIENCY(c,r) = VCB(c,r) / [VDB(c,r) + sum{s,REG, VMSB(c,s,r)}];
+
+Zerodivide (zero_by_zero) off;
+Zerodivide (NONZERO_BY_ZERO) off;
+
+!<
+    4. Sectors ( Comm x Reg )
+    -------------------------
+        NVFP
+        NVPP
+        NVGP
+
+>!
+
+Coefficient (all,de,DEMD)(all,a,ACTS)(all,r,REG)(all,d,DIR)(all,k,PURCHVALUE)
+    NVFP(de,a,r,d,k) # expenditure on d by activity a #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    NVFP(e,a,r,"domestic","basexp") = EVFB(e,a,r);
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    NVFP(e,a,r,"imported","basexp") = 0;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    NVFP(c,a,r,"domestic","basexp") = VDFB(c,a,r);
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    NVFP(c,a,r,"imported","basexp") = VMFB(c,a,r);
+
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    NVFP(e,a,r,"domestic","tax") = ETAX(e,a,r);
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)
+    NVFP(e,a,r,"imported","tax") = 0;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    NVFP(c,a,r,"domestic","tax") = DFTAX(c,a,r);
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)
+    NVFP(c,a,r,"imported","tax") = MFTAX(c,a,r);
+
+Coefficient (all,c,COMM)(all,r,REG)(all,d,DIR)(all,k,PURCHVALUE)
+    NVPP(c,r,d,k) # consumption expenditure on c #;
+Formula (all,c,COMM)(all,r,REG)
+    NVPP(c,r,"domestic","basexp") = VDPB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVPP(c,r,"imported","basexp") = VMPB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVPP(c,r,"domestic","tax") = DPTAX(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVPP(c,r,"imported","tax") = MPTAX(c,r);
+
+
+Coefficient (all,c,COMM)(all,r,REG)(all,d,DIR)(all,k,PURCHVALUE)
+    NVGP(c,r,d,k) # government expenditure on c #;
+Formula (all,c,COMM)(all,r,REG)
+    NVGP(c,r,"domestic","basexp") = VDGB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVGP(c,r,"imported","basexp") = VMGB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVGP(c,r,"domestic","tax") = DGTAX(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVGP(c,r,"imported","tax") = MGTAX(c,r);
+
+Coefficient (all,c,COMM)(all,r,REG)(all,d,DIR)(all,k,PURCHVALUE)
+    NVIP(c,r,d,k) # investment expenditure on c #;
+Formula (all,c,COMM)(all,r,REG)
+    NVIP(c,r,"domestic","basexp") = VDIB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVIP(c,r,"imported","basexp") = VMIB(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVIP(c,r,"domestic","tax") = DITAX(c,r);
+Formula (all,c,COMM)(all,r,REG)
+    NVIP(c,r,"imported","tax") = MITAX(c,r);
+
+!<
+    -----------------------------------
+    Write statements of the Derivatives
+    -----------------------------------
+
+    1. Macro variables ( Reg )
+    --------------------------
+>!
+Write GDPEXP to file GTAPVIEW header "AG01" longname
+    "GDPEXP = C + I + G + X - M, GDP from the expenditure side";
+Write GDPSRC to file GTAPVIEW header "AG02" longname
+    "GDPSRC = NETFACTINC + NETAXES + VDEP, GDP from the sources side";
+Write EVFP to file GTAPVIEW header "AG03" longname
+    "Sources of factor income (NETFACTINC + VDEP) by sector - EVFA(j,r)";
+Write CAPITALACCT to file GTAPVIEW header "AG04" longname
+    "S - I = X - M: CAPITALACCT";
+Write CURRENTACCT to file GTAPVIEW header "AG05" longname
+    "X - M = S - I: CURRENTACCT";
+Write VKB to file GTAPVIEW header "AG06" longname
+    "Capital stock by region - VKB";
+
+!<
+    2.Trade, Transport and Protection ( Reg x Reg )
+    -----------------------------------------------
+>!
+Write VALEXPORTS to file GTAPVIEW header "BI01" longname
+    "Decomposition of exports at world prices: VFOB=VXSB+XTAXD";
+Write VALIMPORTS to file GTAPVIEW header "BI02" longname
+    "Decomposition of imports at market prices: VMSB=VCIF+MTAX";
+Write CIFDECOMP to file GTAPVIEW header "BI03" longname
+    "Decomposition of cif values - CIFDECOMP";
+
+!<
+    3. Commodities ( Comm x Reg )
+    -----------------------------
+>!
+Write OUTDISP to file GTAPVIEW header "CM01" longname
+    "Disposition of output - OUTDISP";
+Write DOMSALESDISP to file GTAPVIEW header "CM02" longname
+    "Disposition of domestic goods - DOMSALESDISP";
+Write IMPSALESDISP to file GTAPVIEW header "CM03" longname
+    "Disposition of imported goods - IMPSALESDISP";
+Write VALOUTPUT to file GTAPVIEW header "CM04" longname
+    "Value of output at basic prices:  VOB = VFP + OUTTAX ";
+Write SUFFICIENCY to file GTAPVIEW header "CM05" longname
+    "Self-sufficiency or domestic share in total use - SUFFICIENCY";
+
+!<
+    4. Sectors ( Comm x Reg )
+    -------------------------
+>!
+Write NVFP to file GTAPVIEW header "SF01" longname
+    "Cost structure of firms - VFP";
+Write NVPP to file GTAPVIEW header "SF02" longname
+    "Cost structure of consumption - VPP";
+Write NVGP to file GTAPVIEW header "SF03" longname
+    "Cost structure of government - VGP";
+Write NVIP to file GTAPVIEW header "SF04" longname
+    "Cost structure of investment - VIP";
+
+Coefficient  (all,r,REG)
+    GDP(r) # GDP from the expenditure side #;
+Formula  (all,r,REG)
+    GDP(r) = sum{g,GDPEXPEND, GDPEXP(r,g)};
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VXDFOB(c,r) # FOB value of com. c exports to all dest. (tradeables only) #;
+Formula (all,c,COMM)(all,r,REG)
+    VXDFOB(c,r) = sum{d,REG, VFOB(c,r,d)};
+
+Coefficient (all,c,COMM)(all,r,REG)
+    VXW(c,r) # value of exports by commodity c and region r at FOB prices #;
+Formula (all,c,COMM)(all,r,REG)
+    VXW(c,r) = VXDFOB(c,r) + IF[c in MARG, VST(c,r)];
+
+Coefficient (all,r,REG)
+    VXWREGION(r) # value of exports by region r at FOB prices #;
+Formula (all,r,REG)
+    VXWREGION(r) = sum{c,COMM, VXW(c,r)};
+
+Coefficient (all,c,COMM)(all,d,REG)
+    VMCIF(c,d) # value of commodity imports c by DEST. d at CIF prices #;
+Formula (all,c,COMM)(all,d,REG)
+    VMCIF(c,d) = sum{s,REG, VCIF(c,s,d)};
+
+Coefficient (all,r,REG)
+    VMWREGION(r) # value of commodity imports by region r at CIF prices #;
+Formula (all,r,REG)
+    VMWREGION(r) = sum{c,COMM, VMCIF(c,r)};
+
+
+! Classify results by dimensions !
+Set 
+ GlOB # Global variables #
+    (wev, ywld, globalcgds, pcgdswld, qxwwld, pxwwld, gco2tw, CO2TW);
+ RMAC # Regional macro variables #
+    (EV_ALT, vgdp, pgdp, qgdp, qmwreg, pxwreg, qxwreg, pmwreg, pmsreg, qinv, pinv, 
+     rental, rorc, rore, gco2q, CO2TR);
+ RCOM # Regional commodity variables #
+    (qxw, qmw, pds, pmw, pms, pxw, qc, qds, qcabs, pcabs);
+ RACT # Regional activity variables #
+    (qo,po);
+ RENDW # Regional endowment variables #
+    (pes, pfe, qes, qfe);
+ RENDWMS # Regional mobile and sluggish endowment variables #
+    (pe, pefactreal, qe);
+ RBILAT # Regional bilateral trade variables #
+    (pfob, pcif, pmds, qxs);
+ RCOMSUP # Regional commodity supply #
+    (pca,qca);
+ REXPEND # agent expenditure #
+    (qga,qpa);
+ FABS # Firms input variables #
+    (qfa, pfa);
+ SRC # Firms input variables #
+    (qfd, qfm, pfd, pfm);
+
+Coefficient (all,v,GLOB)(all,sc,SCEN) 
+    GLOBRES(v,sc) # Global results #;
+Formula (all,v,GLOB)(all,sc,SCEN)
+    GLOBRES(v,sc) = IF[v="WEV",        WEV(sc)       ]                                                             
+                  + IF[v="ywld",       ywld(sc)      ]                                                             
+                  + IF[v="globalcgds", globalcgds(sc)]
+                  + IF[v="pcgdswld",   pcgdswld(sc)  ]
+                  + IF[v="qxwwld",     qxwwld(sc)    ]                                                             
+                  + IF[v="pxwwld",     pxwwld(sc)    ]                                                             
+                  + IF[v="gco2tw",     gco2tw(sc)    ]
+                  + IF[v="CO2TW",      CO2TW("OrdCh",sc)];
+
+Coefficient (all,r,REG)(all,v,RMAC)(all,sc,SCEN) 
+    RMACRES(r,v,sc) # Regional macro results #;
+Formula (all,r,REG)(all,v,RMAC)(all,sc,SCEN) 
+    RMACRES(r,v,sc) = IF[v="EV_ALT", EV_ALT(r,sc) ]
+                    + IF[v="vgdp  ", vgdp(r,sc)   ]
+                    + IF[v="qgdp  ", qgdp(r,sc)   ]
+                    + IF[v="pgdp  ", pgdp(r,sc)   ]
+                    + IF[v="qxwreg", qxwreg(r,sc) ]
+                    + IF[v="qmwreg", qmwreg(r,sc) ]
+                    + IF[v="pxwreg", pxwreg(r,sc) ]
+                    + IF[v="pmwreg", pmwreg(r,sc) ]
+                    + IF[v="pmsreg", pmsreg(r,sc) ]
+                    + IF[v="qinv  ", qinv(r,sc)   ]
+                    + IF[v="pinv  ", pinv(r,sc)   ]
+                    + IF[v="rental", rental(r,sc) ]
+                    + IF[v="rorc  ", rorc(r,sc)   ]
+                    + IF[v="rore  ", rore(r,sc)   ]
+                    + IF[v="gco2q ", gco2q(r,sc)  ]
+                    + IF[v="CO2TR ", CO2TR(r,"OrdCh",sc) ];                                                             
+
+
+Coefficient (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,v,RENDW)(all,sc,SCEN) 
+    RENDWRES(e,a,r,v,sc) # endowment use by activity results #;
+Formula (all,e,ENDW)(all,a,ACTS)(all,r,REG)(all,v,RENDW)(all,sc,SCEN)
+    RENDWRES(e,a,r,v,sc) = IF[v="pes   ", pes(e,a,r,sc) ]
+                         + IF[v="qes   ", qes(e,a,r,sc) ]
+                         + IF[v="pfe   ", pfe(e,a,r,sc) ]
+                         + IF[v="qfe   ", qfe(e,a,r,sc) ];
+
+Coefficient (all,e,ENDWMS)(all,r,REG)(all,v,RENDWMS)(all,sc,SCEN) 
+    RENDWMSRES(e,r,v,sc) # regional endowment supply and price results #;
+Formula (all,e,ENDWMS)(all,r,REG)(all,v,RENDWMS)(all,sc,SCEN) 
+    RENDWMSRES(e,r,v,sc) = IF[v="pe   ", pe(e,r,sc) ]
+                         + IF[v="pefactreal", pefactreal(e,r,sc)]
+                         + IF[v="qe   ", qe(e,r,sc) ];
+
+Coefficient (all,c,COMM)(all,s,REG)(all,d,REG)(all,v,RBILAT)(all,sc,SCEN) 
+    TRADE(c,s,d,v,sc) # bilateral trade results #;
+Formula (all,c,COMM)(all,s,REG)(all,d,REG)(all,v,RBILAT)(all,sc,SCEN) 
+    TRADE(c,s,d,v,sc) = IF[v="pfob", pfob(c,s,d,sc)]
+                      + IF[v="pcif", pcif(c,s,d,sc)]
+                      + IF[v="pmds", pmds(c,s,d,sc)]
+                      + IF[v="qxs ", qxs(c,s,d,sc) ];  
+
+
+Coefficient (all,c,ALLF)(all,a,ACTS)(all,r,REG)(all,v,FABS)(all,sc,SCEN) 
+    FIRMFABS(c,a,r,v,sc) # Firm's input results #;
+Formula (all,c,ALLF)(all,a,ACTS)(all,r,REG)(all,v,FABS)(all,sc,SCEN) 
+    FIRMFABS(c,a,r,v,sc) = IF[v="qfa   ", qfa(c,a,r,sc)]
+                         + IF[v="pfa   ", pfa(c,a,r,sc)];
+
+Coefficient (all,c,COMM)(all,a,ACTS)(all,r,REG)(all,v,SRC)(all,sc,SCEN) 
+    FIRMSRC(c,a,r,v,sc) # Firm's input results #;
+Formula (all,c,COMM)(all,a,ACTS)(all,r,REG)(all,v,SRC)(all,sc,SCEN) 
+    FIRMSRC(c,a,r,v,sc) = IF[v="qfd   ", qfd(c,a,r,sc)]
+                        + IF[v="qfm   ", qfm(c,a,r,sc)]
+                        + IF[v="pfd   ", pfd(c,a,r,sc)]
+                        + IF[v="pfm   ", pfm(c,a,r,sc)];
+
+Write
+ GLOBRES to file OutFile header "GLOB";
+ RMACRES to file OutFile header "RMAC";
+ RCOMRES to file OutFile header "RCOM";
+ RACTRES to file OutFile header "RACT";
+ RENDWRES   to file OutFile header "RFAC";
+ RENDWMSRES to file OutFile header "FACS";
+ TRADE      to file OutFile header "TRAD";
+ RCOMSUPPLY to file OutFile header "CSUP";
+ gco2        to file OutFile header "GCO2";
+ qga         to file OutFile header "QGA";
+ qpa         to file OutFile header "QPA";
+ FIRMFABS    to file OutFile header "FABS";
+ FIRMSRC     to file OutFile header "FSRC";
+
+! Results summary !
+Set AREG # aggregated regions # 
+    read elements from file AGGSETS header "AREG";
+Set AACT # aggregated activities # 
+    read elements from file AGGSETS header "ASEC";
+Set ACOM # aggregated commodities # 
+    read elements from file AGGSETS header "ASEC";
+Mapping MREG from REG to AREG;
+    read (by_elements) MREG from file AGGSETS header "MREG";
+Mapping MACT from ACTS to AACT;
+    read (by_elements) MACT from file AGGSETS header "MSEC";
+Mapping MCOM from COMM to ACOM;
+    read (by_elements) MCOM from file AGGSETS header "MSEC";
+ 
+! Regional !
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_EV_ALT(rr,sc) # EV_ALT: aggregate  regional EV computed in alternative way #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_EV_ALT(rr,sc) = sum{r,REG:MREG(r)=rr, EV_ALT(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,l,LINLEV)(all,sc,SCEN) 
+ AGG_CO2TR(rr,l,sc) # aggregate regional emissions, MTCO2 #;
+Formula (all,rr,AREG)(all,l,LINLEV)(all,sc,SCEN) 
+    AGG_CO2TR(rr,l,sc) = sum{r,REG:MREG(r)=rr, CO2TR(r,l,sc)};
+Formula (all,rr,AREG)(all,sc,SCEN) 
+    AGG_CO2TR(rr,"PercentCh",sc) 
+         = sum{r,REG:MREG(r)=rr, 
+            [CO2TR(r,"PreLevel",sc)/sum{rrr,REG:MREG(rrr)=rr, CO2TR(rrr,"PreLevel",sc)}] 
+            * CO2TR(r,"PercentCh",sc)}; 
+ 
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qgdp(rr,sc) # aggreagte qgdp #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qgdp(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [GDP(r)/sum{rrr,REG:MREG(rrr)=rr, GDP(rrr)}] * qgdp(r,sc)}; 
+ 
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pgdp(rr,sc) # aggreagte pgdp #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pgdp(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [GDP(r)/sum{rrr,REG:MREG(rrr)=rr, GDP(rrr)}] * pgdp(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_vgdp(rr,sc) # aggreagte vgdp #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_vgdp(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [GDP(r)/sum{rrr,REG:MREG(rrr)=rr, GDP(rrr)}] * vgdp(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qxwreg(rr,sc) # aggreagte qxwreg #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qxwreg(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [VXWREGION(r)/sum{rrr,REG:MREG(rrr)=rr, VXWREGION(rrr)}] * qxwreg(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pxwreg(rr,sc) # aggreagte pxwreg #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pxwreg(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [VXWREGION(r)/sum{rrr,REG:MREG(rrr)=rr, VXWREGION(rrr)}] * pxwreg(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qmwreg(rr,sc) # aggreagte qmwreg #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qmwreg(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [VMWREGION(r)/sum{rrr,REG:MREG(rrr)=rr, VMWREGION(rrr)}] * qmwreg(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qinv(rr,sc) # aggreagte qinv #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_qinv(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [GDPEXP(r,"Inv")/sum{rrr,REG:MREG(rrr)=rr, GDPEXP(rrr,"Inv")}] * qinv(r,sc)}; 
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pinv(rr,sc) # aggreagte pinv #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pinv(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [GDPEXP(r,"Inv")/sum{rrr,REG:MREG(rrr)=rr, GDPEXP(rrr,"Inv")}] * pinv(r,sc)}; 
+
+Coefficient (all,aa,AACT)(all,rr,AREG)(all,s,SCEN)
+ AGG_qo(aa,rr,s) # Aggregated output #;
+Formula (all,aa,AACT)(all,rr,AREG)(all,s,SCEN)
+!    aggqo(aa,rr,s) = sum{a,ACTS:MACT(a)=aa, sum{r,REG:MREG(r)=rr, [VOS(a,r)/VOSAR(aa,rr)] * qo(a,r,s)}};!
+    AGG_qo(aa,rr,s) = sum{a,ACTS:MACT(a)=aa, sum{r,REG:MREG(r)=rr, 
+                     [VOS(a,r) / sum{aaa,ACTS:MACT(aaa)=aa, sum{rrr,REG:MREG(rrr)=rr, VOS(aaa,rrr)}}] 
+                     * qo(a,r,s)}};
+
+Coefficient (all,cc,ACOM)(all,rr,AREG)(all,s,SCEN)
+ AGG_qpa(cc,rr,s) # Aggregated output #;
+Formula (all,cc,ACOM)(all,rr,AREG)(all,s,SCEN)
+ AGG_qpa(cc,rr,s) = sum{c,COMM:MCOM(c)=cc, sum{r,REG:MREG(r)=rr, 
+                     [VPP(c,r) / sum{ccc,COMM:MCOM(ccc)=cc, sum{rrr,REG:MREG(rrr)=rr, VPP(ccc,rrr)}}] 
+                     * qpa(c,r,s)}};
+
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pmwreg(rr,sc) # aggreagte pmwreg #;
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pmsreg(rr,sc) # aggreagte pmwreg #;
+Read 
+ AGG_pmwreg from file SOLFILE header "APMW";
+ AGG_pmsreg from file SOLFILE header "APMS";
+
+![[!
+Coefficient (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pmwreg(rr,sc) # aggreagte pmwreg #;
+Formula (all,rr,AREG)(all,sc,SCEN) 
+ AGG_pmwreg(rr,sc) = sum{r,REG:MREG(r)=rr, 
+            [VMWREGION(r)/sum{rrr,REG:MREG(rrr)=rr, VMWREGION(rrr)}] * pmwreg(r,sc)}; 
+!]]!
+
+Coefficient (all,r,AREG)(all,v,RMAC)(all,sc,SCEN) 
+    RMACRESAGG(r,v,sc) # Regional macro results #;
+Formula (all,r,AREG)(all,v,RMAC)(all,sc,SCEN) 
+    RMACRESAGG(r,v,sc) = IF[v="EV_ALT", AGG_EV_ALT(r,sc) ]
+                    + IF[v="vgdp  ", AGG_vgdp(r,sc)   ]
+                    + IF[v="qgdp  ", AGG_qgdp(r,sc)   ]
+                    + IF[v="pgdp  ", AGG_pgdp(r,sc)   ]
+                    + IF[v="qxwreg", AGG_qxwreg(r,sc) ]
+                    + IF[v="qmwreg", AGG_qmwreg(r,sc) ]
+                    + IF[v="pxwreg", AGG_pxwreg(r,sc) ]
+                    + IF[v="pmwreg", AGG_pmwreg(r,sc) ]
+                    + IF[v="pmsreg", AGG_pmsreg(r,sc) ]
+                    + IF[v="qinv  ", AGG_qinv(r,sc)   ]
+                    + IF[v="pinv  ", AGG_pinv(r,sc)   ]
+                    + IF[v="gco2q ", AGG_CO2TR(r,"PercentCh",sc) ]
+                    + IF[v="CO2TR ", AGG_CO2TR(r,"OrdCh",sc) ];                                                             
+
+Write 
+ AGG_qo      to file OUTFILE header "AQO";
+ AGG_qpa     to file OUTFILE header "AQPA";
+ RMACRESAGG  to file OUTFILE header "ARMA";
+
+Coefficient (all,e,ENDW)(all,a,AACT)(all,r,AREG)(all,sc,SCEN) 
+    agg_qfe(e,a,r,sc) #  demand for endowment e by agg. a in agg. region r #;
+Read 
+    agg_qfe from file SOLFILE header "AQFE";
+Write 
+    agg_qfe to file OutFile header "AQFE";
+
+Coefficient (all,a,ACOM)(all,b,AREG)(all,c,AREG)(all,sc,SCEN)
+ agg_qxs(a,b,c,sc) # agg_qxs: aggregate export sales of commodity c from source s to de .. #;
+Read agg_qxs from file SOLFILE header "AQXS";
+Write agg_qxs to file OutFile header "AQXS";
+
+! Contprice !
+Set
+    EGY # energy commodities #
+    read elements from file GTAPSETS header "COME";
+Subset
+    EGY is subset of COMM;
+Subset
+    ENDWMS is subset of ENDW;
+Subset
+    ENDWC is subset of ENDWMS;
+Set
+    ENDWXC # all endowments except capital # = ENDW - ENDWC;
+Set
+    ENDWMSXC # mobile and sluggish endowments except capital # = ENDWMS - ENDWC;
+Set
+    NCOALF # inputs into non-coal energy subproduction # (oil, gas, oil_pcts);
+Set
+    NELYF # inputs into non-electricity energy subproduction # (coal, ncoal);
+Set
+    ENYF # inputs into energy subproduction # (electricity, nely);
+Set
+    KENF # inputs into capital-energy subproduction # (capital, eny);
+Set
+    KEN # capital-energy subproduction # (ken);
+Set
+    VAENF # inputs into value-added-energy subproduction # = ENDWXC + KEN;
+Subset
+    NCOALF is subset of ALLF;
+Subset
+    NELYF  is subset of ALLF;
+Subset
+    ENYF   is subset of ALLF;
+Subset
+    KENF   is subset of ALLF;
+Subset
+    VAENF  is subset of ALLF;
+Set
+    NENYF # inputs into non-energy subproduction # = COMM - EGY;
+Set
+    VAEN # value-added-energy subproduction # (vaen);
+Set
+    TOPF # inputs into top of production structure # = NENYF + VAEN;
+Subset
+    TOPF is subset of ALLF;
+
+Coefficient (all,t,TOPF)(all,a,ACTS)(all,r,REG)(all,sc,SCEN)
+    CONTOUTPRICE(t,a,r,sc) # total cost of inputs into a in r #;
+Read 
+ CONTOUTPRICE from file SUMSOLFILE header "CONP";
+Write 
+ CONTOUTPRICE to file OutFile header "CONP";
+!]]!
+

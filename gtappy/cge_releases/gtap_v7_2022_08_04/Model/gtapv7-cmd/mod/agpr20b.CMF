@@ -1,0 +1,68 @@
+! This CMF file is used for running the GTAP model outside of RunGTAP !
+auxiliary files = gtapv7;           
+check-on-read elements = warn; 
+cpu=yes ; 
+start with MMNZ = 500000000;
+                    
+! Input files: 
+File GTAPSETS = <p1>\SETS.har; 
+File GTAPDATA = <p1>\Basedata.har;
+File GTAPPARM = <p1>\Default.prm;
+
+! Mapping file:
+File GTAPSUPP = <p1>\MapFile.har;
+
+! Updated files:
+Updated File GTAPDATA = <p2>\<CMF>.UPD;
+! Output files:
+File GTAPVOL = <p2>\<CMF>-VOL.har; ! HAR file of volume changes
+File WELVIEW = <p2>\<CMF>-WEL.har; ! HAR file of volume changes
+File GTAPSUM = <p2>\<CMF>-SUM.har; ! Summary/Diagnostics file
+! Solution file:
+Solution File = <p2>\<CMF>.sl4;    ! SL4 file
+log file      = <p2>\<cmf>.log;
+
+Method = Gragg;
+Steps = 2 4 6 ;
+!automatic accuracy = yes;
+!subintervals = 5;
+!accuracy figures = 5;
+!accuracy percent = 95;
+
+Exogenous
+          pop
+          psaveslack pfactwld
+          profitslack incomeslack endwslack
+          cgdslack 
+          tradslack
+          ams atm atf ats atd
+          aosec aoreg avasec avareg
+          aintsec aintreg aintall
+          afcom afsec afreg afecom afesec afereg
+          aoall afall afeall
+          au dppriv dpgov dpsave
+          to tinc 
+          tpreg tm tms tx txs
+          qe
+          qesf
+          ;
+Rest endogenous;
+
+Verbal Description = Agri productivity;
+
+!------------------------
+! (A) Agri productivity
+!------------------------
+xSet AGCOM    # Agri commodities         # (pdr, wht, gro, v_f, osd, c_b, pfb, ocr, ctl, oap, rmk, wol);
+xSet AGCOM_SM # smaller agri commodities # (pdr, wht, gro);
+
+xSubset AGCOM    is subset of COMM;
+xSubset AGCOM    is subset of ACTS;
+xSubset AGCOM_SM is subset of COMM;
+xSubset AGCOM_SM is subset of ACTS;
+
+!------------------------
+! (A) Agri productivity
+!------------------------
+Shock aoall(AGCOM_SM, reg) = uniform 20;
+

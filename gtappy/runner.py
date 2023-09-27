@@ -7,15 +7,17 @@ L = logging.getLogger(__name__)
 
 
 def run_gtap_cmf(run_label, call_list):
-    
-    ### USED BY PNAS CODE
-    # print ('call_list', os.path.abspath(call_list[0]), os.path.abspath(call_list[2]))
-    # print ('call_list nonabs', call_list)
+    """
+    Runs a GEMPACK GTAP model using a specified CMF file.
 
-    # old_cwd = os.getcwd()
-    # os.chdir(os.path.split(call_list[0])[0])
-    # print (os.getcwd())
-    # call_list = [os.path.split(call_list[0])[1], call_list[1], os.path.split(call_list[2])[1]]
+    Parameters:
+    run_label is a string for labeling the run
+    call_list defines what must be given to subprocess, namely
+        cge_executable_path, '-cmf', generated_cmf_path 
+    Returns:
+    None
+    """    
+
 
     proc = subprocess.Popen(call_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
 
@@ -28,13 +30,9 @@ def run_gtap_cmf(run_label, call_list):
             
             # I have no idea why, but triggering the stdout into the logger makes it not show up, but print does work. Thus, I just append it to a list and report later.
             # print (run_label + ': ' + cleaned_line)
-            to_log = cleaned_line
-            # to_log = run_label + ': ' + cleaned_line
-            
-            print (to_log)
-            
+            to_log = cleaned_line            
+            print (to_log)            
             full_log_output.append(to_log)
-            # L.info(run_label + ': ' + cleaned_line) # THIS WONT WORK
 
         poll = proc.poll()
 
@@ -45,7 +43,6 @@ def run_gtap_cmf(run_label, call_list):
             break
 
     proc.stdout.close()
-    # L.info(hb.pp(full_log_output, return_as_string=True))
 
 
     L.info('Finished run_gtap_cmf for ' + run_label)

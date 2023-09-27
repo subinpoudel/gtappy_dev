@@ -1,0 +1,12 @@
+cmf\*.*
+data\65x141
+mod\*.axs
+mod\*.axt
+mod\*.exe
+mod\*.tab
+mod\*.sti
+mod\*.cmf
+out
+rungtapv7.bat
+RunTestSim.bat
+

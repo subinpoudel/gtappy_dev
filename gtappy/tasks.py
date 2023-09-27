@@ -1,9 +1,9 @@
 
 import os
 import hazelbean as hb
-import file_io
-import cmf_generation
-import runner
+from gtappy import file_io
+from gtappy import cmf_generation
+from gtappy import runner
 
 
 import multiprocessing
@@ -443,7 +443,7 @@ def results_as_csv(p):
                     
                     # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
                     har_path = hb.path_replace_extension(indexed_df_path, '.har')
-                    if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4K'  and os.path.splitext(filename)[1] != '.UPKD':
+                    if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
                         file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
     
