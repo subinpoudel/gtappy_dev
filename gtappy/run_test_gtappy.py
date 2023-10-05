@@ -4,7 +4,7 @@ import initialize_project
 import utils
 
 if __name__ == '__main__':
-        
+
     ### ------- ENVIRONMENT SETTINGS -------------------------------
 
     # Users should only need to edit lines in this ENVIRONMENT SETTINGS section
@@ -22,12 +22,12 @@ if __name__ == '__main__':
 
     # Specify which extra dirs define where the project_dir will be
     extra_dirs = ['Files', 'Research', 'cge', 'gtappy', 'projects']
-    
+
     # The project_name is used to name the project directory below. Also note that
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_project'
+    project_name = 'test_gtappy_project_erwin1'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -36,6 +36,8 @@ if __name__ == '__main__':
     project_dir = os.path.join(user_dir, os.sep.join(extra_dirs), project_name)
 
     p = hb.ProjectFlow(project_dir)
+    p.test_mode = 1
+    initialize_project.build_extract_and_run_task_tree(p)
 
     # The ProjectFlow object p will manage all tasks to be run, enables parallelization over spatial tiles or model runs,
     # manages directories, and provies a central place to store project-level variables (as attributes of p) that
@@ -52,26 +54,38 @@ if __name__ == '__main__':
     # NOTE THAT the final directory has to be named base_data to match the naming convention on the google cloud bucket.
     # As with the project dir, this should be a non-cloud-synced directory, and ideally on a fast NVME SSD drive,
     # as this is primarily io-bound.
+    
+    
+    
+    # Set the base data dir.  
     p.base_data_dir = os.path.join('C:/Users/jajohns/Files/Research/base_data')
 
-
+    # Define wihch CGE release to use
+    p.cge_model_release_string = 'gtap_v7_2022_08_04'
+    
+    # Define where the GEMPACK solver/license is installed
+    p.gempack_utils_dir = "C://GP" 
+    
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
     shareable_and_fast_label = '10x10'    
-    p.aggregation_labels = [shareable_and_fast_label]
     
+    
+    
+    p.aggregation_labels = [shareable_and_fast_label]    
     # p.aggregation_labels = [fully_disaggregated_label]
-    # p.aggregation_labels = [shareable_and_fast_label, fully_disaggregated_label] # For use will non-test-set
-    
+    # p.aggregation_labels = [shareable_and_fast_label, fully_disaggregated_label] # For use will non-test-set    
+
     # Define which scenarios (shocks) will be run
     # This example uses 1%, 2% and 3% increases in agricultural productivity.
     p.experiment_labels = ['agpr1', 'agpr2', 'agpr3']
-
+    
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
     utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
 
 
+    
     ###------- Write the unique information that defines how each scenario's CMF is different.
 
     # Define AGGREGATION specific sets
@@ -86,18 +100,6 @@ if __name__ == '__main__':
         'AGCOM_SM is subset of ACTS'
     ]
     
-    # p.xsets['65x141'] = {
-    #     'AGCOM': ['Agri commodities', '(pdr, wht, gro, v_f, osd, c_b, pfb, ocr, ctl, oap, rmk, wol)'],
-    #     'AGCOM_SM' : ['smaller agri commodities', '(pdr, wht, gro)'],       
-    # }
-    # p.xsubsets['65x141'] = [
-    #     'AGCOM is subset of COMM', 
-    #     'AGCOM is subset of ACTS', 
-    #     'AGCOM_SM is subset of COMM',
-    #     'AGCOM_SM is subset of ACTS'
-    # ]
-    
-
     # Define scenario specific shocks   
     p.shocks['10x10']['agpr1'] = {
         'name': 'agri_productivity increases 1p',
@@ -116,6 +118,29 @@ if __name__ == '__main__':
         'shortname': 'agpr3',
         'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 3;'
     }
+    
+    # Define what cross-scenario comparisons to make
+    p.reg_vars_to_plot = ['qgdp', 'pfactor']
+    
+    
+    
+    
+    
+    
+    
+    # p.xsets['65x141'] = {
+    #     'AGCOM': ['Agri commodities', '(pdr, wht, gro, v_f, osd, c_b, pfb, ocr, ctl, oap, rmk, wol)'],
+    #     'AGCOM_SM' : ['smaller agri commodities', '(pdr, wht, gro)'],       
+    # }
+    # p.xsubsets['65x141'] = [
+    #     'AGCOM is subset of COMM', 
+    #     'AGCOM is subset of ACTS', 
+    #     'AGCOM_SM is subset of COMM',
+    #     'AGCOM_SM is subset of ACTS'
+    # ]
+    
+
+
 
     # p.shocks['65x141']['agpr20b']= {
     #     'name': 'agri_productivity increases 20p',
@@ -136,10 +161,7 @@ if __name__ == '__main__':
     # }    
 
 
-
-
-     
-    p.cge_model_release_string = 'gtap_v7_2022_08_04'
+    
     p.custom_gtap_executable_filename = None # TODO
     p.cge_model_dir = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string)
     p.cge_data_dir = os.path.join(p.cge_model_dir, 'Model', 'gtapv7-cmd', 'data')    
@@ -153,14 +175,7 @@ if __name__ == '__main__':
     p.mapping_paths[shareable_and_fast_label] = p.mapping_10_path
     p.mapping_paths[fully_disaggregated_label] = p.mapping_141_path
     
-    p.gempack_utils_dir = "C://GP" # This is where the GEMPACK license is installed too.
 
-
-    p.reg_vars_to_plot = ['qgdp', 'pfactor']
-
-    # Set the run_type, which will determine which task tree to load and execute.
-    p.run_type = 'extract_and_run'
-    # p.run_type = 'process_aez_results'
     
     
     initialize_project.run(p)

@@ -7,7 +7,7 @@ def run(p):
     # Configure the logger that captures all the information generated.
     p.L = hb.get_logger('test_run_gtap_invest')
     
-    build_task_tree_by_name(p, p.run_type)
+    # build_task_tree_by_name(p, p.run_type)
 
     p.L.info('Created ProjectFlow object at ' + p.project_dir + '\n    from script ' + p.calling_script + '\n    with base_data set at ' + p.base_data_dir)
     p.script_dir = os.path.dirname(os.path.realpath(__file__))
