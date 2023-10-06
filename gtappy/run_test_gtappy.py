@@ -21,13 +21,13 @@ if __name__ == '__main__':
     user_dir = os.path.expanduser('~')
 
     # Specify which extra dirs define where the project_dir will be
-    extra_dirs = ['Files', 'Research', 'cge', 'gtappy', 'projects']
+    extra_dirs = ['Files', 'gtappy', 'projects']
 
     # The project_name is used to name the project directory below. Also note that
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_project_erwin1'
+    project_name = 'test_gtappy_project_44'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     
     
     # Set the base data dir.  
-    p.base_data_dir = os.path.join('C:/Users/jajohns/Files/Research/base_data')
+    p.base_data_dir = os.path.join('C:/Users/jajohns/Files/base_data')
 
     # Define wihch CGE release to use
     p.cge_model_release_string = 'gtap_v7_2022_08_04'

@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Additionally, if you're clever, you can move files generated in your tasks to the right base_data_dir
     # directory so that they are available for future projects and avoids redundant processing.
     # NOTE THAT the final directory has to be named base_data to match the naming convention on the google cloud bucket.
-    p.base_data_dir = os.path.join('G:/My Drive/Files/Research/base_data')
+    p.base_data_dir = os.path.join('G:/My Drive/Files/base_data')
 
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
