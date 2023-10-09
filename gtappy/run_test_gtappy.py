@@ -1,7 +1,7 @@
 import os
 import hazelbean as hb
-import initialize_project
-import utils
+import gtappy.gtappy_initialize_project as gtappy_initialize_project
+import gtappy.gtappy_utils as gtappy_utils
 
 if __name__ == '__main__':
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_project_44'
+    project_name = 'test_gtappy_project_45'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     p = hb.ProjectFlow(project_dir)
     p.test_mode = 1
-    initialize_project.build_extract_and_run_task_tree(p)
+    gtappy_initialize_project.build_extract_and_run_task_tree(p)
 
     # The ProjectFlow object p will manage all tasks to be run, enables parallelization over spatial tiles or model runs,
     # manages directories, and provies a central place to store project-level variables (as attributes of p) that
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
-    utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
+    gtappy_utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
 
 
     
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     
     
-    initialize_project.run(p)
+    gtappy_initialize_project.run(p)
     
     
 

@@ -1,7 +1,7 @@
 import os
 import hazelbean as hb
-import initialize_project
-import utils
+import gtappy.gtappy_initialize_project as gtappy_initialize_project
+import gtappy.gtappy_utils as gtappy_utils
 
 if __name__ == '__main__':
         
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
-    utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
+    gtappy_utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
 
 
     ###------- Write the unique information that defines how each scenario's CMF is different.
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     p.run_type = 'process_aez_results'
     
     
-    initialize_project.run(p)
+    gtappy_initialize_project.run(p)
     
     
 

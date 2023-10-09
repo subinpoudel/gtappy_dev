@@ -1,6 +1,6 @@
 import os
 import hazelbean as hb
-import tasks
+import gtappy_tasks
 
 def run(p):
 
@@ -22,11 +22,11 @@ def build_task_tree_by_name(p, task_tree_name):
 
 def build_extract_and_run_task_tree(p):
     
-    p.base_data_as_csv_task = p.add_task(tasks.base_data_as_csv)                
-    p.mapfile_task = p.add_task(tasks.mapfile)                
-    p.gtap_runs_task = p.add_task(tasks.gtap_runs)
-    p.results_as_csv_task = p.add_task(tasks.results_as_csv)
-    p.visualization_task = p.add_task(tasks.vizualization)
+    p.base_data_as_csv_task = p.add_task(gtappy_tasks.base_data_as_csv)                
+    p.mapfile_task = p.add_task(gtappy_tasks.mapfile)                
+    p.gtap_runs_task = p.add_task(gtappy_tasks.gtap_runs)
+    p.results_as_csv_task = p.add_task(gtappy_tasks.results_as_csv)
+    p.visualization_task = p.add_task(gtappy_tasks.vizualization)
 
 def build_process_aez_results_task_tree(p):
-    p.process_aez_results_task = p.add_task(tasks.process_aez_results)
+    p.process_aez_results_task = p.add_task(gtappy_tasks.process_aez_results)

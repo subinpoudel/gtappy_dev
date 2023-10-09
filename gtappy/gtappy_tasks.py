@@ -1,9 +1,9 @@
 
 import os
 import hazelbean as hb
-from gtappy import file_io
-from gtappy import cmf_generation
-from gtappy import runner
+from gtappy import gtappy_file_io
+from gtappy import gtappy_cmf_generation
+from gtappy import gtappy_runner
 
 
 import multiprocessing
@@ -44,11 +44,11 @@ def base_data_as_csv(p):
                     if not hb.path_exists(har_index_path, verbose=True): # Minor note, could add more robust file validation to check for ALL the implied files to exist.
                     
                         # Extract the har to the indexed DF format.
-                        file_io.har_to_indexed_dfs(input_har_path, har_index_path)                    
+                        gtappy_file_io.har_to_indexed_dfs(input_har_path, har_index_path)                    
                         
                         # For validation (and actual use in the model), create a new har from the indexed dir.
                         local_har_path = hb.path_rename_change_dir(input_har_path, output_dir)
-                        file_io.indexed_dfs_to_har(har_index_path, local_har_path)
+                        gtappy_file_io.indexed_dfs_to_har(har_index_path, local_har_path)
 
 
 
@@ -70,7 +70,7 @@ def mapfile(p):
             # In the GEMPACK language, sets are used extensively as arguments to functions or for aggregation
             # We are going to add our new mapfile information to the existing sets list, which we
             # can extract from the indexed CSV.
-            sets_list = file_io.get_set_labels_from_index_path(input_indexed_dfs_path)
+            sets_list = gtappy_file_io.get_set_labels_from_index_path(input_indexed_dfs_path)
 
             # Generatea a "stub" csv which is all the information that should go into the mapping file 
             # that can be inferred from the base data (basically everything besides 
@@ -183,7 +183,7 @@ def mapfile(p):
                     if not hb.path_exists(mapfile_har_path):
 
                         ## START HERE: Almost there. Make it sothat the new Harfiole also has the remappings that Erwin calls in the code, eg.g rin4, rindc, minc, mrin.                
-                        file_io.indexed_dfs_to_har(index_csv_path, mapfile_har_path)
+                        gtappy_file_io.indexed_dfs_to_har(index_csv_path, mapfile_har_path)
                           
  
 def gtap_runs(p):
@@ -203,7 +203,7 @@ def gtap_runs(p):
                 
                 if not hb.path_exists(expected_sl4_path):
                 
-                    inputs_dict = cmf_generation.gtap_v7_cmf_dict.copy()
+                    inputs_dict = gtappy_cmf_generation.gtap_v7_cmf_dict.copy()
                     
                     inputs_dict['xSets'] = p.xsets[aggregation_label]
                     inputs_dict['xSubsets'] = p.xsubsets[aggregation_label]
@@ -220,7 +220,7 @@ def gtap_runs(p):
 
 
 
-                    cmf_generation.generate_cmf_file_for_scenario(inputs_dict, 
+                    gtappy_cmf_generation.generate_cmf_file_for_scenario(inputs_dict, 
                                                                 experiment_label,                                                    
                                                                 data_dir,
                                                                 output_dir,     
@@ -237,7 +237,7 @@ def gtap_runs(p):
 
                     else: # Because not running in parallel, just run it right away.                    
                         call_list = [cge_executable_path, '-cmf', generated_cmf_path]
-                        runner.run_gtap_cmf(generated_cmf_path, call_list)
+                        gtappy_runner.run_gtap_cmf(generated_cmf_path, call_list)
 
             # Now that the iterable is created, run them all in parallel
             num_workers = len(p.experiment_labels)
@@ -248,7 +248,7 @@ def gtap_runs(p):
                     worker_pool = multiprocessing.Pool(num_workers)  # NOTE, worker pool and results are LOCAL variabes so that they aren't pickled when we pass the project object.
 
                     finished_results = []
-                    result = worker_pool.starmap_async(runner.run_gtap_cmf, parallel_iterable)
+                    result = worker_pool.starmap_async(gtappy_runner.run_gtap_cmf, parallel_iterable)
                     for i in result.get():
                         finished_results.append(i)
                     worker_pool.close()
@@ -435,16 +435,16 @@ def results_as_csv(p):
                         
                         # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
                         if os.path.splitext(filename)[1] == '.sl4':
-                            file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
+                            gtappy_file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
                         else:
-                            file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                            gtappy_file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
                         
                         
                     
                     # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
                     har_path = hb.path_replace_extension(indexed_df_path, '.har')
                     if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
-                        file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
+                        gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
     
 
@@ -511,16 +511,16 @@ def vizualization(p):
                         
                     #     # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
                     #     if os.path.splitext(filename)[1] == '.sl4':
-                    #         file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
+                    #         gtappy_file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
                     #     else:
-                    #         file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                    #         gtappy_file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
                         
                         
                     
                     # # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
                     # har_path = hb.path_replace_extension(indexed_df_path, '.har')
                     # if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4K'  and os.path.splitext(filename)[1] != '.UPKD':
-                    #     file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
+                    #     gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
     
 
