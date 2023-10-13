@@ -18,7 +18,6 @@ def run_gtap_cmf(run_label, call_list):
     None
     """    
 
-
     proc = subprocess.Popen(call_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
 
     to_log = ""
