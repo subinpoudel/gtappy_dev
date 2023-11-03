@@ -481,6 +481,7 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
     set_names_dict = {}
     for header in HeadsOnFile:
         
+        # START HERE: consider something like if header in headers_to_skip: Currently it is failing because DREL is a 1C which messes up the RE data type logic.
         # Get a specific header from the InFile
         DataHead = InFile[header]
         
