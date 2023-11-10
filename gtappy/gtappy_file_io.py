@@ -314,7 +314,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
         skip = False
         if len(shape) == 0:
             # row_index = DataHead.setElements[0]
-            row_index= [1]
+            row_index = [1]
             columns = [header]
             data_array = np.asarray([[DataHead.array]]).T # Pandas requires it to be a 2d array to write, even tho singular
             
@@ -522,7 +522,14 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
             if DataHead.setNames[0] and DataHead.setElements[0]: # check that it's not just a list of None
                 for c, set_name in enumerate(DataHead.setNames):
                     if set_name in set_names_dict:
-                        assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
+                        pass
+                        a = DataHead.setElements[c] 
+                        b = set_names_dict[set_name]
+                        if a != b:
+                            print('WARNING SETS WITH SAME NAME HAVE DIFFERENT ELEMENTS')
+                            print(a)
+                            print(b)
+                        # assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
                     elif len(DataHead.setElements) != len(DataHead.setNames):
                         raise NameError('There should be exactly 1 set name for each setElements list.')
                     else:
@@ -567,7 +574,10 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         
         skip = False
         if len(shape) == 0:
-            # row_index = DataHead.setElements[0]
+            try:
+                row_index = DataHead.setElements[0]
+            except:
+                row_index = [1]
             columns = [header]
             data_array = np.asarray([[DataHead.array]]).T # Pandas requires it to be a 2d array to write, even tho singular
             

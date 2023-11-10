@@ -1,6 +1,93 @@
+import os
+import hazelbean as hb
 
 
 
+def generate_cmf_dict_from_cmf_file(template_cmf_path):
+    def process_string(input_string):
+        replace_dict = {
+            '<': '<^',
+            '>': '^>',
+            '<^CMF^>': '<^cmf^>',
+            '<^cmf^>': '<^experiment_name^>',
+            '<^p1^>': '<^data_dir^>',
+            '<^p2^>': '<^output_dir^>',
+        }
+        for k, v in replace_dict.items():
+            input_string = input_string.replace(k, v)
+        
+        output_string = input_string
+        return output_string.lstrip().rstrip()
+    
+    # Open the cmf and iterate through its lines
+    with open(template_cmf_path, 'r') as rf:
+        cmf_lines = rf.readlines()
+        output_dict = {}
+        in_exogenous = False
+        for line in cmf_lines:
+            
+            if 'endogenous' in line.lower():
+                print(line)
+            
+            
+            line = line.replace('\n', '')
+            spaces_removed = line.replace(' ', '')
+            # Check for empty but for strings line
+            if len(spaces_removed) == 0:
+                only_spaces = True
+            else:
+                only_spaces = False
+            
+            if not line.startswith('!') and not only_spaces and not line.lower().lstrip().startswith('shock'):
+                
+                # Strip anything on ta line after a comment starts.
+                line_comment_split = line.split('!')
+                if len(line_comment_split) > 1:
+                    line = line_comment_split[0]
+                if line.lstrip().startswith('Exogenous'):
+                    if ';' in line:
+                        # Then it is a single-line Exogenous statement
+                        if '=' in line:
+                            split_equal_line = line.split('=')
+                            output_dict[process_string(split_equal_line[0])] = process_string(split_equal_line[1]) 
+
+                        else:
+                            # Handle the case where it's a single line but just variable labels
+                            line_space_split = line.split(' ')
+                            output_dict['Exogenous'] = [process_string(i) for i in line_space_split[1:]]        
+                        if in_exogenous:
+                            in_exogenous = False
+       
+                    else:
+                        in_exogenous = True
+                        exogenous_list = []
+                        
+                
+                elif in_exogenous:
+                    split_line = [i for i in line.split(' ') if i != '' and 'Exogenous' not in i]
+
+                    if ';' not in line:
+                        exogenous_list.extend(split_line)
+                    else:
+                        in_exogenous = False
+                        output_dict['Exogenous'] = exogenous_list
+
+
+                elif '=' in line:
+                    split_equal_line = line.split('=')
+                    output_dict[process_string(split_equal_line[0])] = process_string(split_equal_line[1]) 
+                else:
+                    if 'Rest endogenous;' in line:
+                        output_dict['Rest endogenous;'] = ''
+                    else:
+                        raise ValueError('Line does not have an equals sign and is not a Rest endogenous line: ' + str(line))    
+                
+    hb.log('Generated CMF dict from file: ' + str(template_cmf_path))
+    hb.log(hb.print_dict(output_dict))
+    
+    return output_dict
+    
+# START HERE: keep goint on cmf to dict function, then plug it in this.
 
 def generate_cmf_file_for_scenario(inputs_dict, 
                                     experiment_name,                                                    
@@ -14,9 +101,11 @@ def generate_cmf_file_for_scenario(inputs_dict,
                                     # aggregation_name='65x141'
                                     ):
     
-    reserved_keys = ['xSets', 'xSubsets', 'Exogenous', 'Shocks']
+    reserved_keys = ['xSets', 'xSubsets', 'Exogenous', 'Shocks', 'cmf_commands']
     output_list = []
     for k, v in inputs_dict.items():
+        if 'endo' in k.lower():
+            print(k)
         if k not in reserved_keys:
             if '<^experiment_name^>' in v:   
                 v = v.replace('<^experiment_name^>', experiment_name)  
@@ -24,7 +113,10 @@ def generate_cmf_file_for_scenario(inputs_dict,
                 v = v.replace('<^data_dir^>', data_dir)           
             if '<^output_dir^>' in v:
                 v = v.replace('<^output_dir^>', output_dir)         
-            output_list.append(str(k) + '=' + str(v) + ';\n')
+            if len(v) > 0:
+                output_list.append(str(k) + '=' + str(v) + '\n')
+            else:
+                output_list.append(str(k) + '\n')
                 
         elif k == 'xSets':
             for xset_name, xset_values_list in v.items():                    
@@ -38,7 +130,7 @@ def generate_cmf_file_for_scenario(inputs_dict,
                 for i in v:
                     output_list.append('          ' + str(i) + '\n')
                 output_list.append('          ;\n')
-                output_list.append('Rest endogenous;\n')
+                # output_list.append('Rest endogenous;\n')
         elif k == 'Shocks':
             output_list.append(v['shock_string'])
                    

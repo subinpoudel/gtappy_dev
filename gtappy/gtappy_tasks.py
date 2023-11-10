@@ -195,48 +195,56 @@ def gtap_runs(p):
         
         for aggregation_label in p.aggregation_labels:
 
-            run_parallel = 1
+            run_parallel = 0
             parallel_iterable = []
              
             for experiment_label in p.experiment_labels:
                 expected_sl4_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.sl4')
                 
-                if not hb.path_exists(expected_sl4_path):
+                if 1 or not hb.path_exists(expected_sl4_path):
+                    cmf_dict = gtappy_cmf_generation.generate_cmf_dict_from_cmf_file(p.template_cmf_path)
                 
-                    inputs_dict = gtappy_cmf_generation.gtap_v7_cmf_dict.copy()
+                    # inputs_dict = gtappy_cmf_generation.gtap_v7_cmf_dict.copy()
                     
-                    inputs_dict['xSets'] = p.xsets[aggregation_label]
-                    inputs_dict['xSubsets'] = p.xsubsets[aggregation_label]
-                    inputs_dict['Shocks'] = p.shocks[aggregation_label][experiment_label]
+                    cmf_dict['xSets'] = p.xsets[aggregation_label]
+                    cmf_dict['xSubsets'] = p.xsubsets[aggregation_label]
+                    cmf_dict['Shocks'] = p.shocks[aggregation_label][experiment_label]
+                    cmf_dict['cmf_commands'] = p.cmf_commands[aggregation_label][experiment_label]
 
+                    for replace_k, replace_v in cmf_dict['cmf_commands'].items():
+                        cmf_dict[replace_k] = replace_v
+                        # if replace_k in cmf_dict:
+                        #     cmf_dict[replace_k] = replace_v
+                        # else:
+                        #     cmf_dict[replace_k] = replace_v
                     
-                    data_dir = os.path.join(p.cge_model_dir, 'Model', 'gtapv7-cmd', 'data', aggregation_label)
-                    hb.create_directories(data_dir)
+                    # data_dir = os.path.join(p.cge_model_dir, 'Model', 'gtapv7-cmd', 'data', aggregation_label)
+                    # hb.create_directories(data_dir)
 
                     output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label)
                     hb.create_directories(output_dir)
                     
-                    generated_cmf_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '.cmf')
+                    generated_cmf_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '.cmf')
 
+                    current_cge_data_dir = os.path.join(p.cge_data_dir, aggregation_label)
 
-
-                    gtappy_cmf_generation.generate_cmf_file_for_scenario(inputs_dict, 
+                    gtappy_cmf_generation.generate_cmf_file_for_scenario(cmf_dict, 
                                                                 experiment_label,                                                    
-                                                                data_dir,
+                                                                current_cge_data_dir,
                                                                 output_dir,     
                                                                 generated_cmf_path,     )
                     
                     
-                    cge_executable_path = os.path.join(p.cge_model_dir, 'Model\\gtapv7-cmd\\mod\\GTAPV7.exe')
+                    # cge_executable_path = os.path.join(p.cge_model_dir, 'mod\\GTAPV7-AEZ.exe')
                     
                     # Generate the OS call for the CGE model executable and its corresponding cmf file
-                    call_list = [cge_executable_path, '-cmf', generated_cmf_path]                
+                    call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]                
                     
                     if run_parallel: # When running in paralell, add it to a list for later parallel processing.
                         parallel_iterable.append(tuple([experiment_label, call_list]))
 
                     else: # Because not running in parallel, just run it right away.                    
-                        call_list = [cge_executable_path, '-cmf', generated_cmf_path]
+                        call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]
                         gtappy_runner.run_gtap_cmf(generated_cmf_path, call_list)
 
             # Now that the iterable is created, run them all in parallel

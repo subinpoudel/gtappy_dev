@@ -61,7 +61,7 @@ if __name__ == '__main__':
     p.base_data_dir = os.path.join('C:/Users/jajohns/Files/base_data')
 
     # Define wihch CGE release to use
-    p.cge_model_release_string = 'gtapaez11_2023_11_03'
+    p.cge_model_release_string = 'gtapv7-aez_20231103'
     
     # Define where the GEMPACK solver/license is installed
     p.gempack_utils_dir = "C://GP" 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
     shareable_and_fast_label = '10x10'  
-    aez_cwon = 'gtapaez11-50'  
+    aez_cwon = 'v11-s26-r50_20231103'  
     
     
     
@@ -80,54 +80,69 @@ if __name__ == '__main__':
     # Define which scenarios (shocks) will be run
     # This example uses 1%, 2% and 3% increases in agricultural productivity.
     p.experiment_labels = ['TarElim', 'TarElimProd', ]
+    # p.experiment_labels = ['GTAPv7-aez', 'TarElim', 'TarElimProd', ]
+    
+    # NOTGE GTAPv7-aez is provided by default with each new model. It also tests if Hod-1 in prices.
     
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
     gtappy_utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
+    
+    
+    p.custom_gtap_executable_filename = None # TODO
+    p.cge_model_dir = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string)
+    p.cge_executable_path = os.path.join(p.cge_model_dir, 'mod', 'GTAPV7-AEZ.exe')
+    p.cge_data_dir = os.path.join(p.cge_model_dir, 'data') # Note I just changed this to NOT have the aggregation in it. will need to be fixed for regular gtappy    
+
 
 
     
     ###------- Write the unique information that defines how each scenario's CMF is different.
 
     # Define AGGREGATION specific sets
-    p.xsets['gtapaez11-50'] = {
+    p.xsets['v11-s26-r50_20231103'] = {
     }
-    p.xsubsets['gtapaez11-50'] = [
+    p.xsubsets['v11-s26-r50_20231103'] = [
 
     ]
     
     # Define scenario specific shocks   
-    p.shocks['gtapaez11-50']['GTAPv7-aez'] = {
-        'name': 'baseline',
-        'shortname': 'agpr10',
-        'shock_string': 'Shock aoall(AGCOM_SM, reg) = uniform 1;'
-    }
+    # p.shocks['v11-s26-r50_20231103']['GTAPv7-aez'] = {
+    #     'name': 'baseline',
+    #     'shortname': 'agpr10',
+    #     'shock_string': ''
+    # }
  
-    p.shocks['gtapaez11-50']['TarElim'] = {
+    p.shocks['v11-s26-r50_20231103']['TarElim'] = {
         'name': 'Tariff Elimination',
         'shortname': 'TarElim',
-        'shock_string': 'shock tms = file <p2>\shocksv7.har header "tms";'
+        'shock_string': 'shock tms = file ' + p.cge_model_dir + '/mod\shocksv7.har header "tms";'
     }
 
-    p.shocks['gtapaez11-50']['TarElimProd'] = {
+    p.shocks['v11-s26-r50_20231103']['TarElimProd'] = {
         'name': 'Tariff Elimination and Productivity Increase',
         'shortname': 'TarElimProd',
-        'shock_string': 'shock tms = file <p2>\shocksv7.har header \"tms\";\nshock aoall = uniform -3;'
+        'shock_string': 'shock tms = file ' + p.cge_model_dir + '/mod\shocksv7.har header \"tms\";\nshock aoall = uniform -3;'
     }
     
+    # Put any additional CMF commands here. These will overwrite things in the template cmf via a key = value string representation.
+    p.cmf_commands['v11-s26-r50_20231103']['TarElim'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
+    p.cmf_commands['v11-s26-r50_20231103']['TarElimProd'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
+    
+
+
     # Define what cross-scenario comparisons to make
     p.reg_vars_to_plot = ['qgdp', 'pfactor']
     
+    # Point to the numeraire run of the model. In addition to showing that the 
+    # base model works, this also generates files that can be used in subsequent
+    # scenarios, specifically shockv7.har
+    p.template_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'GTAPv7-aez.CMF')
     
     
     
     
     
-    
-    p.custom_gtap_executable_filename = None # TODO
-    p.cge_model_dir = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string)
-    p.cge_data_dir = os.path.join(p.cge_model_dir, 'data') # Note I just changed this to NOT have the aggregation in it. will need to be fixed for regular gtappy    
-
 
     p.mapping_10_path = hb.get_first_extant_path(os.path.join('gtappy', 'aggregation_mappings', 'new_mapfile_data', 'mapping_10_regs_to_4_and_3_inc_categories.csv'), [p.input_dir, p.base_data_dir])
     p.mapping_141_path = None # Not needed, cause no remapping is done here.

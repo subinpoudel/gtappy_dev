@@ -10,14 +10,17 @@ def set_attributes_based_on_aggregation_and_experiments(p, aggregation_labels, e
     p.xsets = {}
     p.xsubsets = {}
     p.shocks = {}
+    p.cmf_commands = {} #['gtapaez11-50']['TarElimProd']
     for aggregation_label in aggregation_labels:
         p.xsets[aggregation_label] = {}
         p.xsubsets[aggregation_label] = {}
         p.shocks[aggregation_label] = {}
+        p.cmf_commands[aggregation_label] = {}
         for experiment_label in experiment_labels:
             p.xsets[aggregation_label][experiment_label] = {}
             p.xsubsets[aggregation_label][experiment_label] = {}
             p.shocks[aggregation_label][experiment_label] = {}
+            p.cmf_commands[aggregation_label][experiment_label] = {}
 
 
 def processed_shockfiles(p):
