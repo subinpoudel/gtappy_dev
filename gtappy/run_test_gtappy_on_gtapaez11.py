@@ -4,6 +4,54 @@ import gtappy.gtappy_initialize_project as gtappy_initialize_project
 import gtappy.gtappy_utils as gtappy_utils
 
 if __name__ == '__main__':
+    
+    ### ----- CHANGE LOG ---------------------------------
+
+    """Questions from EU Commission
+    
+    - Key points are correct: sustainability, externalities, overestimation of productivity gains,
+    - SCC point not fully endogenized but soon
+    - Bring the Uris BAU definition into slides.
+    
+    - Miles: rename baseline (optimistic? fantasy?, myopic?) this is important because it might be a cost relative to an optimistic baseline
+    - Germany: low income countries point: but big polluters are in high-income countries tho?
+    - numbers low, is it really worth all the effort? 
+        - Streetlamp metaphor. We are biased because we can only look where the light shines. We need more light.
+    - Austria: could ghana use the results to say what they could demand for eg their exploitation?
+    
+1. Erwin todo: in the release's Data folder, the aggregation label gtapaez11-50 should be renamed v11-s26-r50
+2. Also note that I have decided to have the most recent release always have NO timestamp whereas dated versions of same-named 
+models/aggregations should add on the timestamp of when they were first released
+3. Propose changing the names of the cmf files from cwon_bau.cmf to gtapv7-aez-rd_bau.cmf and cwon_bau_es.cmf to gtapv7-aez-rd_bau_es 
+(note difference between hyphens (which imply same-variable) and underscores, which are used to split into list.)
+4. Propose not using set PROJ=cwon in the CMF as that is defined by the projectflow object.
+5. propose changing SIMRUN to just 'experiment_name' ie "bau" rather than "projname" + "bau"
+    
+6. Reorganize this so that data is in the base_data_dir and the output is separated from the code release"
+set MODd=..\mod
+set SOLd=..\out
+set CMFd=.\cmf
+set DATd=..\data\%AGG%
+    
+    
+7. This basic idea now is that there is a release that someone downloads, and they could run it 
+either by calling the bat file or by calling the python run script. This means i'm trying to make
+the two different file types as similar as possible. However, note that the bat file is only going 
+to be able to replicate a rd run without ES, so technically the python script can contain a bat
+file but not vice versa.    
+
+8. Renamce command line cmf options as tehy're referenced in the cmf file:
+                    # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
+                    # p1: starting_data_dir # EXCLUDE THIS, because we only use it for p2
+                    # p2: starting_data_file_path # Rename points to the correct starting har
+                    # p3: output_dir # Rename
+                    # p4: starting_year # Rename
+                    # p5: ending_year # Rename
+
+
+
+    """
+
 
     ### ------- ENVIRONMENT SETTINGS -------------------------------
 
@@ -27,7 +75,7 @@ if __name__ == '__main__':
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_aez_project'
+    project_name = 'test_gtappy_aez_project3'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -43,6 +91,7 @@ if __name__ == '__main__':
     # manages directories, and provies a central place to store project-level variables (as attributes of p) that
     # works between tasks and between parallel threads. For instance, here we define the local variables above
     # to ProjectFlow attributes.
+    # TODOO Could put this in the projectflow __init__ function.
     p.user_dir = user_dir
     p.project_name = project_name
     p.project_dir = project_dir
@@ -59,27 +108,45 @@ if __name__ == '__main__':
     
     # Set the base data dir.  
     p.base_data_dir = os.path.join('C:/Users/jajohns/Files/base_data')
-
-    # Define wihch CGE release to use
-    p.cge_model_release_string = 'gtapv7-aez_20231103'
     
-    # Define where the GEMPACK solver/license is installed
+        # Define where the GEMPACK solver/license is installed
     p.gempack_utils_dir = "C://GP" 
+    
+    ### ------------- EVERYTHING BELOW IS DEFINED with RELATIVE PATHS -----------
+    p.years = [2018] # Exclusive of base_year
+    p.base_year = 2017
+    p.key_base_year = 2017 # TODOO In seals we have a key base year and there are multiple p.base_years = []. Generalize this and make it so that base_year is singluar but p.base_years is renamed p.prior_years
+    
+    # Define wihch CGE release to use
+    p.cge_model_release_string = 'gtapv7-aez-rd'
+    
+    # Point to the numeraire run of the model. In addition to showing that the 
+    # base model works, this also generates files that can be used in subsequent
+    # scenarios, specifically shockv7.har
+    p.template_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau.cmf')
+    
+    
+    
+
+
+    
+
     
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
     shareable_and_fast_label = '10x10'  
-    aez_cwon = 'v11-s26-r50_20231103'  
+    old_aez_cwon = 'v11-s26-r50_20231103'  
+    cwon_aggregation_label = 'v11-s26-r50'
     
     
     
-    p.aggregation_labels = [aez_cwon]    
+    p.aggregation_labels = [cwon_aggregation_label]    
     # p.aggregation_labels = [fully_disaggregated_label]
     # p.aggregation_labels = [shareable_and_fast_label, fully_disaggregated_label] # For use will non-test-set    
 
     # Define which scenarios (shocks) will be run
     # This example uses 1%, 2% and 3% increases in agricultural productivity.
-    p.experiment_labels = ['TarElim', 'TarElimProd', ]
+    p.experiment_labels = ['bau', 'bau_es', ]
     # p.experiment_labels = ['GTAPv7-aez', 'TarElim', 'TarElimProd', ]
     
     # NOTGE GTAPv7-aez is provided by default with each new model. It also tests if Hod-1 in prices.
@@ -91,7 +158,7 @@ if __name__ == '__main__':
     
     p.custom_gtap_executable_filename = None # TODO
     p.cge_model_dir = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string)
-    p.cge_executable_path = os.path.join(p.cge_model_dir, 'mod', 'GTAPV7-AEZ.exe')
+    p.cge_executable_path = os.path.join(p.cge_model_dir, 'mod', p.cge_model_release_string + '.exe')
     p.cge_data_dir = os.path.join(p.cge_model_dir, 'data') # Note I just changed this to NOT have the aggregation in it. will need to be fixed for regular gtappy    
 
 
@@ -100,47 +167,59 @@ if __name__ == '__main__':
     ###------- Write the unique information that defines how each scenario's CMF is different.
 
     # Define AGGREGATION specific sets
-    p.xsets['v11-s26-r50_20231103'] = {
+    p.xsets['v11-s26-r50'] = {
     }
-    p.xsubsets['v11-s26-r50_20231103'] = [
+    p.xsubsets['v11-s26-r50'] = [
 
     ]
     
-    # Define scenario specific shocks   
-    # p.shocks['v11-s26-r50_20231103']['GTAPv7-aez'] = {
-    #     'name': 'baseline',
-    #     'shortname': 'agpr10',
-    #     'shock_string': ''
-    # }
  
-    p.shocks['v11-s26-r50_20231103']['TarElim'] = {
-        'name': 'Tariff Elimination',
-        'shortname': 'TarElim',
-        'shock_string': 'shock tms = file ' + p.cge_model_dir + '/mod\shocksv7.har header "tms";'
-    }
+    # Define SCENARIO specific information
+    p.shocks['v11-s26-r50']['bau'] = [
+        'swap qe(\"capital\",REG) = capadd(REG);'
+        'swap afelabreg = qgdppcfisher;'
+        'swap qesf = qesfsupply;'
+        'shock del_unity = 1;',
+        'shock qgdppcfisher = file <p1>\BaseScen.har header \"OGP2\" slice "<p5>";'
+        'shock pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";',
+        'shock qe(ENDWL,REG) = file <p1>\BaseScen.har header \"LAB2\" slice \"<p5>\";'
+    ]
 
-    p.shocks['v11-s26-r50_20231103']['TarElimProd'] = {
-        'name': 'Tariff Elimination and Productivity Increase',
-        'shortname': 'TarElimProd',
-        'shock_string': 'shock tms = file ' + p.cge_model_dir + '/mod\shocksv7.har header \"tms\";\nshock aoall = uniform -3;'
-    }
+
+#     ! (A1) Activate year-on-year capital accumulation equation
+# swap qe("capital",REG) = capadd(REG);
+
+# ! (A2) Endogenize labor productivity and exogenize GDP per capita
+# swap afelabreg = qgdppcfisher;
+
+# ! (A3) Upward sloping supply curve for sector-specific factor
+# swap qesf = qesfsupply;
+
+# !-----------------------------------
+# ! (B) Impose baseline shocks
+# !-----------------------------------
+# ! (B1) Activate year-on-year capital accumulation mechanism  
+# shock del_unity = 1;
+
+# ! (B2) Real GDP per capita projections
+# shock qgdppcfisher = file <p1>\BaseScen.har header "OGP2" slice "<p5>";
+
+# ! (B3) Population growth projections 
+# shock  pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";   
+
+# ! (B4) Labor force growth projections
+# shock  qe(ENDWL,REG) = file <p1>\BaseScen.har header "LAB2" slice "<p5>";
     
     # Put any additional CMF commands here. These will overwrite things in the template cmf via a key = value string representation.
-    p.cmf_commands['v11-s26-r50_20231103']['TarElim'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
-    p.cmf_commands['v11-s26-r50_20231103']['TarElimProd'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
+    # p.cmf_commands['v11-s26-r50']['bau'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
+    # p.cmf_commands['v11-s26-r50']['bau_es'] = {'Steps': '6 12 18;', 'Method': 'euler;'}
     
 
 
     # Define what cross-scenario comparisons to make
     p.reg_vars_to_plot = ['qgdp', 'pfactor']
     
-    # Point to the numeraire run of the model. In addition to showing that the 
-    # base model works, this also generates files that can be used in subsequent
-    # scenarios, specifically shockv7.har
-    p.template_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'GTAPv7-aez.CMF')
-    
-    
-    
+
     
     
 

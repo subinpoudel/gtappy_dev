@@ -37,7 +37,7 @@ def base_data_as_csv(p):
                 input_har_path = har_filename    
                 har_index_path = os.path.join(p.cur_dir, aggregation_label, hb.file_root(input_har_path) + '.csv')              
                 if hb.path_exists(input_har_path):
-                    p.L.info('Found input_har_path: ' + input_har_path)
+                    hb.log('Found input_har_path: ' + input_har_path)
                     output_dir = os.path.join(p.cur_dir, aggregation_label)
                     hb.create_directories(output_dir)
                     
@@ -188,6 +188,11 @@ def mapfile(p):
  
 def gtap_runs(p):
     """Run a precompiled gtap exe file by creating a cmf file and calling it.
+    
+    The current general approach to ingesting a new gtap-aez release from Purdue is:
+    
+    1. Extract it into the cge_releases dir and update the release name in the run file.
+    2. Generate a cmf_dict with a scenario-derived bat_to_catear_vars_replace_dict that converts p1, p2, p3, p4, p5 to the appropriate paths.
     """
 
 
@@ -199,225 +204,123 @@ def gtap_runs(p):
             parallel_iterable = []
              
             for experiment_label in p.experiment_labels:
-                expected_sl4_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.sl4')
                 
-                if 1 or not hb.path_exists(expected_sl4_path):
-                    cmf_dict = gtappy_cmf_generation.generate_cmf_dict_from_cmf_file(p.template_cmf_path)
-                
-                    # inputs_dict = gtappy_cmf_generation.gtap_v7_cmf_dict.copy()
+                for n_years_counter, ending_year in enumerate(p.years):
                     
-                    cmf_dict['xSets'] = p.xsets[aggregation_label]
-                    cmf_dict['xSubsets'] = p.xsubsets[aggregation_label]
-                    cmf_dict['Shocks'] = p.shocks[aggregation_label][experiment_label]
-                    cmf_dict['cmf_commands'] = p.cmf_commands[aggregation_label][experiment_label]
-
-                    for replace_k, replace_v in cmf_dict['cmf_commands'].items():
-                        cmf_dict[replace_k] = replace_v
-                        # if replace_k in cmf_dict:
-                        #     cmf_dict[replace_k] = replace_v
-                        # else:
-                        #     cmf_dict[replace_k] = replace_v
+                    if n_years_counter == 0:
+                        starting_year = p.base_year
+                    else:
+                        starting_year = p.years[n_years_counter - 1]
+                        
+                    output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(ending_year))
+                    expected_sl4_path = os.path.join(output_dir, experiment_label + '_' + str(ending_year) + '.sl4')
                     
-                    # data_dir = os.path.join(p.cge_model_dir, 'Model', 'gtapv7-cmd', 'data', aggregation_label)
-                    # hb.create_directories(data_dir)
+                    if not hb.path_exists(expected_sl4_path):
+                        
+                        hb.create_directories(output_dir)
+                        
+                        generated_cmf_path = os.path.join(output_dir, aggregation_label + '_' + experiment_label + '.cmf')
 
-                    output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label)
-                    hb.create_directories(output_dir)
+                        if n_years_counter == 0:
+                            current_cge_data_dir = os.path.join(p.cge_data_dir, aggregation_label)
+                        else:
+                            current_cge_data_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(starting_year))
+                        
+                        # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
+                        # p1: starting_data_dir # EXCLUDE THIS, because we only use it for p2
+                        # p2: starting_data_file_path # Rename points to the correct starting har
+                        # p3: output_dir # Rename
+                        # p4: starting_year # Rename
+                        # p5: ending_year # Rename
+                        # TODOO Once i get erwin's renamed bat file this step can go away
+                        bat_to_catear_vars_replace_dict = {}
+                        bat_to_catear_vars_replace_dict['<'] = '<^'
+                        bat_to_catear_vars_replace_dict['>'] = '^>' 
+                        bat_to_catear_vars_replace_dict['<^CMF^>'] = '<^cmf^>' 
+                        bat_to_catear_vars_replace_dict['<^cmf^>'] = '<^experiment_label^>'                    
+                        bat_to_catear_vars_replace_dict['<^p1^>'] = '<^starting_data_dir^>' 
+                        bat_to_catear_vars_replace_dict['<^p2^>'] = '<^starting_data_file_path^>' 
+                        bat_to_catear_vars_replace_dict['<^p3^>'] = '<^output_dir^>' 
+                        bat_to_catear_vars_replace_dict['<^p4^>'] = '<^starting_year^>' 
+                        bat_to_catear_vars_replace_dict['<^p5^>'] = '<^ending_year^>' 
+                        
+                        labeled_cmf_template_path = os.path.join(output_dir, 'labeled_cmf_template.cmf')
+                        hb.replace_in_file_via_dict(p.template_cmf_path, labeled_cmf_template_path, bat_to_catear_vars_replace_dict)
+                        
+                        
+                        initial_year = 1 # TODOO reference run file
+                        if initial_year:
+                            bat_to_catear_vars_replace_dict['<^p1^>'] = os.path.join(p.cge_data_dir, aggregation_label)
+                            bat_to_catear_vars_replace_dict['<^p2^>'] = os.path.join(bat_to_catear_vars_replace_dict['<^p1^>'], 'basedata.har') 
+                        else:
+                            bat_to_catear_vars_replace_dict['<^p1^>'] = os.path.join(p.cur_dir, aggregation_label, experiment_label)
+                            bat_to_catear_vars_replace_dict['<^p2^>'] = os.path.join(bat_to_catear_vars_replace_dict['<^p1^>'], experiment_label + '_' + starting_year + '.upd') 
+                        bat_to_catear_vars_replace_dict['<^p3^>'] = bat_to_catear_vars_replace_dict['<^p1^>']
+                        bat_to_catear_vars_replace_dict['<^p4^>'] = starting_year
+                        bat_to_catear_vars_replace_dict['<^p5^>'] = ending_year
+
+                        # bat_to_catear_vars_replace_dict['<^CMF^>'] = '<^cmf^>' # MOVE THIS TO AUTO
+
+                        
+                        
+                        
+                        
+
+                        cmf_dict = gtappy_cmf_generation.generate_cmf_dict_from_cmf_file(p.template_cmf_path, replace_dict=bat_to_catear_vars_replace_dict)
                     
-                    generated_cmf_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '.cmf')
+                        hb.log('Generating cmf for ', aggregation_label, experiment_label, ' with bat_to_catear_vars_replace_dict: ', bat_to_catear_vars_replace_dict, '\n', hb.print_iterable(cmf_dict))
+                        
+                        cmf_dict['xSets'] = p.xsets[aggregation_label]
+                        cmf_dict['xSubsets'] = p.xsubsets[aggregation_label]
+                        cmf_dict['Shocks'] = p.shocks[aggregation_label][experiment_label]
+                        cmf_dict['cmf_commands'] = p.cmf_commands[aggregation_label][experiment_label]
 
-                    current_cge_data_dir = os.path.join(p.cge_data_dir, aggregation_label)
+                        
+                        for replace_k, replace_v in cmf_dict['cmf_commands'].items():
+                            cmf_dict[replace_k] = replace_v
 
-                    gtappy_cmf_generation.generate_cmf_file_for_scenario(cmf_dict, 
-                                                                experiment_label,                                                    
-                                                                current_cge_data_dir,
-                                                                output_dir,     
-                                                                generated_cmf_path,     )
-                    
-                    
-                    # cge_executable_path = os.path.join(p.cge_model_dir, 'mod\\GTAPV7-AEZ.exe')
-                    
-                    # Generate the OS call for the CGE model executable and its corresponding cmf file
-                    call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]                
-                    
-                    if run_parallel: # When running in paralell, add it to a list for later parallel processing.
-                        parallel_iterable.append(tuple([experiment_label, call_list]))
+                        hb.log('ADDED to the cmf for ', aggregation_label, experiment_label, ' to get',  hb.print_iterable(cmf_dict))
 
-                    else: # Because not running in parallel, just run it right away.                    
-                        call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]
-                        gtappy_runner.run_gtap_cmf(generated_cmf_path, call_list)
+                        
+                        
 
-            # Now that the iterable is created, run them all in parallel
-            num_workers = len(p.experiment_labels)
-            if run_parallel:
-                # Performance note: it takes about 3 seconds to run this block even with nothing in the iterable, I guess just from launching the worker pool
-                if len(parallel_iterable) > 0:
+                        gtappy_cmf_generation.generate_cmf_file_for_scenario(cmf_dict, 
+                                                                    experiment_label,                                                    
+                                                                    current_cge_data_dir,
+                                                                    output_dir,     
+                                                                    generated_cmf_path,     )
+                        
+                        
+                        # cge_executable_path = os.path.join(p.cge_model_dir, 'mod\\GTAPV7-AEZ.exe')
+                        
+                        # Generate the OS call for the CGE model executable and its corresponding cmf file
+                        call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]                
+                        
+                        if run_parallel: # When running in paralell, add it to a list for later parallel processing.
+                            parallel_iterable.append(tuple([experiment_label, call_list]))
 
-                    worker_pool = multiprocessing.Pool(num_workers)  # NOTE, worker pool and results are LOCAL variabes so that they aren't pickled when we pass the project object.
+                        else: # Because not running in parallel, just run it right away.                    
+                            call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]
+                            gtappy_runner.run_gtap_cmf(generated_cmf_path, call_list)
 
-                    finished_results = []
-                    result = worker_pool.starmap_async(gtappy_runner.run_gtap_cmf, parallel_iterable)
-                    for i in result.get():
-                        finished_results.append(i)
-                    worker_pool.close()
-                    worker_pool.join()
+                # Now that the iterable is created, run them all in parallel
+                num_workers = len(p.experiment_labels)
+                if run_parallel:
+                    # Performance note: it takes about 3 seconds to run this block even with nothing in the iterable, I guess just from launching the worker pool
+                    if len(parallel_iterable) > 0:
+
+                        worker_pool = multiprocessing.Pool(num_workers)  # NOTE, worker pool and results are LOCAL variabes so that they aren't pickled when we pass the project object.
+
+                        finished_results = []
+                        result = worker_pool.starmap_async(gtappy_runner.run_gtap_cmf, parallel_iterable)
+                        for i in result.get():
+                            finished_results.append(i)
+                        worker_pool.close()
+                        worker_pool.join()
 
 
                 
         # Note bug. Currently even when done in parallel, only 1 run can be run per python run. Says it runs out of space to allocate results, which isn't true. I'm assuming is an unreleased shared asset, maybe gtap.exe
-                    
-                    
-                    
-                    
-                    
-                    
-        # os.chdir(old_cwd)
-        
-        # scenario_labels = ['agpr20b']
-        
-        # for scenario_label in scenario_labels:
-        #     cmf_path = os.path.join(p.cge_model_dir, 'Model\\gtapv7-cmd\\cmf\\' + scenario_label + '.CMF')
-        #     sl4_path = os.path.join(p.cge_model_dir, 'Model\\gtapv7-cmd\\out\\' + scenario_label + '.sl4')
-            
-        #     if not hb.path_exists(sl4_path, verbose=True):
-        #         call_list = [cge_executable_path, '-cmf', cmf_path]
-        #         gtap_invest_integration_functions.run_gtap_cmf(cmf_path, call_list)
-                
-        # r"C:\Users\jajohns\Files\Research\cge\food_systems\projects\manuscript_v1\input\food_systems_2022_08_04\Model\gtapv7-cmd\mod\GTAPV7.exe"
-        # r"C:\Users\jajohns\Files\Research\cge\food_systems\projects\manuscript_v1\input\food_systems_2022_08_04\Model\gtapv7-cmd\cmf\agpr20.CMF"
-        # # r"C:\Users\jajohns\Files\Research\cge\food_systems\projects\manuscript_v1\input\food_systems_2022_08_04\Model\gtapv7-cmd\out\agpr20.sl4"
-        
-        # gtap_policy_baseline_solution_file_path = os.path.join(p.cur_dir, p.cge_model_dir, 'work', gtap_policy_baseline_scenario_label + '.sl4')
-        # if not hb.path_exists(gtap_policy_baseline_solution_file_path, verbose=True):
-        #     # Generate a new cmf file with updated paths.
-        #     gtap_invest_integration_functions.generate_policy_baseline_cmf_file(gtap_policy_baseline_scenario_source_cmf_path, gtap_policy_baseline_scenario_cmf_path)
-
-        #     # Run the gtap executable pointing to the new cmf file
-        #     call_list = [gtapaez_executable_abs_path, '-cmf', gtap_policy_baseline_scenario_cmf_path]
-        #     gtap_invest_integration_functions.run_gtap_cmf(gtap_policy_baseline_scenario_label, call_list)
-
-
-        # # Define paths for the source cmf file (extracted from GTAP-AEZ integration zipfile) and the modified one that will be run
-        # gtap_policy_baseline_scenario_label = str(p.base_year) + '_' + str(p.policy_base_year)[2:] + '_BAU'
-        # gtap_policy_baseline_scenario_source_cmf_path = os.path.join(p.gtap1_aez_invest_local_model_dir, 'cmfs', gtap_policy_baseline_scenario_label + '.cmf')
-        # gtap_policy_baseline_scenario_cmf_path = os.path.join(p.gtap1_aez_invest_local_model_dir, gtap_policy_baseline_scenario_label + '_local.cmf')
-        # gtap_policy_baseline_solution_file_path = os.path.join(p.cur_dir, p.gtap_aez_invest_release_string, 'work', gtap_policy_baseline_scenario_label + '.sl4')
-
-        # L.info('gtap_policy_baseline_scenario_cmf_path', gtap_policy_baseline_scenario_cmf_path)
-        # L.info('gtap_policy_baseline_solution_file_path', gtap_policy_baseline_solution_file_path)
-
-        # if not hb.path_exists(gtap_policy_baseline_solution_file_path, verbose=True):
-        #     # Generate a new cmf file with updated paths.
-        #     gtap_invest_integration_functions.generate_policy_baseline_cmf_file(gtap_policy_baseline_scenario_source_cmf_path, gtap_policy_baseline_scenario_cmf_path)
-
-        #     # Run the gtap executable pointing to the new cmf file
-        #     call_list = [gtapaez_executable_abs_path, '-cmf', gtap_policy_baseline_scenario_cmf_path]
-        #     gtap_invest_integration_functions.run_gtap_cmf(gtap_policy_baseline_scenario_label, call_list)
-
-        # run_parallel = 1
-        # parallel_iterable = []
-        # for gtap_scenario_label in p.gtap1_scenario_labels:
-
-        #     current_scenario_source_cmf_path = os.path.join(p.gtap1_aez_invest_local_model_dir, 'cmfs', gtap_scenario_label + '.cmf')
-        #     current_scenario_cmf_path = os.path.join(p.gtap1_aez_invest_local_model_dir, gtap_scenario_label + '_local.cmf')
-
-        #     current_solution_file_path = os.path.join(p.cur_dir, p.gtap_aez_invest_release_string, 'work', gtap_scenario_label + '.sl4')
-
-        #     # Hack to fix uris scenario typo
-        #     src = os.path.join(p.gtap1_aez_invest_local_model_dir, 'cmfs', '2021_30_SR_RnD_20p_PESGB_30_allES.cmf')
-        #     dst = os.path.join(p.gtap1_aez_invest_local_model_dir, 'cmfs', '2021_30_SR_RnD_20p_PESGC_30_allES.cmf')
-        #     hb.copy_shutil_flex(src, dst)
-
-        #     possible_file_names = [current_solution_file_path]
-        #     if 'PESGC' in current_solution_file_path:
-        #         possible_file_names.append(current_solution_file_path.replace('PESGC', 'PESGB'))
-
-
-        #     if not any([hb.path_exists(i, verbose=True) for i in possible_file_names]):
-        #         # Generate a new cmf file with updated paths.
-        #         # Currently this just uses the policy_baseline version.
-        #         gtap_invest_integration_functions.generate_policy_baseline_cmf_file(current_scenario_source_cmf_path, current_scenario_cmf_path)
-
-        #         # Run the gtap executable pointing to the new cmf file
-        #         call_list = [gtapaez_executable_abs_path, '-cmf', current_scenario_cmf_path]
-        #         parallel_iterable.append(tuple([gtap_scenario_label, call_list]))
-
-        #         # If the model is run sequentially, just call it here.
-        #         if not run_parallel:
-        #             gtap_invest_integration_functions.run_gtap_cmf(gtap_scenario_label, call_list)
-
-
-        # if run_parallel:
-        #     # Performance note: it takes about 3 seconds to run this block even with nothing in the iterable, I guess just from launching the worker pool
-        #     if len(parallel_iterable) > 0:
-
-        #         worker_pool = multiprocessing.Pool(p.num_workers)  # NOTE, worker pool and results are LOCAL variabes so that they aren't pickled when we pass the project object.
-
-        #         finished_results = []
-        #         result = worker_pool.starmap_async(gtap_invest_integration_functions.run_gtap_cmf, parallel_iterable)
-        #         for i in result.get():
-        #             finished_results.append(i)
-        #         worker_pool.close()
-        #         worker_pool.join()
-
-
-
-
-
-
-
-
-
-        # ### R POSTSIM WORK
-
-
-
-        # # Now call the R code to pull these
-        # src_r_postsim_script_path = os.path.join(p.gtap1_aez_invest_local_model_dir, 'postsims', '01_output_csv.r')
-
-        # # Create a local copy of the R file with modifications specific to this run (i.e., the shanging the workspace)
-        # r_postsim_script_path = os.path.join(p.gtap1_aez_invest_local_model_dir, 'postsims', '01_output_csv_local.r')
-
-
-
-        # # Copy the time-stamped gtap2 results to a non-time-stamped version to clarify which one to use for eg plotting.
-        # p.gtap1_results_path = os.path.join(p.cur_dir, 'GTAP_Results.csv')
-        # p.gtap1_land_use_change_path = os.path.join(p.cur_dir, 'GTAP_AEZ_LCOVER_ha.csv')
-        # current_date = hb.pretty_time('year_month_day_hyphens')
-        # dated_expected_files = [os.path.join(p.cur_dir, current_date +'_GTAP_Results.csv'), os.path.join(p.cur_dir, current_date +'_GTAP_AEZ_LCOVER_ha.csv')]
-        # expected_files = [p.gtap1_results_path, p.gtap1_land_use_change_path]
-
-        # for c, file_path in enumerate(dated_expected_files):
-        #     if hb.path_exists(file_path):
-        #         hb.copy_shutil_flex(file_path, expected_files[c])
-
-        # gtap1_aez_results_exist = all([True if hb.path_exists(i) else False for i in expected_files])
-
-        # if not gtap1_aez_results_exist:
-        #     p.L.info('Starting r script at ' + str(r_postsim_script_path) + ' to create output files.')
-
-        #     os.makedirs(os.path.join(os.path.split(src_r_postsim_script_path)[0], 'temp'), exist_ok=True)
-        #     os.makedirs(os.path.join(os.path.split(src_r_postsim_script_path)[0], 'temp', 'merge'), exist_ok=True)
-
-        #     # TODOO, This is a silly duplication of non-small files that could be eliminated. originally it was in so that i didn't have to modify Uris' r code.
-        #     # TODOO Also, most of this R code is just running har2csv.exe, which is a license-constrained gempack file. replace with python har2csv
-        #     hb.copy_file_tree_to_new_root(os.path.join(p.gtap1_aez_invest_local_model_dir, 'work'), os.path.join(p.gtap1_aez_invest_local_model_dir, 'postsims', 'in', 'gtap'))
-
-        #     # working_dir = implied_r_working_dir = os.path.split(src_r_script_path)[0]
-        #     gtap_invest_integration_functions.generate_postsims_r_script_file(src_r_postsim_script_path, r_postsim_script_path)
-
-        #     hb.execute_r_script(p.r_executable_path, os.path.abspath(r_postsim_script_path))
-
-
-        #     # The two CSVs generated by the script file are key outputs. Copy them to the cur_dir root as well as the output dir
-        #     files_to_copy = [os.path.join(p.gtap1_aez_invest_local_model_dir, 'postsims', 'out', os.path.split(i)[1]) for i in dated_expected_files]
-
-        #     for file_path in files_to_copy:
-        #         hb.copy_shutil_flex(file_path, os.path.join(p.cur_dir, os.path.split(file_path)[1]), verbose=True)
-        #         hb.copy_shutil_flex(file_path, os.path.join(p.output_dir, 'gtap1_aez', os.path.split(file_path)[1]), verbose=True)
-        #         hb.copy_shutil_flex(file_path, os.path.join(p.cur_dir, os.path.split(expected_files[c])[1]), verbose=True)
-
-
 
 def results_as_csv(p):
     
@@ -430,7 +333,7 @@ def results_as_csv(p):
                 expected_filenames = [experiment_label + '.sl4',  experiment_label + '.UPD', experiment_label + '-SUM.har', experiment_label + '-VOL.har', experiment_label + '-WEL.har',]
                 
                 for filename in expected_filenames:
-                    p.L.info('Extracting data for ', aggregation_label, experiment_label, filename)
+                    hb.log('Extracting data for ', aggregation_label, experiment_label, filename)
                     
                     experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label)
                     expected_path = os.path.join(experiment_dir, filename)
@@ -460,75 +363,38 @@ def vizualization(p):
     if p.run_this:
         plots = {}
 
-
-        # Do CROSS-Experiment plots
-        csvs_to_merge = []
         vars_to_plot = p.reg_vars_to_plot
-        
-        for aggregation_label in p.aggregation_labels:
-            plots[aggregation_label] = {}
 
-            for var in vars_to_plot:
-                plots[aggregation_label][var] = {}
-                plots[aggregation_label][var]['file_paths_to_merge'] = []
-                plots[aggregation_label][var]['plot_labels'] = []
+        # DO INDIVIDUAL EXPERMINET PLOTS        
+        for aggregation_label in p.aggregation_labels:            
+            for experiment_label in p.experiment_labels:
+                current_sl4_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
+                for c, var in enumerate(vars_to_plot):
+                    output_csv_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, var + '.csv')
+                    
+                    if hb.path_exists(output_csv_path):
+                        current_var_path = os.path.join(current_sl4_dir, var + '.csv')
+                        df = pd.read_csv(current_var_path)
 
-                for experiment_label in p.experiment_labels:
+                        
+                        hb.create_directories(output_csv_path)
+                        output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, var + '.png')
 
+                        hb.df_plot(df, output_png_path, type='bar')
+                        
+                        # Write csv
+                        df.to_csv(output_csv_path, index=False)
+
+
+        # DO CROSS-EXPERIMENT PLOTS
+        for aggregation_label in p.aggregation_labels:    
+            for c, var in enumerate(vars_to_plot):
+                for cc, experiment_label in enumerate(p.experiment_labels):
                     current_sl4_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
-                    file_path_to_merge = os.path.join(current_sl4_dir, var + '.csv')        
-
-                    plots[aggregation_label][var]['file_paths_to_merge'].append(file_path_to_merge)
-                    plots[aggregation_label][var]['plot_labels'].append(experiment_label)
-
-
-        for aggregation_label in p.aggregation_labels:
-            for var in vars_to_plot:
-                output_csv_path = os.path.join(p.cur_dir, var + '.csv')
-                merged_df = hb.df_merge_list_of_csv_paths(plots[aggregation_label][var]['file_paths_to_merge'] , column_suffix=plots[aggregation_label][var]['plot_labels'], output_csv_path=output_csv_path)
-
-                output_png_path = os.path.join(p.cur_dir, var + '.png')
-
-                hb.df_plot(merged_df, output_png_path, type='bar', legend_labels=plots[aggregation_label][var]['plot_labels'])
-
-
-
-        # Plot the merged_df in a bar graph with numerical value on the vertical axis and the 10 different country indices on the horizontal axis
-        # merged_df.plot.bar(x=index, y=['Baseline', 'Policy'], rot=0)
-        
-
-        # for file_path in csvs_to_merge:
-
-        #     current_df = pd.read_csv(file_path)
-
-        #     if merged_df is None:
-        #         merged_df = current_df
-        #     else:
-        #         merged_df = hb.df_merge(merged_df, current_df)
-
-        print(merged_df.head())
+                    current_var_path = os.path.join(current_sl4_dir, var + '.csv')
                     
-                    # experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label)
-                    # expected_path = os.path.join(experiment_dir, filename)
-                    
-                    # if not hb.path_exists(expected_path, verbose=True):
-                    #     raise NameError('Cannot find file: ' + str(expected_path))
-                    
-                    # indexed_df_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, filename.replace('.', '_') + '.csv')
-                    # if not hb.path_exists(indexed_df_path):     
-                        
-                    #     # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
-                    #     if os.path.splitext(filename)[1] == '.sl4':
-                    #         gtappy_file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
-                    #     else:
-                    #         gtappy_file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
-                        
-                        
-                    
-                    # # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
-                    # har_path = hb.path_replace_extension(indexed_df_path, '.har')
-                    # if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4K'  and os.path.splitext(filename)[1] != '.UPKD':
-                    #     gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
-
-    
-
+                    if cc == 0:
+                        df = pd.read_csv(current_var_path)
+                    else:
+                        new_df = pd.read_csv(current_var_path)
+                        df = hb.df_merge(df, new_df)

@@ -46,6 +46,8 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
     
     # Iterate through individual HAR entires
     set_names_dict = {}
+    set_names = sl4_object.setNames
+    hb.log('set_names', set_names)  
     for header in sl4_object.setNames:
         
         # Get a specific header from the InFile
@@ -60,8 +62,8 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
             dtype = 'RE'
         
         # Record to the data structure.
-        header_data['header'].append(header)
-        header_data['long_name'].append(DataHead.long_name)
+        header_data['header'].append(header.strip())
+        header_data['long_name'].append(DataHead.long_name.strip())
         
         # Render shape string.
         # in addition to the python types, like shape, there is also the string type for what is written the CSV. This is for pretty rendering but won't load programatically.
@@ -121,7 +123,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
         # Finish adding other attributes to the data dict.     
         header_data['ndims'].append(ndims)
         header_data['dtype'].append(dtype)
-        header_data['coefficient_name'].append(DataHead.coeff_name)
+        header_data['coefficient_name'].append(str(DataHead.coeff_name).strip())
         
         # Separate from writing the index.csv, we also will write the specific headers csv spreadsheet. This is straightforward
         # for 1 and 2 dimensions, but for three+ we need to stack vertically
@@ -165,12 +167,15 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
                 
             except:
                 implied_numpy_type = 'string'
-                if isinstance(data_array[0, 0], np.float32):
+                try:
+                    if isinstance(data_array[0, 0], np.float32):
+                        implied_length = 12
+                    elif isinstance(data_array[0, 0], np.float64):
+                        implied_length = 24 # No clue what it actually is for har or if it is even possible.
+                    else:   
+                        implied_length = len(data_array[0, 0])
+                except:
                     implied_length = 12
-                elif isinstance(data_array[0, 0], np.float64):
-                    implied_length = 24 # No clue what it actually is for har or if it is even possible.
-                else:   
-                    implied_length = len(data_array[0, 0])
             
             
             
@@ -239,8 +244,8 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
             dtype = 'RE'
         
         # Record to the data structure.
-        header_data['header'].append(header)
-        header_data['long_name'].append(DataHead.long_name)
+        header_data['header'].append(header.strip())
+        header_data['long_name'].append(DataHead.long_name.strip())
         
         # Render shape string.
         # in addition to the python types, like shape, there is also the string type for what is written the CSV. This is for pretty rendering but won't load programatically.
@@ -266,6 +271,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
         if len(DataHead.setNames) > 0:
             if DataHead.setNames[0] and DataHead.setElements[0]: # check that it's not just a list of None
                 for c, set_name in enumerate(DataHead.setNames):
+                    
                     if set_name in set_names_dict:
                         assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
                     elif len(DataHead.setElements) != len(DataHead.setNames):
@@ -296,11 +302,14 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
                 dim_names = str(DataHead.setNames).replace(',', '*').replace(' ', '')
             else:
                 dim_names = ''
-                
+        
+        if ndims == 0:
+            ndims = 1
+            
         # Finish adding other attributes to the data dict.     
         header_data['ndims'].append(ndims)
         header_data['dtype'].append(dtype)
-        header_data['coefficient_name'].append(DataHead.coeff_name)
+        header_data['coefficient_name'].append(str(DataHead.coeff_name).strip())
         
         # Separate from writing the index.csv, we also will write the specific headers csv spreadsheet. This is straightforward
         # for 1 and 2 dimensions, but for three+ we need to stack vertically
@@ -396,7 +405,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
     # Only the base data seems to be distributed with Sets.har files. sl4s do not have this. Thus only run if there is something that populates set_names_dict
     if len(set_names_dict) > 0:
         for set_name, set_elements in set_names_dict.items():
-            print('Adding header for set: ', set_name, set_elements)
+            # print('Adding header for set: ', set_name, set_elements)
 
 
             header_data['header'].append(set_name)
@@ -477,9 +486,14 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         'coefficient_name': [],
         }
     
+    
     # Iterate through individual HAR entires
     set_names_dict = {}
+    # headers_to_iterate = [i for i in HeadsOnFile if i ]
     for header in HeadsOnFile:
+        
+        if header == 'VDEP':
+            print('In VDEP header writing.')
         
         # START HERE: consider something like if header in headers_to_skip: Currently it is failing because DREL is a 1C which messes up the RE data type logic.
         # Get a specific header from the InFile
@@ -487,15 +501,17 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         
         # Draw most values from the actual array (to avoid problems with missing set names etc.)
         shape = DataHead.array.shape
-        ndims = len(DataHead.array.shape)
-        dtype = DataHead.array.dtype
-        
+        if str(shape) == '()': # For the DVER variable, it was a singleton integer, which numpy i think regards as 1 dim but other contexts it's 0-dim. Overwrite that there
+            shape = (1,)
+        ndims = len(shape)
+        dtype = DataHead.array.dtype        
+
         if 'float' in str(dtype):
             dtype = 'RE'
         
         # Record to the data structure.
-        header_data['header'].append(header)
-        header_data['long_name'].append(DataHead.long_name)
+        header_data['header'].append(str(header).lstrip().rstrip())
+        header_data['long_name'].append(str(DataHead.long_name).lstrip().rstrip())
         
         # Render shape string.
         # in addition to the python types, like shape, there is also the string type for what is written the CSV. This is for pretty rendering but won't load programatically.
@@ -521,19 +537,21 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         if len(DataHead.setNames) > 0:
             if DataHead.setNames[0] and DataHead.setElements[0]: # check that it's not just a list of None
                 for c, set_name in enumerate(DataHead.setNames):
-                    if set_name in set_names_dict:
+                    trimmed_set_name = set_name.replace(' ', '')
+                    if trimmed_set_name in set_names_dict:
                         pass
-                        a = DataHead.setElements[c] 
+                        a = [i.replace(' ', '') for i in DataHead.setElements[c]]
                         b = set_names_dict[set_name]
                         if a != b:
-                            print('WARNING SETS WITH SAME NAME HAVE DIFFERENT ELEMENTS')
-                            print(a)
-                            print(b)
+                            print ('WARNING SETS WITH SAME NAME HAVE DIFFERENT ELEMENTS')
+                            print (a)
+                            print (b)
                         # assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
                     elif len(DataHead.setElements) != len(DataHead.setNames):
                         raise NameError('There should be exactly 1 set name for each setElements list.')
                     else:
-                        set_names_dict[set_name] = DataHead.setElements[c]
+                        a = DataHead.setElements[c]
+                        set_names_dict[trimmed_set_name] = a
                 try:  
                     fstring = str(DataHead.setNames)[1:-1].replace('\'', '').replace(',', '*').replace(' ', '')
                     header_data['dim_names'].append(fstring) # The string manipulation here makes it look nice in excel
@@ -562,17 +580,15 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         # Finish adding other attributes to the data dict.     
         header_data['ndims'].append(ndims)
         header_data['dtype'].append(dtype)
-        header_data['coefficient_name'].append(DataHead.coeff_name)
+        header_data['coefficient_name'].append(str(DataHead.coeff_name).lstrip().rstrip())
         
         # Separate from writing the index.csv, we also will write the specific headers csv spreadsheet. This is straightforward
         # for 1 and 2 dimensions, but for three+ we need to stack vertically
         current_header_data_path = os.path.join(har_csv_dir, header + '.csv')
         
         implied_numpy_type = ''
-        
-            
-        
-        skip = False
+        if header == 'SAVE':
+            print('in SAVE')
         if len(shape) == 0:
             try:
                 row_index = DataHead.setElements[0]
@@ -580,7 +596,7 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
                 row_index = [1]
             columns = [header]
             data_array = np.asarray([[DataHead.array]]).T # Pandas requires it to be a 2d array to write, even tho singular
-            
+            dim_names
             # Test to see if it can be coerced into a float or int
             try:
                 nt = np.float32(data_array[[0]])
@@ -590,8 +606,11 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
             
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path, index=False)
-        elif len(DataHead.array.shape) == 1:     
-            row_index = DataHead.setElements[0]
+        elif len(DataHead.array.shape) == 1 or len(shape) == 1:  
+            try:
+                row_index = DataHead.setElements[0]
+            except:
+                row_index = [1]
             columns = [header]   
             data_array = np.asarray([DataHead.array]).T # Pandas requires it to be a 2d array to write, even tho 1dim
             # Test to see if it can be coerced into a float or int
@@ -609,18 +628,32 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
                 
             except:
                 implied_numpy_type = 'string'
-                if isinstance(data_array[0, 0], np.float32):
-                    implied_length = 12
-                elif isinstance(data_array[0, 0], np.float64):
-                    implied_length = 24 # No clue what it actually is for har or if it is even possible.
-                else:   
-                    implied_length = len(data_array[0, 0])
-            
-            
+                if len(data_array.shape) == 1:
+                    if isinstance(data_array[0], np.float32):
+                        implied_length = 12
+                    elif isinstance(data_array[0], np.float64):
+                        implied_length = 24 # No clue what it actually is for har or if it is even possible.
+                    else:   
+                        implied_length = len(data_array[0])
+                else:
+                    if isinstance(data_array[0, 0], np.float32):
+                        implied_length = 12
+                    elif isinstance(data_array[0, 0], np.float64):
+                        implied_length = 24 # No clue what it actually is for har or if it is even possible.
+                    else:   
+                        implied_length = len(data_array[0, 0])
+                
+                
             
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             
+            if row_index and len(dim_names) > 0:
+                df_data = df_data.reset_index()
+                df_data = df_data.rename(columns={'index': dim_names[0]})
+                
             dtype_dict = {header: implied_numpy_type}
+            
+            # START HERE, set to false if is set, otherwise not
             
             df_data.to_csv(current_header_data_path, index=False)
         elif len(DataHead.array.shape) == 2:          
@@ -661,47 +694,54 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
     # Only the base data seems to be distributed with Sets.har files. sl4s do not have this. Thus only run if there is something that populates set_names_dict
     if len(set_names_dict) > 0:
         for set_name, set_elements in set_names_dict.items():
-            print('Adding header for set: ', set_name, set_elements)
+            # print ('Adding header for set: ', set_name, set_elements)
 
-
-            header_data['header'].append(set_name)
-            header_data['long_name'].append('Set ' + set_name) # NOTE: This is literally defined by ViewHAR and is used in TABLO that the first word set means the second word set_name is a set. Subsequent words are ignored.
-            header_data['shape'].append(len(set_elements))
-            header_data['dim_names'].append(set_name)
-            header_data['ndims'].append(1)
-            header_data['dtype'].append('<U12')
-            header_data['coefficient_name'].append('')
-        
-            columns = [set_name]   
-            data_array = np.asarray(set_elements).T # Pandas requires it to be a 2d array to write, even tho 1dim
-            # Test to see if it can be coerced into a float or int
-            
-            # try:
-            #     nt = np.float32(data_array[0, 0])
+            if set_name in header_data['header']:
+                # print ('set_name', set_name, 'already in header_data. Skipping.')
+                skip_adding_header = True
+            else:
+                skip_adding_header = False
                 
-            #     implied_length = len(data_array[0, 0])
-            #     if implied_length == 12:
-            #         implied_numpy_type = np.float32
-            #     elif implied_length > 12:
-            #         implied_numpy_type = np.float64
-            #     else:
-            #         implied_numpy_type = np.in64
+            if not skip_adding_header:
                 
-            # except:
-            #     implied_numpy_type = 'string'
-            #     if isinstance(data_array[0, 0], np.float32):
-            #         implied_length = 12
-            #     elif isinstance(data_array[0, 0], np.float64):
-            #         implied_length = 24 # No clue what it actually is for har or if it is even possible.
-            #     else:   
-            #         implied_length = len(data_array[0, 0])
+                header_data['header'].append(set_name)
+                header_data['long_name'].append('Set ' + set_name) # NOTE: This is literally defined by ViewHAR and is used in TABLO that the first word set means the second word set_name is a set. Subsequent words are ignored.
+                header_data['shape'].append(len(set_elements))
+                header_data['dim_names'].append(set_name)
+                header_data['ndims'].append(1)
+                header_data['dtype'].append('<U12')
+                header_data['coefficient_name'].append('')
             
-            
-            # df_data = pd.DataFrame(index=row_multi_index, columns=columns, data=array_2d)
-            
-            current_header_data_path = os.path.join(har_csv_dir, set_name + '.csv')
-            df_data = pd.DataFrame(columns=columns, data=data_array)
-            df_data.to_csv(current_header_data_path, index=False)
+                columns = [set_name]   
+                data_array = np.asarray(set_elements).T # Pandas requires it to be a 2d array to write, even tho 1dim
+                # Test to see if it can be coerced into a float or int
+                
+                # try:
+                #     nt = np.float32(data_array[0, 0])
+                    
+                #     implied_length = len(data_array[0, 0])
+                #     if implied_length == 12:
+                #         implied_numpy_type = np.float32
+                #     elif implied_length > 12:
+                #         implied_numpy_type = np.float64
+                #     else:
+                #         implied_numpy_type = np.in64
+                    
+                # except:
+                #     implied_numpy_type = 'string'
+                #     if isinstance(data_array[0, 0], np.float32):
+                #         implied_length = 12
+                #     elif isinstance(data_array[0, 0], np.float64):
+                #         implied_length = 24 # No clue what it actually is for har or if it is even possible.
+                #     else:   
+                #         implied_length = len(data_array[0, 0])
+                
+                
+                # df_data = pd.DataFrame(index=row_multi_index, columns=columns, data=array_2d)
+                
+                current_header_data_path = os.path.join(har_csv_dir, set_name + '.csv')
+                df_data = pd.DataFrame(columns=columns, data=data_array)
+                df_data.to_csv(current_header_data_path, index=False)
             
     df_index = pd.DataFrame(data=header_data)
     df_index.to_csv(har_index_path, index=False)
@@ -728,7 +768,7 @@ def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path, verbose=False):
             annotation = split_name[0]
             possible_set_label = split_name[1]
             if annotation == 'Set':
-                # print('Found set', possible_set_label)
+                # print ('Found set', possible_set_label)
                 set_data = pd.read_csv(os.path.join(index_df_dir, index_name, possible_set_label + '.csv'))
                 sets_data[possible_set_label] = list(set_data.values)
     # Create a new Harfile object.
@@ -854,7 +894,9 @@ def indexed_dfs_to_har(input_indexed_dfs_path, output_har_path, verbose=False):
             
             if verbose:
                 print ('indexed_dfs_to_har is writing ' + str(header), dtype)
-                
+            if short_header in Harfile:
+                skip_write = True
+                hb.log('Skipping writing header', short_header)
             # Create a new Header object from the values loaded from the DFs. 
             har_dtype = dtype
             if not skip_write:
@@ -877,7 +919,7 @@ def directory_of_hars_to_indexed_dfs(input_dir, output_dir=None, produce_hars_fr
     
     for har_filename in hars_to_look_for:
         if verbose:
-            print('Extracting ' + str(har_filename))
+            print ('Extracting ' + str(har_filename))
             
         # Write har to CSVs
         har_index_path = os.path.join(output_dir, hb.file_root(har_filename) + '.csv')     
@@ -906,3 +948,49 @@ def get_set_labels_from_index_path(input_path):
     set_labels = list(df_sets['header'])
     
     return set_labels
+
+def assert_two_indexed_csv_paths_are_identical(left_path, right_path, approximate_ok=False):
+    if approximate_ok:
+        df1 = pd.read_csv(left_path)
+        df2 = pd.read_csv(right_path)
+    
+        if not str(df1.head()) == str(df2.head()):
+            print ('df1.head()')
+            print (df1.head())  
+            print ('df2.head()')
+            print (df2.head())
+            raise Exception('df1.head() != df2.head()')
+
+        if not str(df1.tail()) == str(df2.tail()):
+            print ('df1.tail()')
+            print (df1.tail())
+            print ('df2.tail()')
+            print (df2.tail())
+            raise Exception('df1.tail() != df2.tail()')
+
+        df1_dtypes = df1.dtypes
+        df2_dtypes = df2.dtypes
+        if not str(df1_dtypes) == str(df2_dtypes):
+            print ('df1_dtypes')
+            print (df1_dtypes)
+            print ('df2_dtypes')
+            print (df2_dtypes)
+            raise Exception('df1_dtypes != df2_dtypes')
+    
+    else:
+        df1 = pd.read_csv(left_path)
+        df2 = pd.read_csv(right_path)
+        
+        for c, df1_row in df1.iterrows():
+            df2_row = df2.iloc[c]
+
+            # Test that the two rows are identical using the pandas equality test            
+            if not df1_row.equals(df2_row):
+                print ('df1_row')
+                print (df1_row)
+                print ('df2_row')
+                print (df2_row)
+                raise Exception('df1_row != df2_row')
+            
+            
+    return True

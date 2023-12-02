@@ -60,4 +60,3 @@ def gtap_shockfile_to_df(input_path):
 
 
 
-
