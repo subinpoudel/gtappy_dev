@@ -9,6 +9,106 @@ import numpy as np
 import math
 import harpy
 
+def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all'):
+    
+    if headers_to_stack == 'all':
+        raise NotImplementedError('Not yet implemented')        
+    
+    # Read the index
+    df_index = pd.read_csv(input_file_path)
+    
+    # Get only the subset of the index that will be stacked
+    df_index = df_index[df_index['header'].isin(headers_to_stack)]
+    
+    # Create a new df to merge with the data
+    df = df_index.copy()    
+
+    # ADD new label-value columns for each dimension
+    total_n_dims = 7 # Because Hars are defined this way with a max of this dimensions.
+    for c, dim in enumerate(range(total_n_dims + 1)):
+        dim_label = 'dim' + str(c) + '_label'
+        dim_value = 'dim' + str(c) + '_value'
+        
+        # Add dim_label as a new empty column in df
+        df[dim_label] = ''
+        df[dim_value] = ''
+        
+
+    for header in headers_to_stack:
+        # Analyze row in index for current header
+        current_row = df[df['header'] == header]
+        print('current_row', current_row)      
+        
+        
+        current_dims = current_row['dim_names'].iloc[0].split('*')
+        
+        for c, dim in enumerate(current_dims):
+            dim_label_col = 'dim' + str(c) + '_label'
+            dim_value_col = 'dim' + str(c) + '_value'
+            
+            current_row[dim_label_col] = dim
+        
+        # START HERE: This is working, but test it for higher-dimensional data
+                
+        header_data_dirname = os.path.splitext(input_file_path)[0]
+        header_data_dir = os.path.join(os.path.split(input_file_path)[0], header_data_dirname)
+        header_data_path = os.path.join(header_data_dir, header + '.csv')
+        
+        data_df = pd.read_csv(header_data_path)
+        
+        # Set the header of the index to be named 'header'
+        data_df = data_df.rename(columns={data_df.columns[0]: current_dims[0]})
+        
+        # Set the index to be this column
+        data_df = data_df.set_index(current_dims[0])
+        data_df.to_csv(hb.suri(output_file_path, '1'), index=False)
+        print(data_df)
+        
+        # Set the columns of data_df to be a multiindex
+        
+        # Create a multiindex from dimensions and values
+        data_df.columns = pd.MultiIndex.from_product([current_dims[1:], data_df.columns], names=[current_dims[0], current_dims[1]])
+        
+        # Save
+        print('output_file_path', output_file_path)
+        data_df.to_csv(hb.suri(output_file_path, '2'), index=False)
+        
+        print('data_df.columns', data_df.columns)
+        
+        data_df_stacked = data_df.stack()
+        
+        print('data_df_stacked\n', data_df_stacked)
+        
+        data_df_stacked.columns = ['value']
+        data_df_stacked['header'] = header
+        data_df_stacked.to_csv(hb.suri(output_file_path, '3'), index=True)
+        
+        # reset the index so they are preserved when merged
+        data_df_stacked = data_df_stacked.reset_index()
+        df = hb.df_merge(df, data_df_stacked, on='header', how='outer', verbose=True)
+        
+        for c, dim in enumerate(current_dims):
+            dim_label_col = 'dim' + str(c) + '_label'
+            dim_value_col = 'dim' + str(c) + '_value'
+            
+            df[dim_label_col] = dim
+            df[dim_value_col] = df[dim]
+            
+            df = df.drop(columns=[dim])
+                    
+
+        df.to_csv(hb.suri(output_file_path), index=False)
+        
+        
+        
+        
+        5
+        
+        
+        
+    
+    
+
 
 def sl4_to_indexed_dfs(input_har_path, output_index_path):
     """Convert all information in input_har_path into several CSVs that can be programatically rewritten back to a conformant har.

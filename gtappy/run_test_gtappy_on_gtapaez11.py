@@ -6,18 +6,7 @@ import gtappy.gtappy_utils as gtappy_utils
 if __name__ == '__main__':
     
     ### ----- CHANGE LOG ---------------------------------
-
-    """Questions from EU Commission
-    
-    - Key points are correct: sustainability, externalities, overestimation of productivity gains,
-    - SCC point not fully endogenized but soon
-    - Bring the Uris BAU definition into slides.
-    
-    - Miles: rename baseline (optimistic? fantasy?, myopic?) this is important because it might be a cost relative to an optimistic baseline
-    - Germany: low income countries point: but big polluters are in high-income countries tho?
-    - numbers low, is it really worth all the effort? 
-        - Streetlamp metaphor. We are biased because we can only look where the light shines. We need more light.
-    - Austria: could ghana use the results to say what they could demand for eg their exploitation?
+    """
     
 1. Erwin todo: in the release's Data folder, the aggregation label gtapaez11-50 should be renamed v11-s26-r50
 2. Also note that I have decided to have the most recent release always have NO timestamp whereas dated versions of same-named 
@@ -42,13 +31,19 @@ file but not vice versa.
 
 8. Renamce command line cmf options as tehy're referenced in the cmf file:
                     # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
-                    # p1: starting_data_dir # EXCLUDE THIS, because we only use it for p2
+                    # p1: gtap_base_data_dir 
                     # p2: starting_data_file_path # Rename points to the correct starting har
                     # p3: output_dir # Rename
                     # p4: starting_year # Rename
                     # p5: ending_year # Rename
+                    
+9. Simple question: Is there any way to read the raw GEMPACK output to get a sense of how close to complete you are? I would like to make an approximate progress bar.
 
+10. Would it be possible to not put a Y in front of years like Y2018? This can mess up string->int conversions.
 
+11. There is no bau-SUM_Y2050 (but ther is for VOL and WEL). Is this intentional?
+
+12. Question: Is EVERYTHING stored in the SL4? I.e., are the other files redundant?
 
     """
 
@@ -113,7 +108,9 @@ file but not vice versa.
     p.gempack_utils_dir = "C://GP" 
     
     ### ------------- EVERYTHING BELOW IS DEFINED with RELATIVE PATHS -----------
-    p.years = [2018] # Exclusive of base_year
+    # define a list of years from 2018 to 2050
+    p.years = list(range(2018, 2051)) # Exclusive of base_year
+    # p.years = [2018, 2019] # Exclusive of base_year
     p.base_year = 2017
     p.key_base_year = 2017 # TODOO In seals we have a key base year and there are multiple p.base_years = []. Generalize this and make it so that base_year is singluar but p.base_years is renamed p.prior_years
     
@@ -123,7 +120,8 @@ file but not vice versa.
     # Point to the numeraire run of the model. In addition to showing that the 
     # base model works, this also generates files that can be used in subsequent
     # scenarios, specifically shockv7.har
-    p.template_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau.cmf')
+    p.template_bau_oldschool_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau.cmf')
+    p.template_bau_es_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau_es.cmf')
     
     
     
@@ -146,7 +144,8 @@ file but not vice versa.
 
     # Define which scenarios (shocks) will be run
     # This example uses 1%, 2% and 3% increases in agricultural productivity.
-    p.experiment_labels = ['bau', 'bau_es', ]
+    p.experiment_labels = ['bau',]
+    # p.experiment_labels = ['bau', 'bau_es', ]
     # p.experiment_labels = ['GTAPv7-aez', 'TarElim', 'TarElimProd', ]
     
     # NOTGE GTAPv7-aez is provided by default with each new model. It also tests if Hod-1 in prices.
@@ -167,11 +166,8 @@ file but not vice versa.
     ###------- Write the unique information that defines how each scenario's CMF is different.
 
     # Define AGGREGATION specific sets
-    p.xsets['v11-s26-r50'] = {
-    }
-    p.xsubsets['v11-s26-r50'] = [
-
-    ]
+    p.xsets['v11-s26-r50'] = []
+    p.xsubsets['v11-s26-r50'] = []
     
  
     # Define SCENARIO specific information

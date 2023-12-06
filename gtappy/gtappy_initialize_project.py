@@ -37,4 +37,5 @@ def build_extract_and_run_aez_task_tree(p):
     # p.mapfile_task = p.add_task(gtappy_tasks.mapfile)                
     p.gtap_runs_task = p.add_task(gtappy_tasks.gtap_runs)
     p.results_as_csv_task = p.add_task(gtappy_tasks.results_as_csv)
+    p.results_as_stacked_csv_task = p.add_task(gtappy_tasks.results_as_stacked_csv)
     p.visualization_task = p.add_task(gtappy_tasks.vizualization)

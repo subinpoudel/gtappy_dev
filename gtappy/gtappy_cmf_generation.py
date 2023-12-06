@@ -1,7 +1,7 @@
 import os
 import hazelbean as hb
 
-def generate_cmf_dict_from_cmf_file(template_cmf_path, replace_dict):
+def generate_cmf_dict_from_cmf_file(template_bau_oldschool_cmf_path, replace_dict):
     def process_string(input_string, replace_dict):
         initial_replace_dict = {
             '<': '<^',
@@ -19,7 +19,7 @@ def generate_cmf_dict_from_cmf_file(template_cmf_path, replace_dict):
         return output_string.lstrip().rstrip()
     
     # Open the cmf and iterate through its lines
-    with open(template_cmf_path, 'r') as rf:
+    with open(template_bau_oldschool_cmf_path, 'r') as rf:
         cmf_lines = rf.readlines()
         output_dict = {}
         # in_exogenous = False
@@ -83,13 +83,13 @@ def generate_cmf_dict_from_cmf_file(template_cmf_path, replace_dict):
                     else:
                         raise ValueError('Line does not have an equals sign and is not a Rest endogenous line: ' + str(line))    
                 
-    # hb.log('Generated CMF dict from file: ' + str(template_cmf_path))
+    # hb.log('Generated CMF dict from file: ' + str(template_bau_oldschool_cmf_path))
     # hb.log(hb.print_dict(output_dict))
     
     return output_dict
 
 
-def generate_cmf_dict_from_cmf_file_old(template_cmf_path, replace_dict):
+def generate_cmf_dict_from_cmf_file_old(template_bau_oldschool_cmf_path, replace_dict):
     def process_string(input_string, replace_dict):
         initial_replace_dict = {
             '<': '<^',
@@ -119,7 +119,7 @@ set DATd=..\data\%AGG%
         return output_string.lstrip().rstrip()
     
     # Open the cmf and iterate through its lines
-    with open(template_cmf_path, 'r') as rf:
+    with open(template_bau_oldschool_cmf_path, 'r') as rf:
         cmf_lines = rf.readlines()
         output_dict = {}
         in_exogenous = False
@@ -181,7 +181,7 @@ set DATd=..\data\%AGG%
                     else:
                         raise ValueError('Line does not have an equals sign and is not a Rest endogenous line: ' + str(line))    
                 
-    hb.log('Generated CMF dict from file: ' + str(template_cmf_path))
+    hb.log('Generated CMF dict from file: ' + str(template_bau_oldschool_cmf_path))
     hb.log(hb.print_dict(output_dict))
     
     return output_dict

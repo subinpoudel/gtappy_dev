@@ -192,7 +192,8 @@ def gtap_runs(p):
     The current general approach to ingesting a new gtap-aez release from Purdue is:
     
     1. Extract it into the cge_releases dir and update the release name in the run file.
-    2. Generate a cmf_dict with a scenario-derived bat_to_catear_vars_replace_dict that converts p1, p2, p3, p4, p5 to the appropriate paths.
+    2. Based on a CMF file you want to use as a template, rename the p1, p2, cmf and other vars to catear-denoted and more descripting labels. Save this as labeled_cmf_template.cmf in the cur_dir.
+    3. Using 2, generate a new cmf file for each experiment, year, and aggregation. This will be saved in the cur_dir in the nested folder.
     """
 
 
@@ -213,7 +214,7 @@ def gtap_runs(p):
                         starting_year = p.years[n_years_counter - 1]
                         
                     output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(ending_year))
-                    expected_sl4_path = os.path.join(output_dir, experiment_label + '_' + str(ending_year) + '.sl4')
+                    expected_sl4_path = os.path.join(output_dir, experiment_label + '_Y' + str(ending_year) + '.sl4')
                     
                     if not hb.path_exists(expected_sl4_path):
                         
@@ -227,7 +228,7 @@ def gtap_runs(p):
                             current_cge_data_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(starting_year))
                         
                         # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
-                        # p1: starting_data_dir # EXCLUDE THIS, because we only use it for p2
+                        # p1: gtap_base_data_dir # EXCLUDE THIS, because we only use it for p2
                         # p2: starting_data_file_path # Rename points to the correct starting har
                         # p3: output_dir # Rename
                         # p4: starting_year # Rename
@@ -238,70 +239,43 @@ def gtap_runs(p):
                         bat_to_catear_vars_replace_dict['>'] = '^>' 
                         bat_to_catear_vars_replace_dict['<^CMF^>'] = '<^cmf^>' 
                         bat_to_catear_vars_replace_dict['<^cmf^>'] = '<^experiment_label^>'                    
-                        bat_to_catear_vars_replace_dict['<^p1^>'] = '<^starting_data_dir^>' 
+                        bat_to_catear_vars_replace_dict['<^p1^>'] = '<^gtap_base_data_dir^>' 
                         bat_to_catear_vars_replace_dict['<^p2^>'] = '<^starting_data_file_path^>' 
                         bat_to_catear_vars_replace_dict['<^p3^>'] = '<^output_dir^>' 
                         bat_to_catear_vars_replace_dict['<^p4^>'] = '<^starting_year^>' 
                         bat_to_catear_vars_replace_dict['<^p5^>'] = '<^ending_year^>' 
                         
                         labeled_cmf_template_path = os.path.join(output_dir, 'labeled_cmf_template.cmf')
-                        hb.replace_in_file_via_dict(p.template_cmf_path, labeled_cmf_template_path, bat_to_catear_vars_replace_dict)
+                        hb.replace_in_file_via_dict(p.template_bau_oldschool_cmf_path, labeled_cmf_template_path, bat_to_catear_vars_replace_dict)
                         
-                        
-                        initial_year = 1 # TODOO reference run file
-                        if initial_year:
-                            bat_to_catear_vars_replace_dict['<^p1^>'] = os.path.join(p.cge_data_dir, aggregation_label)
-                            bat_to_catear_vars_replace_dict['<^p2^>'] = os.path.join(bat_to_catear_vars_replace_dict['<^p1^>'], 'basedata.har') 
+                        scenario_replace_dict = {}
+                        scenario_replace_dict['<^experiment_label^>'] = experiment_label
+                        scenario_replace_dict['<^gtap_base_data_dir^>'] = os.path.join(p.cge_data_dir, aggregation_label)
+                        if n_years_counter == 0:
+                            scenario_replace_dict['<^starting_data_file_path^>'] = os.path.join(scenario_replace_dict['<^gtap_base_data_dir^>'], 'basedata.har') 
                         else:
-                            bat_to_catear_vars_replace_dict['<^p1^>'] = os.path.join(p.cur_dir, aggregation_label, experiment_label)
-                            bat_to_catear_vars_replace_dict['<^p2^>'] = os.path.join(bat_to_catear_vars_replace_dict['<^p1^>'], experiment_label + '_' + starting_year + '.upd') 
-                        bat_to_catear_vars_replace_dict['<^p3^>'] = bat_to_catear_vars_replace_dict['<^p1^>']
-                        bat_to_catear_vars_replace_dict['<^p4^>'] = starting_year
-                        bat_to_catear_vars_replace_dict['<^p5^>'] = ending_year
+                            scenario_replace_dict['<^starting_data_file_path^>'] = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(starting_year), experiment_label + '_Y' + str(starting_year) + '.upd') 
+                        scenario_replace_dict['<^output_dir^>'] = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(ending_year))
+                        scenario_replace_dict['<^starting_year^>'] = 'Y' + str(starting_year)
+                        scenario_replace_dict['<^ending_year^>'] = 'Y' + str(ending_year)
+                        
+                        hb.create_directories(scenario_replace_dict['<^output_dir^>'])
 
-                        # bat_to_catear_vars_replace_dict['<^CMF^>'] = '<^cmf^>' # MOVE THIS TO AUTO
-
+                        scenario_cmf_path = os.path.join(output_dir, aggregation_label + '_' + experiment_label + '.cmf')
+                        hb.replace_in_file_via_dict(labeled_cmf_template_path, scenario_cmf_path, scenario_replace_dict)
                         
                         
-                        
-                        
-
-                        cmf_dict = gtappy_cmf_generation.generate_cmf_dict_from_cmf_file(p.template_cmf_path, replace_dict=bat_to_catear_vars_replace_dict)
-                    
-                        hb.log('Generating cmf for ', aggregation_label, experiment_label, ' with bat_to_catear_vars_replace_dict: ', bat_to_catear_vars_replace_dict, '\n', hb.print_iterable(cmf_dict))
-                        
-                        cmf_dict['xSets'] = p.xsets[aggregation_label]
-                        cmf_dict['xSubsets'] = p.xsubsets[aggregation_label]
-                        cmf_dict['Shocks'] = p.shocks[aggregation_label][experiment_label]
-                        cmf_dict['cmf_commands'] = p.cmf_commands[aggregation_label][experiment_label]
-
-                        
-                        for replace_k, replace_v in cmf_dict['cmf_commands'].items():
-                            cmf_dict[replace_k] = replace_v
-
-                        hb.log('ADDED to the cmf for ', aggregation_label, experiment_label, ' to get',  hb.print_iterable(cmf_dict))
-
-                        
-                        
-
-                        gtappy_cmf_generation.generate_cmf_file_for_scenario(cmf_dict, 
-                                                                    experiment_label,                                                    
-                                                                    current_cge_data_dir,
-                                                                    output_dir,     
-                                                                    generated_cmf_path,     )
-                        
-                        
-                        # cge_executable_path = os.path.join(p.cge_model_dir, 'mod\\GTAPV7-AEZ.exe')
+  
                         
                         # Generate the OS call for the CGE model executable and its corresponding cmf file
-                        call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]                
+                        call_list = [p.cge_executable_path, '-cmf', scenario_cmf_path]                
                         
                         if run_parallel: # When running in paralell, add it to a list for later parallel processing.
                             parallel_iterable.append(tuple([experiment_label, call_list]))
 
                         else: # Because not running in parallel, just run it right away.                    
-                            call_list = [p.cge_executable_path, '-cmf', generated_cmf_path]
-                            gtappy_runner.run_gtap_cmf(generated_cmf_path, call_list)
+                            call_list = [p.cge_executable_path, '-cmf', scenario_cmf_path]
+                            gtappy_runner.run_gtap_cmf(scenario_cmf_path, call_list)
 
                 # Now that the iterable is created, run them all in parallel
                 num_workers = len(p.experiment_labels)
@@ -330,34 +304,66 @@ def results_as_csv(p):
             
             for experiment_label in p.experiment_labels:
                 
-                expected_filenames = [experiment_label + '.sl4',  experiment_label + '.UPD', experiment_label + '-SUM.har', experiment_label + '-VOL.har', experiment_label + '-WEL.har',]
-                
-                for filename in expected_filenames:
-                    hb.log('Extracting data for ', aggregation_label, experiment_label, filename)
+                for year in p.years:
                     
-                    experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label)
-                    expected_path = os.path.join(experiment_dir, filename)
+                    expected_filenames = [experiment_label + '_Y' + str(year) + '.sl4', 
+                                          experiment_label + '_Y' + str(year) + '.UPD', 
+                                        #   experiment_label + '-SUM'  + '_Y' + str(year) + '.har',  # CURRENTLY DEACTIVATED BECAUSE OF -1 BUG, waiting for Erwin response
+                                          experiment_label + '-VOL'  + '_Y' + str(year) + '.har', 
+                                          experiment_label + '-WEL'  + '_Y' + str(year) + '.har',]
                     
-                    if not hb.path_exists(expected_path, verbose=True):
-                        raise NameError('Cannot find file: ' + str(expected_path))
-                    
-                    indexed_df_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, filename.replace('.', '_') + '.csv')
-                    if not hb.path_exists(indexed_df_path):     
+                    for filename in expected_filenames:
+                        hb.log('Extracting data for ', aggregation_label, experiment_label, filename)
                         
-                        # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
-                        if os.path.splitext(filename)[1] == '.sl4':
-                            gtappy_file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
-                        else:
-                            gtappy_file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                        experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label, str(year))
+                        expected_path = os.path.join(experiment_dir, filename)
                         
+                        if not hb.path_exists(expected_path, verbose=True):
+                            raise NameError('Cannot find file: ' + str(expected_path))
                         
-                    
-                    # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
-                    har_path = hb.path_replace_extension(indexed_df_path, '.har')
-                    if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
-                        gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
+                        output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(year))
+                        indexed_df_path = os.path.join(output_dir, filename.replace('.', '_') + '.csv')
+                        if not hb.path_exists(indexed_df_path):     
+                            
+                            # START HERE: See if using the sl4 interface makes the sl4 pull in all the actually-used data.
+                            if os.path.splitext(filename)[1] == '.sl4':
+                                gtappy_file_io.sl4_to_indexed_dfs(expected_path, indexed_df_path)
+                            else:
+                                gtappy_file_io.har_to_indexed_dfs(expected_path, indexed_df_path)
+                            
+                            
+                        also_write_validation_hars = False
+                        if also_write_validation_hars:
+                            # Write a har for validation
+                            # har_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, experiment_label + '.har')
+                            har_path = hb.path_replace_extension(indexed_df_path, '.har')
+                            if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
+                                gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
+def results_as_stacked_csv(p):
     
+
+    if p.run_this:
+        for aggregation_label in p.aggregation_labels:
+            
+            for experiment_label in p.experiment_labels:
+                
+                for year in p.years:
+                    filenames_to_extract = [
+                        experiment_label + '_Y' + str(year) + '_sl4.csv',
+                    ]
+                    
+                    input_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, str(year))
+                    
+                    for filename in filenames_to_extract:
+                        
+                        input_file_path = os.path.join(input_dir, filename)
+                        hb.log('Making stacked data  for ', aggregation_label, experiment_label, input_file_path)
+                        output_file_path = os.path.join(p.cur_dir, hb.file_root(filename) + '_stacked.csv')
+                        headers_to_stack = ['pds']
+                        gtappy_file_io.stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack)
+                        
+
 
 def vizualization(p):
     if p.run_this:
