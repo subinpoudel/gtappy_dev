@@ -4,6 +4,7 @@ import hazelbean as hb
 from gtappy import gtappy_file_io
 from gtappy import gtappy_cmf_generation
 from gtappy import gtappy_runner
+from gtappy import gtappy_utils
 
 
 import multiprocessing
@@ -37,11 +38,11 @@ def base_data_as_csv(p):
                 input_har_path = har_filename    
                 har_index_path = os.path.join(p.cur_dir, aggregation_label, hb.file_root(input_har_path) + '.csv')              
                 if hb.path_exists(input_har_path):
-                    hb.log('Found input_har_path: ' + input_har_path)
+                    hb.log('Found input_har_path: ' + input_har_path, level=100)
                     output_dir = os.path.join(p.cur_dir, aggregation_label)
                     hb.create_directories(output_dir)
                     
-                    if not hb.path_exists(har_index_path, verbose=True): # Minor note, could add more robust file validation to check for ALL the implied files to exist.
+                    if not hb.path_exists(har_index_path, verbose=False): # Minor note, could add more robust file validation to check for ALL the implied files to exist.
                     
                         # Extract the har to the indexed DF format.
                         gtappy_file_io.har_to_indexed_dfs(input_har_path, har_index_path)                    
@@ -313,12 +314,12 @@ def results_as_csv(p):
                                           experiment_label + '-WEL'  + '_Y' + str(year) + '.har',]
                     
                     for filename in expected_filenames:
-                        hb.log('Extracting data for ', aggregation_label, experiment_label, filename)
+                        hb.log('Extracting data for ', aggregation_label, experiment_label, filename, level=100)
                         
                         experiment_dir = os.path.join(p.gtap_runs_dir, aggregation_label, experiment_label, str(year))
                         expected_path = os.path.join(experiment_dir, filename)
                         
-                        if not hb.path_exists(expected_path, verbose=True):
+                        if not hb.path_exists(expected_path, verbose=False):
                             raise NameError('Cannot find file: ' + str(expected_path))
                         
                         output_dir = os.path.join(p.cur_dir, aggregation_label, experiment_label, str(year))
@@ -340,6 +341,7 @@ def results_as_csv(p):
                             if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
                                 gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
+
 def results_as_stacked_csv(p):
     
 
@@ -358,12 +360,62 @@ def results_as_stacked_csv(p):
                     for filename in filenames_to_extract:
                         
                         input_file_path = os.path.join(input_dir, filename)
-                        hb.log('Making stacked data  for ', aggregation_label, experiment_label, input_file_path)
+                        hb.log('Making stacked data  for ', aggregation_label, experiment_label, input_file_path, level=100)
                         output_file_path = os.path.join(p.cur_dir, hb.file_root(filename) + '_stacked.csv')
-                        headers_to_stack = ['pds']
-                        gtappy_file_io.stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack)
+                        headers_to_stack = 'all'
+                        # headers_to_stack = ['pds']
+                        headers_to_exclude = 'default'
                         
+                        if not hb.path_exists(output_file_path):
+                            gtappy_file_io.stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack)
+                            
+                            
+                            
+    5
+def run_comparison(p):
+    comparison_dir = "C:/Users/jajohns/Files/gtappy/projects/test_gtappy_aez_project_all_years/intermediate/results_as_stacked_csv"
+    headers_to_comare = ['pds', 'qgdp']
+    
+    if p.run_this:
 
+        for aggregation_label in p.aggregation_labels:
+            
+            for experiment_label in p.experiment_labels:
+                
+                for year in p.years:
+                    
+                    if year == 2050:
+                        
+                        last_output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_comare[-1] + '_comparison.csv')
+                        if True or not hb.path_exists(last_output_path):
+                            src_csv_path = os.path.join(p.results_as_stacked_csv_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
+                            comparison_csv_path = os.path.join(comparison_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
+                            
+                            src_df = pd.read_csv(src_csv_path)
+                            comparison_df = pd.read_csv(comparison_csv_path)
+                            
+                            
+                            for header in headers_to_comare:
+                                
+                                for type_string in ['src', 'comparison']:
+                                    
+                                    
+                                    output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_' + type_string + '.csv')
+                                    # select just where the header column equals header
+                                    src_df_header = src_df.loc[src_df['header'] == header]
+                                    comparison_df_header = comparison_df.loc[comparison_df['header'] == header]
+                                    
+                                    src_simplified_df = gtappy_utils.nd_stacked_df_to_single_schema_df(src_df_header)
+                                    
+                                    src_simplified_df.to_csv(output_path, index=False)
+                                    src_simplified_df.to_csv(hb.suri(output_path, 'index'), index=True)
+                                    
+                                    print('Summing ', output_path)
+                                    print(src_simplified_df['value'].sum())
+                                    
+        # START HERE: Try making a time series now.
+        5
+                    
 
 def vizualization(p):
     if p.run_this:

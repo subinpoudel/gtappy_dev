@@ -9,13 +9,31 @@ import numpy as np
 import math
 import harpy
 
-def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all'):
+def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all', headers_to_ignore='default'):
+    """Reads an nd_index csv file and converts it to a nd_stacked csv file.
+    The nd_stacked_csv file is a very flexible format that combines data of many different
+    dimensions, set-definintions, and naming schemes while preserving all of the information.
+    It does this by defining 1-7 pairs of dimN_label and dimN_value columns, where N is the dimension number.
+    The file size for this is huge (Though it compresses well), but it is very flexible for doing
+    pivot tables.
     
-    if headers_to_stack == 'all':
-        raise NotImplementedError('Not yet implemented')        
+    Writes to output_file_path.
+    
+    returns the stacked dataframe.
+    
+    """
+    
     
     # Read the index
     df_index = pd.read_csv(input_file_path)
+    if headers_to_stack == 'all':
+        headers_to_stack = df_index['header'].tolist()
+        
+    if headers_to_ignore == 'default':
+        headers_to_ignore = ['XXNP']
+        
+    # Remove headers to ignore from the headers_to_stack list
+    headers_to_stack = [i for i in headers_to_stack if i not in headers_to_ignore] 
     
     # Get only the subset of the index that will be stacked
     df_index = df_index[df_index['header'].isin(headers_to_stack)]
@@ -33,80 +51,150 @@ def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all')
         df[dim_label] = ''
         df[dim_value] = ''
         
+    # Iterate through headers, saving individual DFs into this list for concatenation later
+    dfs_to_stack = []
+    for header_c, header in enumerate(headers_to_stack):
 
-    for header in headers_to_stack:
         # Analyze row in index for current header
         current_row = df[df['header'] == header]
-        print('current_row', current_row)      
+        hb.log(str(header_c/len(headers_to_stack) * 100), 'percent done. Converting header ', header, 'from', input_file_path, 'to', output_file_path, level=20)      
         
-        
-        current_dims = current_row['dim_names'].iloc[0].split('*')
+        # The logic below is CONVOLUTED AS HELL! But it works. It's just a lot of edge cases to consider.
+        current_dims_pre = str(current_row['dim_names'].values[0])
+        current_shape_pre = current_row['shape'].values[0]
+        is_singular = False
+        if current_dims_pre == 'nan' and current_shape_pre == str(1):
+            is_singular = True
+        try:
+            a = list(current_row['dim_names'].iloc[0])
+            it_broke = False
+        except:
+            it_broke = True
+        if it_broke:
+            current_dims = ['value']
+        elif '*' in current_row['dim_names'].iloc[0]:
+            current_dims = current_row['dim_names'].iloc[0].split('*')
+        else:
+            current_dims = [current_row['dim_names'].iloc[0]]
         
         for c, dim in enumerate(current_dims):
             dim_label_col = 'dim' + str(c) + '_label'
             dim_value_col = 'dim' + str(c) + '_value'
             
-            current_row[dim_label_col] = dim
-        
-        # START HERE: This is working, but test it for higher-dimensional data
-                
+            current_row.loc[:, dim_label_col] = dim
+                        
         header_data_dirname = os.path.splitext(input_file_path)[0]
         header_data_dir = os.path.join(os.path.split(input_file_path)[0], header_data_dirname)
         header_data_path = os.path.join(header_data_dir, header + '.csv')
         
         data_df = pd.read_csv(header_data_path)
         
-        # Set the header of the index to be named 'header'
+        # LEARNING POINT: using
+        # data_df = pd.read_csv(header_data_path, index_col=0)
+        # causes us to LOSE a column of data! wtf       
+
         data_df = data_df.rename(columns={data_df.columns[0]: current_dims[0]})
         
+        hb.log('BEFORE set index\n\n', data_df, level=100)
         # Set the index to be this column
-        data_df = data_df.set_index(current_dims[0])
-        data_df.to_csv(hb.suri(output_file_path, '1'), index=False)
-        print(data_df)
+        if len(current_dims) == 1:
+            if len(data_df) > 1:
+                if len(data_df.columns) == 1:
+                    pass
+                    # data_df = data_df.set_index(current_dims[0]
+                else:
+                    data_df = data_df.set_index(current_dims[0])
+            else:
+                if is_singular:
+                    pass
+                elif len(data_df.columns) == 1:
+                    pass
+                    # data_df = data_df.set_index(current_dims[0])
+                else:
+                    data_df = data_df.set_index(current_dims[0])
+        else:
+            data_df = data_df.set_index(current_dims[0:-1])      
+        hb.log('AFTER set index\n\n', data_df, level=100)
         
-        # Set the columns of data_df to be a multiindex
+        if len(current_dims) > 1:
+            hb.log('columns before creating multiindex', list(data_df.columns), level=100)
+            # Create a multiindex from dimensions and values
+            data_df.columns = pd.MultiIndex.from_product([current_dims[-1:], data_df.columns], names=[current_dims[-1] + '_index', current_dims[-1]])
+
+            hb.log('columns after creating multiindex', data_df.columns, level=100)
+            hb.log(data_df, level=100)
+            
+            data_df_stacked = data_df.stack()        
+        else:
+            if is_singular:
+                data_df_stacked = data_df
+            else:
+                data_df_stacked = data_df
+            
+        hb.log('Stacked\n\n', data_df_stacked, level=100)
         
-        # Create a multiindex from dimensions and values
-        data_df.columns = pd.MultiIndex.from_product([current_dims[1:], data_df.columns], names=[current_dims[0], current_dims[1]])
+        # Flatten things out so it can go in the n-dim stacked output
+        data_df_stacked.columns = ['value']        
+        data_df_stacked['header'] = header        
+        hb.log('added header for merging with index\n', data_df_stacked, level=100)
         
-        # Save
-        print('output_file_path', output_file_path)
-        data_df.to_csv(hb.suri(output_file_path, '2'), index=False)
+        # reset the index so they are preserved when merged, but first check for duplicate index names        
+        duplicated_cols = hb.list_find_duplicates(data_df_stacked.index.names)
+        if len(duplicated_cols) > 0:
+            hb.log('DUPLICATES FOUND IN INDEX. Renaming.', duplicated_cols, level=100)
+            data_df_stacked = data_df_stacked.reset_index(allow_duplicates=True)
+            columns_list = data_df_stacked.columns.tolist()
+            for c, column in enumerate(columns_list):
+                if column in duplicated_cols:
+                    columns_list[c] = column + '_' + str(c)
+                    current_dims[c] = column + '_' + str(c)
+            data_df_stacked.columns = columns_list
+        data_df_stacked = data_df_stacked.reset_index() # allow_duplicates=True) resulted in two columns being returned later on        
+        hb.log('data_df_stacked_after_reset_index\n', data_df_stacked, level=100)
         
-        print('data_df.columns', data_df.columns)
+        # Note that we only merge with the selection because we will concatenate at the end for speed
+        df_selection = df[df['header'] == header]
+        df_current = hb.df_merge(df_selection, data_df_stacked, on='header', how='outer', verbose=False)
         
-        data_df_stacked = data_df.stack()
-        
-        print('data_df_stacked\n', data_df_stacked)
-        
-        data_df_stacked.columns = ['value']
-        data_df_stacked['header'] = header
-        data_df_stacked.to_csv(hb.suri(output_file_path, '3'), index=True)
-        
-        # reset the index so they are preserved when merged
-        data_df_stacked = data_df_stacked.reset_index()
-        df = hb.df_merge(df, data_df_stacked, on='header', how='outer', verbose=True)
-        
+        hb.log('df after merge with stacked \n', df, level=100)
         for c, dim in enumerate(current_dims):
             dim_label_col = 'dim' + str(c) + '_label'
             dim_value_col = 'dim' + str(c) + '_value'
             
-            df[dim_label_col] = dim
-            df[dim_value_col] = df[dim]
+            df_current[dim_label_col] = dim
             
-            df = df.drop(columns=[dim])
-                    
+            if dim in df_current.columns:
+                df_current[dim_value_col] = df_current[dim]
+            else:
+                df_current[dim_value_col] = df_current['value']
+            
+            if dim != 'value':
+                if dim in df_current.columns:
+                    df_current = df_current.drop(columns=[dim])
+            
+        # Now do the actual value
+        dim_label_col = 'dim' + str(c+1) + '_label'
+        dim_value_col = 'dim' + str(c+1) + '_value'   
 
-        df.to_csv(hb.suri(output_file_path), index=False)
+        df_current[dim_label_col] = 'value'
+        try:        
+            df_current[dim_value_col] = df_current['value'].astype(float)          
+        except:
+            df_current[dim_value_col] = df_current['value']
+            
+        df_current = df_current.drop(columns=['value'])
+        if 'index' in df_current.columns:
+            df_current = df_current.drop(columns=['index'])
+        dfs_to_stack.append(df_current)
         
-        
-        
-        
-        5
-        
-        
-        
+    # Stack everything in df_to_stack
+    df = pd.concat(dfs_to_stack)
+    # Change the dtype of 'value' column to float in-place
     
+    df.to_csv(hb.suri(output_file_path, ''), index=False)
+    
+    return df
+ 
     
 
 
@@ -131,7 +219,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
     HeadsOnFile = InFile.getHeaderArrayNames()
     
     sl4_object = harpy.SL4(input_har_path)
-    print(sl4_object)
+
 
     # Define the data recorded to the har_index
     header_data = {
@@ -416,10 +504,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
         current_header_data_path = os.path.join(har_csv_dir, header + '.csv')
         
         implied_numpy_type = ''
-        
-            
-        if header == 'qgdp':
-            print ('here')
+
         skip = False
         if len(shape) == 0:
             # row_index = DataHead.setElements[0]
@@ -505,7 +590,6 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
     # Only the base data seems to be distributed with Sets.har files. sl4s do not have this. Thus only run if there is something that populates set_names_dict
     if len(set_names_dict) > 0:
         for set_name, set_elements in set_names_dict.items():
-            # print('Adding header for set: ', set_name, set_elements)
 
 
             header_data['header'].append(set_name)
@@ -592,10 +676,6 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
     # headers_to_iterate = [i for i in HeadsOnFile if i ]
     for header in HeadsOnFile:
         
-        if header == 'VDEP':
-            print('In VDEP header writing.')
-        
-        # START HERE: consider something like if header in headers_to_skip: Currently it is failing because DREL is a 1C which messes up the RE data type logic.
         # Get a specific header from the InFile
         DataHead = InFile[header]
         
@@ -687,8 +767,7 @@ def har_to_indexed_dfs(input_har_path, output_index_path):
         current_header_data_path = os.path.join(har_csv_dir, header + '.csv')
         
         implied_numpy_type = ''
-        if header == 'SAVE':
-            print('in SAVE')
+
         if len(shape) == 0:
             try:
                 row_index = DataHead.setElements[0]

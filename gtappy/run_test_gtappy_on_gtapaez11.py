@@ -8,18 +8,20 @@ if __name__ == '__main__':
     ### ----- CHANGE LOG ---------------------------------
     """
     
-1. Erwin todo: in the release's Data folder, the aggregation label gtapaez11-50 should be renamed v11-s26-r50
+1. In the release's Data folder, the aggregation label gtapaez11-50 should be renamed v11-s26-r50, correct?
 2. Also note that I have decided to have the most recent release always have NO timestamp whereas dated versions of same-named 
 models/aggregations should add on the timestamp of when they were first released
-3. Propose changing the names of the cmf files from cwon_bau.cmf to gtapv7-aez-rd_bau.cmf and cwon_bau_es.cmf to gtapv7-aez-rd_bau_es 
+3. Propose changing the names of the cmf files from cwon_bau.cmf to gtapv7-aez-rd_bau.cmf and cwon_bau-es.cmf to gtapv7-aez-rd_bau-es 
 (note difference between hyphens (which imply same-variable) and underscores, which are used to split into list.)
 4. Propose not using set PROJ=cwon in the CMF as that is defined by the projectflow object.
 5. propose changing SIMRUN to just 'experiment_name' ie "bau" rather than "projname" + "bau"
     
 6. Reorganize this so that data is in the base_data_dir and the output is separated from the code release"
 set MODd=..\mod
-set SOLd=..\out
 set CMFd=.\cmf
+
+# THESE TWO STAY OUTSIDE THE RELEASE
+set SOLd=..\out
 set DATd=..\data\%AGG%
     
     
@@ -39,11 +41,30 @@ file but not vice versa.
                     
 9. Simple question: Is there any way to read the raw GEMPACK output to get a sense of how close to complete you are? I would like to make an approximate progress bar.
 
+- When you say "automatic accuracy", you can. 
+
+  +++>  Beginning subinterval number 4.
+ 
+  --->  Beginning pass number 1 of 2-pass calculation, subinterval 4.
+  
+   Beginning pass number 6 of 6-pass calculation, subinterval 6
+  
+  
+
 10. Would it be possible to not put a Y in front of years like Y2018? This can mess up string->int conversions.
+
+keep Y, gempack can't have non-numeric characters at the start of a var
 
 11. There is no bau-SUM_Y2050 (but ther is for VOL and WEL). Is this intentional?
 
+NO! SUM describes the starting database.
+
+Welfare not possibly in RD because no discount rate eg
+
 12. Question: Is EVERYTHING stored in the SL4? I.e., are the other files redundant?
+
+
+No, apparently things like the converting the sl4 to volume terms is not stored in the sl4, so that needs to come in on sltht or in ViewSOL
 
     """
 
@@ -70,7 +91,7 @@ file but not vice versa.
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_aez_project3'
+    project_name = 'test_gtappy_aez_project_3'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
@@ -109,7 +130,9 @@ file but not vice versa.
     
     ### ------------- EVERYTHING BELOW IS DEFINED with RELATIVE PATHS -----------
     # define a list of years from 2018 to 2050
-    p.years = list(range(2018, 2051)) # Exclusive of base_year
+    p.years = list(range(2018, 2020)) # Every 5 years but add the same terminal 2050
+    # p.years = list(range(2018, 2051, 5)) + [2050] # Every 5 years but add the same terminal 2050
+    # p.years = list(range(2018, 2051)) # Exclusive of base_year
     # p.years = [2018, 2019] # Exclusive of base_year
     p.base_year = 2017
     p.key_base_year = 2017 # TODOO In seals we have a key base year and there are multiple p.base_years = []. Generalize this and make it so that base_year is singluar but p.base_years is renamed p.prior_years

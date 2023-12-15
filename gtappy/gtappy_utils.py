@@ -56,7 +56,24 @@ def gtap_shockfile_to_df(input_path):
     return df
 
 
+def nd_stacked_df_to_single_schema_df(nd_stacked_df):
+    """Takes and nds_df and makes it more readable (though now requires the dims to be the same)."""
+    
+    n_dims = nd_stacked_df['ndims'].values[0] # Note the switch from ndims to n_dims. This is because ndims is the gtap-specific name but breaks EE standard.
+    dim_names = nd_stacked_df['dim_names'].values[0].split('*')
+    initial_columns = ['header', 'long_name', 'coefficient_name']
+    df_out = nd_stacked_df[initial_columns].copy()
+    
+    # Add values so it writes it too
+    dim_names += ['value']
+    for dim_c in range(n_dims+1):
+        current_dim_name = dim_names[dim_c]
+        current_values_column_label = 'dim' + str(dim_c) + '_value'
+        df_out[current_dim_name] = nd_stacked_df.loc[:, current_values_column_label]
+        
+        # Change the datatype to floats
+        if current_dim_name == 'value':
+            df_out[current_dim_name] = df_out[current_dim_name].astype(float)
 
-
-
-
+    return df_out 
+        
