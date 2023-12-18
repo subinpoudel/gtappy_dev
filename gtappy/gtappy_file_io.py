@@ -8,8 +8,9 @@ import pandas as pd
 import numpy as np
 import math
 import harpy
+import warnings
 
-def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all', headers_to_ignore='default'):
+def ndstack_indexed_csv(input_file_path, output_file_path, headers_to_stack='all', headers_to_ignore='default'):
     """Reads an nd_index csv file and converts it to a nd_stacked csv file.
     The nd_stacked_csv file is a very flexible format that combines data of many different
     dimensions, set-definintions, and naming schemes while preserving all of the information.
@@ -189,16 +190,33 @@ def stack_indexed_dfs(input_file_path, output_file_path, headers_to_stack='all',
         
     # Stack everything in df_to_stack
     df = pd.concat(dfs_to_stack)
+    
     # Change the dtype of 'value' column to float in-place
+    # But note that because in the stacked format we don't know from the column labels which
+    # is the actual column that stores 'value', we get it from the last assigned value of 
+    # dim_value_col
+    
+    # first test to see if it's floatable
+    try:
+        df[dim_value_col] = df[dim_value_col].astype(float)
+    except:
+        pass # Must have been string.
     
     df.to_csv(hb.suri(output_file_path, ''), index=False)
     
     return df
  
     
+def read_ndstacked_csv(input_file_path):
+    # Small function to read nd_stacked csvs withotu throwing the error that
+    # there are different dtypes ina column (which is actually intended because of the nd-stacked structure)
+    from pandas.errors import DtypeWarning
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DtypeWarning)
+        df = pd.read_csv(input_file_path)
+    return df
 
-
-def sl4_to_indexed_dfs(input_har_path, output_index_path):
+def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
     """Convert all information in input_har_path into several CSVs that can be programatically rewritten back to a conformant har.
     All paths are written relative to output_index_path (either parallel to or in a newly created output dir)
     
@@ -639,7 +657,7 @@ def sl4_to_indexed_dfs(input_har_path, output_index_path):
 
 
 
-def har_to_indexed_dfs(input_har_path, output_index_path):
+def har_to_ndindexed_dfs(input_har_path, output_index_path):
     """Convert all information in input_har_path into several CSVs that can be programatically rewritten back to a conformant har.
     All paths are written relative to output_index_path (either parallel to or in a newly created output dir)
     
@@ -1109,7 +1127,7 @@ def directory_of_hars_to_indexed_dfs(input_dir, output_dir=None, produce_hars_fr
             if not hb.path_exists(har_index_path, verbose=True): # Minor note, could add more robust file validation to check for ALL the implied files to exist.
             
                 # Extract the har to the indexed DF format.
-                har_to_indexed_dfs(har_filename, har_index_path)       
+                har_to_ndindexed_dfs(har_filename, har_index_path)       
                 
             if produce_hars_from_csvs:
 

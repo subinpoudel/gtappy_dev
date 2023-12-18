@@ -36,27 +36,27 @@ for path in paths_to_test:
     path_extension = os.path.splitext(path)[1]
     if path.endswith('.har') or path.endswith('.UPD'):
         har_as_csv_path = os.path.join(test_output_dir, hb.file_root(path) + '_as_csv.csv')
-        gtappy_file_io.har_to_indexed_dfs(path, har_as_csv_path)
+        gtappy_file_io.har_to_ndindexed_dfs(path, har_as_csv_path)
 
         csv_back_as_har_path = os.path.join(test_output_dir, hb.file_root(path) + '_back_as_har' + path_extension)
         gtappy_file_io.indexed_dfs_to_har(har_as_csv_path, csv_back_as_har_path)
 
         har_back_as_csv_path = os.path.join(test_output_dir, hb.file_root(path) + '_back_as_csv.csv')
-        gtappy_file_io.har_to_indexed_dfs(csv_back_as_har_path, har_back_as_csv_path)
+        gtappy_file_io.har_to_ndindexed_dfs(csv_back_as_har_path, har_back_as_csv_path)
 
         # Assert that a df created directly from the har is identical to the df created from a har created from the initial df.
         gtappy_file_io.assert_two_indexed_csv_paths_are_identical(har_as_csv_path, har_back_as_csv_path)
 
     elif path.endswith('.sl4'):
         har_as_csv_path = os.path.join(test_output_dir, hb.file_root(path) + '_as_sl4_csv.csv')
-        # gtappy_file_io.sl4_to_indexed_dfs(path, har_as_csv_path)
-        gtappy_file_io.sl4_to_indexed_dfs(path, har_as_csv_path)
+        # gtappy_file_io.sl4_to_ndindexed_dfs(path, har_as_csv_path)
+        gtappy_file_io.sl4_to_ndindexed_dfs(path, har_as_csv_path)
 
         # csv_back_as_har_path = os.path.join(test_output_dir, hb.file_root(path) + '_back_as_har' + path_extension)
         # gtappy_file_io.indexed_dfs_to_har(har_as_csv_path, csv_back_as_har_path)
 
         # har_back_as_csv_path = os.path.join(test_output_dir, hb.file_root(path) + '_back_as_csv.csv')
-        # gtappy_file_io.har_to_indexed_dfs(csv_back_as_har_path, har_back_as_csv_path)
+        # gtappy_file_io.har_to_ndindexed_dfs(csv_back_as_har_path, har_back_as_csv_path)
 
         # Assert that a df created directly from the har is identical to the df created from a har created from the initial df.
         # gtappy_file_io.assert_two_indexed_csv_paths_are_identical(har_as_csv_path, har_back_as_csv_path)

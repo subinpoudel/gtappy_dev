@@ -38,5 +38,5 @@ def build_extract_and_run_aez_task_tree(p):
     p.gtap_runs_task = p.add_task(gtappy_tasks.gtap_runs)
     p.results_as_csv_task = p.add_task(gtappy_tasks.results_as_csv)
     p.results_as_stacked_csv_task = p.add_task(gtappy_tasks.results_as_stacked_csv)
-    p.run_comparison_task = p.add_task(gtappy_tasks.run_comparison)
+    p.single_year_variable_csvs_task = p.add_task(gtappy_tasks.single_year_variable_csvs)
     p.visualization_task = p.add_task(gtappy_tasks.vizualization)

@@ -56,7 +56,7 @@ def gtap_shockfile_to_df(input_path):
     return df
 
 
-def nd_stacked_df_to_single_schema_df(nd_stacked_df):
+def ndstacked_df_to_tidy_df(nd_stacked_df):
     """Takes and nds_df and makes it more readable (though now requires the dims to be the same)."""
     
     n_dims = nd_stacked_df['ndims'].values[0] # Note the switch from ndims to n_dims. This is because ndims is the gtap-specific name but breaks EE standard.
