@@ -12,6 +12,447 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 
+def base_data_generation(p):
+    pass 
+
+
+    
+def gadm_ingested(p):
+    p.current_task_documentation = """
+Input the GADM v 4.10 ADM0 layer and use shapely to simplify it so we can create multiple
+resolutions of GADM.
+    """    
+    # hb.log(p.current_task_documentation)
+    
+    # Use ProjectFlow's get_path method to find the most "local" version of the file that exists and set that as the path
+    # Note, gadm is the domain and i chose to keep with their notation of adm0 for this dimension, but it could have been more consistent as r263
+    p.gadm_adm0_vector_input_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_410_adm0.gpkg'), possible_dirs='default', copy_to_project=False)
+    p.gadm_adm0_1sec_vector_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_adm0_1sec.gpkg'))
+    p.gadm_adm0_10sec_vector_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_adm0_10sec.gpkg'))
+    p.gadm_adm0_100sec_vector_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_adm0_100sec.gpkg'))
+    p.gadm_adm0_labels_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_adm0_labels.csv'))
+
+    
+    # the local variable gadm is either a string (if unloaded) or the gdf (if loaded). This ensures we
+    # only load it once.
+    gadm = p.gadm_adm0_vector_input_path    
+      
+    
+    # Note EE Spec validates by the existence of the LAST path generated.
+    if not hb.path_exists(p.gadm_adm0_100sec_vector_path):
+        ten_sec_size = 0.002777777777777777884
+        sizes = {1: ten_sec_size * .1, 10: ten_sec_size, 100: 10 * ten_sec_size, } # Tried 1000: 100 * ten_sec_size but with the simplification algorithm used, it just was a jaggy mess and wasn't much smaller cause we're not dropping islands.
+        template_path = os.path.join(p.cur_dir, 'gadm_adm0.gpkg') 
+        
+        for sec, deg in sizes.items():
+            
+            # Just load it on first pass
+            if type(gadm) is str:
+                gadm = hb.read_vector(p.gadm_adm0_vector_input_path)
+            
+            output_path = hb.suri(template_path, str(sec) + 'sec')        
+            if not hb.path_exists(output_path):
+                
+                hb.log('Creating', output_path)            
+                hb.simplify_geometry(gadm, output_path, tolerance=deg, preserve_topology=True, drop_below_tolerance_multiplier=None)
+            
+    # Create a table (no geometry) version that is quicker to load and will be used for later merges
+    # Here is where we rename columns to be EE spec.
+    if not hb.path_exists(p.gadm_adm0_labels_path):
+        gdf = hb.read_vector(p.gadm_adm0_100sec_vector_path)
+        df = gdf[[i for i in gdf.columns if i != 'geometry']]
+        
+        # Sort based on value of label
+        df = df.sort_values('label')
+        
+        # Add new column with integers starting at 1 and incrementing up
+        df['id'] = np.arange(1, len(df) + 1).astype(np.int64)
+        
+        # Put the 'id' column first
+        new_cols = ['id'] + [i for i in df.columns if i != 'id']
+        df = df[new_cols]
+    
+        # Convert all floats to ints
+        df = hb.df_convert_column_type(df, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+        
+        # Save
+        hb.create_directories(p.gadm_adm0_labels_path)
+        df.to_csv(p.gadm_adm0_labels_path, index=False)
+    
+
+def gtap_aez_seals_correspondences(p):
+    p.current_task_documentation = """
+    Create correspondence CSVs from ISO3 countries to GTAPv11 160
+    regions, and then to gtapaezv11 50ish regions, also put the classification
+    for seals simplification and luh.  
+    
+    Note the careful naming where regions is used in file paths and for the df variable name
+    but the column header is region
+    """
+    
+    # TODOO Note that only the actual file strings are made EE spec. The variable names themselves still need to,
+    
+    # These are teh two input paths I receive from Erwin. They are unmodified except for adding honduras as separate.
+    p.gtapv7_r251_r160_correspondence_input_path = os.path.join(p.base_data_dir, 'gtappy', 'aggregation_mappings', 'gtapv7_r251_r160_correspondence.xlsx') # Erwin's naming
+    p.gtapv7_r251_s65_r50_s26_correspondence_input_path = os.path.join(p.base_data_dir, 'gtappy', 'aggregation_mappings', 'gtapv7_r251_s65_r50_s26_correspondence.xlsx') # Erwin's naming
+    
+    # Project level paths that initialize even without running this task
+    
+    # Usually I don't have to write out the non-correspondence files, but here I do because the full labels weren't in the inputs
+    # so I write them to merge them in.
+    # Also note that I chose not to have the word _regions or similar attached because this is a singular thing and its label is defined by r251
+    p.gtapv7_r251_labels_path = os.path.join(p.cur_dir, 'gtapv7_r251_labels.csv')
+    p.gtapv7_r160_labels_path = os.path.join(p.cur_dir, 'gtapv7_r160_labels.csv')
+    p.gtapv7_r50_labels_path = os.path.join(p.cur_dir, 'gtapv7_r50_labels.csv')
+    p.gtapv7_r251_r160_correspondence_path = os.path.join(p.cur_dir, 'gtapv7_r251_r160_correspondence.csv')
+        
+    # Activities and commodities are separate. Activiteis have 24 total, subset of commodities, which have 26
+    p.gtapv7_s65_a24_correspondence_path = os.path.join(p.cur_dir, 'gtapv7_s65_a24_correspondence.csv')
+    p.gtapv7_s65_c26_correspondence_path = os.path.join(p.cur_dir, 'gtapv7_s65_c26_correspondence.csv')
+    p.gtapv7_r160_r50_correspondence_path = os.path.join(p.cur_dir, 'gtapv7_r160_r50_correspondence.csv')
+    
+    # Combine the above correspondences into a single file.
+    p.gadm_r263_gtapv7_r251_correspondence_path = os.path.join(p.cur_dir, 'gadm_r263_gtapv7_r251_correspondence.csv')
+    p.gtapv7_r251_r160_r50_correspondence = os.path.join(p.cur_dir, 'gtapv7_r251_r160_r50_correspondence.csv')
+    p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path = os.path.join(p.cur_dir, 'gadm_r263_gtapv7_r251_r160_r50_correspondence.csv')
+    
+    # Identical to the full previous one but handy for shorter naming, based on the cge release string
+    p.gtapv7_aez_rd_correspondence_path = os.path.join(p.cur_dir, 'gtapv7_aez_rd_correspondence.csv')
+    
+    if p.run_this:
+           
+        if not hb.path_all_exist([p.gtapv7_r251_labels_path, p.gtapv7_r160_labels_path, p.gtapv7_r251_r160_correspondence_path]):
+            
+            # Process tine Legend worksheet in the input into two listings of the labels and ids from iso3 (as defined by gtap11 and gtap11 regions)
+            gtap11_region_correspondence_input_legend = pd.read_excel(p.gtapv7_r251_r160_correspondence_input_path, sheet_name='Legend', header=1, index_col=None)
+            
+            # drop the Unnamed columns
+            gtap11_region_correspondence_legend = gtap11_region_correspondence_input_legend[[i for i in gtap11_region_correspondence_input_legend.columns if 'Unnamed' not in i]]
+                        
+            # Rename columns to be match specification in EE   
+            # Note that eg No. is used twice where the first is r160 and the second is r251. New input mapping should clarify                         
+            gtap11_region_correspondence_legend = gtap11_region_correspondence_legend.rename(columns={'No.': 'gtapv7_r160_id', 'GTAP Region': 'gtapv7_r160_label', 'Description': 'gtapv7_r160_description', 'No..1': 'gtapv7_r251_id', 'Country (iso)': 'gtapv7_r251_label', 'Description.1': 'gtapv7_r251_description'})
+            
+            # Shuffle things around to match the EE spec
+            gtap11_iso3_1 = gtap11_region_correspondence_legend[['gtapv7_r251_id', 'gtapv7_r251_label', 'gtapv7_r251_description']]
+            gtap11_iso3_2 = gtap11_iso3_1.dropna()
+            gtapv7_r251_naming = gtap11_iso3_2.rename(columns={'gtapv7_r251_description': 'gtapv7_r251_name'})
+            gtapv7_r251_naming['gtapv7_r251_description'] = gtapv7_r251_naming['gtapv7_r251_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+
+            # Convert all floats to ints
+            gtapv7_r251_naming = hb.df_convert_column_type(gtapv7_r251_naming, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+
+            # Write it to a csv while dropping the index
+            gtapv7_r251_naming.to_csv(p.gtapv7_r251_labels_path, index=False)
+            
+            # Shuffle things around to match the EE spec
+            gtap11_regions_1 = gtap11_region_correspondence_legend[['gtapv7_r160_id', 'gtapv7_r160_label', 'gtapv7_r160_description']]
+            gtap11_regions_2 = gtap11_regions_1.dropna()
+            gtap11_regions = gtap11_regions_2.rename(columns={'gtapv7_r160_description': 'gtapv7_r160_name'})
+            gtap11_regions['gtapv7_r160_description'] = gtap11_regions['gtapv7_r160_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            
+            # Note for input No., it was interpretted as a float. fix that here.
+            gtap11_regions['gtapv7_r160_id'] = gtap11_regions['gtapv7_r160_id'].astype(np.int64)
+
+
+            # Convert all floats to ints                    
+            gtap11_regions = hb.df_convert_column_type(gtap11_regions, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+
+            # Write it to a csv while dropping the index
+            gtap11_regions.to_csv(p.gtapv7_r160_labels_path, index=False)
+            
+            # Process the MapCTRY2GREG worksheet in the input
+            gtap11_region_correspondence_input_map = pd.read_excel(p.gtapv7_r251_r160_correspondence_input_path, sheet_name='MapCTRY2GREG', header=1, index_col=None)
+            df = gtap11_region_correspondence_input_map[[i for i in gtap11_region_correspondence_input_map.columns if 'Unnamed' not in i]]
+            df2 = df.rename(columns={'No.': 'gtapv7_r251_id', 'Country (iso)': 'gtapv7_r251_label', 'Name': 'gtapv7_r251_name', 'GTAP region': 'gtapv7_r160_label', 'Name.1': 'gtapv7_r160_name'})
+            
+            # Mergine in values from gtap11_region_ids
+            gtap11_regions = pd.read_csv(p.gtapv7_r160_labels_path)
+            gtap11_regions = gtap11_regions.drop(columns=['gtapv7_r160_name'])
+            df2a = hb.df_merge(df2, gtap11_regions, left_on='gtapv7_r160_label', right_on='gtapv7_r160_label', verbose=False)
+            df2a['gtapv7_r251_description'] = df2a['gtapv7_r251_name']
+            df2a['gtapv7_r160_description'] = df2a['gtapv7_r160_name']
+            
+            # Reorder
+            df4 = df2a[['gtapv7_r251_id', 'gtapv7_r160_id', 'gtapv7_r251_label', 'gtapv7_r160_label', 'gtapv7_r251_name', 'gtapv7_r160_name', 'gtapv7_r251_description', 'gtapv7_r160_description']] 
+                        
+            gtap11_iso3_gtap11_region_correspondence = df4.sort_values('gtapv7_r160_id') # Sort back to the original order per the EE spec
+
+            # Convert all floats to ints
+            gtap11_iso3_gtap11_region_correspondence = hb.df_convert_column_type(gtap11_iso3_gtap11_region_correspondence, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+            
+            # Write it to a csv while dropping the index
+            gtap11_iso3_gtap11_region_correspondence.to_csv(p.gtapv7_r251_r160_correspondence_path, index=False)
+        
+        if not hb.path_exists(p.gadm_r263_gtapv7_r251_correspondence_path):
+            
+            # Load the two tables
+            gadm = pd.read_csv(p.gadm_adm0_labels_path)
+            gtapv7_r251_naming = pd.read_csv(p.gtapv7_r251_labels_path)
+                        
+            # Make gadm lowercase
+            gadm['label'] = gadm['label'].str.lower()
+
+            # TODOO Figure out how to make this a HB level choice.
+            pd.set_option('display.max_column', 33)
+            pd.set_option('expand_frame_repr', False)
+            
+
+            gadm = gadm.rename(columns={'id': 'gadm_id', 'label': 'gadm_label', 'name': 'gadm_name'})
+            gadm['gadm_description'] = gadm['gadm_name'] 
+            gadm_r263_labels_path = os.path.join(p.cur_dir, 'gadm_r263_labels.csv')
+            gadm.to_csv(gadm_r263_labels_path, index=False)
+            
+            # Do an outer merge
+            df = hb.df_merge(gadm, gtapv7_r251_naming, left_on='gadm_label', right_on='gtapv7_r251_label', verbose=False)
+            
+            # Clean            
+            new_cols = ['gadm_id', 'gtapv7_r251_id', 'gadm_label', 'gtapv7_r251_label', 'gadm_name', 'gtapv7_r251_name', 'gadm_description', 'gtapv7_r251_description']
+            df = df[new_cols]     
+            
+            # Drop any row with a missing value in id, label or name
+            df2 = df.dropna(subset=['gadm_id', 'gadm_label', 'gadm_name', 'gtapv7_r251_id', 'gtapv7_r251_label', 'gtapv7_r251_name'])    
+
+
+            # Convert all floats to ints
+            df2 = hb.df_convert_column_type(df2, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+            
+            df2.loc[:, 'gadm_description'] = df2['gadm_name']
+
+            df2.to_csv(p.gadm_r263_gtapv7_r251_correspondence_path, index=False)
+            
+                   
+           
+        if not hb.path_all_exist([p.gtapv7_s65_a24_correspondence_path, p.gtapv7_s65_c26_correspondence_path, p.gtapv7_r160_r50_correspondence_path]):
+            
+            # Read the common input XLSX worksheet for sectors and activities
+            gtap11_sectors_gtapaez11_sectors_correspondence_input_sectors = pd.read_excel(p.gtapv7_r251_s65_r50_s26_correspondence_input_path, sheet_name='Sectors', header=1, index_col=None)
+            
+            # Also get the Legends worksheet
+            gtap11_sectors_gtapaez11_sectors_correspondence_input_legend = pd.read_excel(p.gtapv7_r251_s65_r50_s26_correspondence_input_path, sheet_name='Legend', header=1, index_col=None)
+            
+            
+            # Split Activities and Commodities (ACT, COMM)
+            # SELECT just activities
+            df = gtap11_sectors_gtapaez11_sectors_correspondence_input_sectors[['No.', 'Sector', 'Aggregate Activity', 'Description']]
+            rename_dict = {
+                            'No.': 'gtapv7_s65_id', 
+                            'Sector': 'gtapv7_s65_label',
+                            'Aggregate Activity': 'gtapv7_a24_label',
+                            'Description': 'gtapv7_a24_name',
+                            }            
+            df2 = df.rename(columns=rename_dict)
+            # Add empty columns
+            # 
+            # # Get the name and description from the legend
+            df_s65_sectors_legend = gtap11_sectors_gtapaez11_sectors_correspondence_input_legend[['No..1', 'Sector', 'Description']]
+            rename_dict = {
+                'No..1': 'gtapv7_s65_id', 
+                'Sector': 'gtapv7_s65_label',
+                'Description': 'gtapv7_s65_name',
+                }      
+            df_s65_sectors_legend = df_s65_sectors_legend.rename(columns=rename_dict)            
+            df_s65_sectors_legend['gtapv7_s65_description'] = df_s65_sectors_legend['gtapv7_s65_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            df_s65_sector_labels_path = os.path.join(p.cur_dir, 'gtapv7_s65_labels.csv')
+            # Drop empty rows
+            df_s65_sectors_legend = df_s65_sectors_legend.dropna(subset=['gtapv7_s65_id', 'gtapv7_s65_label', 'gtapv7_s65_name', 'gtapv7_s65_description'])
+            
+            df_s65_sectors_legend = hb.df_convert_column_type(df_s65_sectors_legend, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+
+            
+            df_s65_sectors_legend.to_csv(df_s65_sector_labels_path, index=False)            
+                        
+                        
+            df_a24_activities_legend = gtap11_sectors_gtapaez11_sectors_correspondence_input_legend[['No..3', 'Activity', 'Aggregate activity description']]
+            rename_dict = {
+                'No..3': 'gtapv7_a24_id', 
+                'Activity': 'gtapv7_a24_label',
+                'Aggregate activity description': 'gtapv7_a24_name',
+                }      
+            df_a24_activities_legend = df_a24_activities_legend.rename(columns=rename_dict)            
+            df_a24_activities_legend['gtapv7_a24_description'] = df_a24_activities_legend['gtapv7_a24_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            
+
+            df_a24_sector_labels_path = os.path.join(p.cur_dir, 'gtapv7_a24_labels.csv')
+            # Drop empty rows
+            
+            df_a24_activities_legend = df_a24_activities_legend.dropna(subset=['gtapv7_a24_id', 'gtapv7_a24_label', 'gtapv7_a24_name', 'gtapv7_a24_description'])
+            df_a24_activities_legend = hb.df_convert_column_type(df_a24_activities_legend, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+            df_a24_activities_legend.to_csv(df_a24_sector_labels_path, index=False)     
+            
+            df_c26_activities_legend = gtap11_sectors_gtapaez11_sectors_correspondence_input_legend[['No..4', 'Commodity', 'Aggregate commodity description']]
+            rename_dict = {
+                'No..4': 'gtapv7_c26_id', 
+                'Commodity': 'gtapv7_c26_label',
+                'Aggregate commodity description': 'gtapv7_c26_name',
+                }      
+            df_c26_activities_legend = df_c26_activities_legend.rename(columns=rename_dict)            
+            df_c26_activities_legend['gtapv7_c26_description'] = df_c26_activities_legend['gtapv7_c26_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            df_c26_sector_labels_path = os.path.join(p.cur_dir, 'gtapv7_c26_labels.csv')
+            df_c26_activities_legend = df_c26_activities_legend.dropna(subset=['gtapv7_c26_id', 'gtapv7_c26_label', 'gtapv7_c26_name', 'gtapv7_c26_description'])
+            
+            df_c26_activities_legend = hb.df_convert_column_type(df_c26_activities_legend, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+
+            df_c26_activities_legend.to_csv(df_c26_sector_labels_path, index=False)    
+            
+            df2['gtapv7_s65_name'] = ''
+            df2['gtapv7_a24_description'] = ''
+            df3 = df2.sort_values('gtapv7_a24_label') # First sort it by the gtapaez11_activity_label to assign an order ID to it
+            grouped = df3.groupby('gtapv7_a24_label')
+            df3['gtapv7_a24_id'] = grouped.ngroup() + 1
+            df3['gtapv7_s65_description'] = df3['gtapv7_s65_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            df4 = df3[['gtapv7_s65_id', 'gtapv7_a24_id', 'gtapv7_s65_label', 'gtapv7_a24_label', 'gtapv7_s65_name', 'gtapv7_a24_name', 'gtapv7_s65_description', 'gtapv7_a24_description']] 
+            gtapv7_s65_a24_correspondence = df4.sort_values('gtapv7_a24_id') # Sort back to the original order per the EE spec
+            
+            # Convert all floats to ints
+            gtapv7_s65_a24_correspondence = hb.df_convert_column_type(gtapv7_s65_a24_correspondence, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+                                
+            # Merge back in descriptions
+            gtapv7_s65_a24_correspondence = gtapv7_s65_a24_correspondence.drop(columns=['gtapv7_s65_name', 'gtapv7_s65_description', 'gtapv7_s65_id'])
+            gtapv7_s65_a24_correspondence = hb.df_merge(gtapv7_s65_a24_correspondence, df_s65_sectors_legend, left_on='gtapv7_s65_label', right_on='gtapv7_s65_label', verbose=False)
+            gtapv7_s65_a24_correspondence['gtapv7_a24_description'] = gtapv7_s65_a24_correspondence['gtapv7_a24_name']
+            # Reorder so it matches the EE spec
+            gtapv7_s65_a24_correspondence = gtapv7_s65_a24_correspondence[['gtapv7_s65_id', 'gtapv7_a24_id', 'gtapv7_s65_label', 'gtapv7_a24_label', 'gtapv7_s65_name', 'gtapv7_a24_name', 'gtapv7_s65_description', 'gtapv7_a24_description']]
+            
+            
+            # Write it to a csv while dropping the index
+            gtapv7_s65_a24_correspondence.to_csv(p.gtapv7_s65_a24_correspondence_path, index=False)
+            
+            # SELECT just commodities
+            df = gtap11_sectors_gtapaez11_sectors_correspondence_input_sectors[['No..1', 'Sector.1', 'Aggregate Commodity', 'Description.1']]
+            
+            rename_dict = {
+                            'No..1': 'gtapv7_s65_id',
+                            'Sector.1': 'gtapv7_s65_label',
+                            'Aggregate Commodity': 'gtapv7_c26_label',
+                            'Description.1': 'gtapv7_c26_name',
+                            }
+            df2 = df.rename(columns=rename_dict)
+            # Add empty columns
+            df2['gtapv7_s65_name'] = ''
+            df2['gtapv7_c26_description'] = ''
+            df3 = df2.sort_values('gtapv7_c26_label') # First sort it by the gtapaez11_commodity_label to assign an order ID to it
+            grouped = df3.groupby('gtapv7_c26_label')
+            df3['gtapv7_c26_id'] = grouped.ngroup() + 1
+            df3['gtapv7_c64_description'] = df3['gtapv7_s65_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+
+            df4 = df3[['gtapv7_s65_id', 'gtapv7_c26_id', 'gtapv7_s65_label', 'gtapv7_c26_label', 'gtapv7_s65_name', 'gtapv7_c26_name', 'gtapv7_c64_description', 'gtapv7_c26_description']] 
+            gtapv7_s65_c26_correspondence = df4.sort_values('gtapv7_s65_id') # Sort back to the original order per the EE spec
+
+            # Convert all floats to ints
+            gtapv7_s65_c26_correspondence = hb.df_convert_column_type(gtapv7_s65_c26_correspondence, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+
+            # Merge back in descriptions ['gtapv7_s65_name', 'gtapv7_s65_description', 'gtapv7_s65_id'] 
+            gtapv7_s65_c26_correspondence = gtapv7_s65_c26_correspondence.drop(columns=['gtapv7_s65_name', 'gtapv7_s65_id'])
+            gtapv7_s65_c26_correspondence = hb.df_merge(gtapv7_s65_c26_correspondence, df_s65_sectors_legend, left_on='gtapv7_s65_label', right_on='gtapv7_s65_label', verbose=False)
+            gtapv7_s65_c26_correspondence['gtapv7_c26_description'] = gtapv7_s65_c26_correspondence['gtapv7_c26_name']
+            
+            # Reorder so it matches the EE spec
+            gtapv7_s65_c26_correspondence = gtapv7_s65_c26_correspondence[['gtapv7_s65_id', 'gtapv7_c26_id', 'gtapv7_s65_label', 'gtapv7_c26_label', 'gtapv7_s65_name', 'gtapv7_c26_name', 'gtapv7_s65_description', 'gtapv7_c26_description']]
+            
+            
+
+            # Write it to a csv while dropping the index
+            gtapv7_s65_c26_correspondence.to_csv(p.gtapv7_s65_c26_correspondence_path, index=False)
+            # df = gtapv7_s65_c26_correspondence[[i for i in gtapv7_s65_c26_correspondence.columns if 'Unnamed' not in i]]            
+            
+            # LOAD the Region worksheet
+            gtap11_regions_gtapaez11_regions_correspondence_input_region = pd.read_excel(p.gtapv7_r251_s65_r50_s26_correspondence_input_path, sheet_name='Region', header=1, index_col=None)
+            rename_dict = {
+                            'No.': 'gtapv7_r160_id', 
+                            'Region': 'gtapv7_r160_label',
+                            'Aggregate Region': 'gtapv7_r50_label',
+                            'Aggregate Country/Region name': 'gtapv7_r50_name',
+                            }          
+            
+            df2 = gtap11_regions_gtapaez11_regions_correspondence_input_region.rename(columns=rename_dict)
+
+            df3 = df2.sort_values('gtapv7_r50_label') # First sort it by the gtapaez11_region_label to assign an order ID to it
+            grouped = df3.groupby('gtapv7_r50_label')
+            df3['gtapv7_r50_id'] = grouped.ngroup() + 1
+            
+            # Merge in the gtapv7_r160_name
+            gtap11_regions = pd.read_csv(p.gtapv7_r160_labels_path)
+            df3 = hb.df_merge(df3, gtap11_regions, left_on='gtapv7_r160_label', right_on='gtapv7_r160_label', verbose=False)
+            
+            df3['gtapv7_r160_description'] = df3['gtapv7_r160_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            df3['gtapv7_r50_description'] = df3['gtapv7_r50_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
+            df4 = df3[['gtapv7_r160_id', 'gtapv7_r50_id', 'gtapv7_r160_label', 'gtapv7_r50_label', 'gtapv7_r50_description', 'gtapv7_r160_name', 'gtapv7_r50_name', 'gtapv7_r160_description', 'gtapv7_r50_description']] 
+            gtapv7_r160_r50_correspondence = df4.sort_values('gtapv7_r50_id') # Sort back to the original order per the EE spec
+                        
+            # Convert all floats to ints
+            gtapv7_r160_r50_correspondence = hb.df_convert_column_type(gtapv7_r160_r50_correspondence, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+                    
+            gtapv7_r160_r50_correspondence.to_csv(p.gtapv7_r160_r50_correspondence_path, index=False)
+            
+       
+        if not hb.path_exists(p.gtapv7_r251_r160_r50_correspondence):
+            # BNow combine gadm label, gtapiso3, gtapregion, and gtapaezregion.v
+            gadm_gid0_gtap11_iso3_correspondence = pd.read_csv(p.gadm_r263_gtapv7_r251_correspondence_path)   
+            gtap11_iso3_gtap11_regions_correspondence = pd.read_csv(p.gtapv7_r251_r160_correspondence_path)
+            gtapv7_r160_r50_correspondence = pd.read_csv(p.gtapv7_r160_r50_correspondence_path)
+            
+            df = hb.df_merge(gadm_gid0_gtap11_iso3_correspondence, gtap11_iso3_gtap11_regions_correspondence, left_on='gtapv7_r251_label', right_on='gtapv7_r251_label', verbose=False)            
+            df = hb.df_merge(df, gtapv7_r160_r50_correspondence, left_on='gtapv7_r160_label', right_on='gtapv7_r160_label', verbose=False)      
+            df = df.copy()  
+            # Convert all floats to ints
+            df = hb.df_convert_column_type(df, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
+                                      
+
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r251_id_x', 'gtapv7_r251_id_y', 'gtapv7_r251_id')
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r160_id_x', 'gtapv7_r160_id_y', 'gtapv7_r160_id')
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r251_name_x', 'gtapv7_r251_name_y', 'gtapv7_r251_name')
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r251_description_x', 'gtapv7_r251_description_y', 'gtapv7_r251_description')
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r160_description_x', 'gtapv7_r160_description_y', 'gtapv7_r160_description')
+            df = hb.df_merge_two_columns_filling_missing(df, 'gtapv7_r160_name_x', 'gtapv7_r160_name_y', 'gtapv7_r160_name')
+            
+            # rename gadm_id to gadm_r263_id
+            df = df.rename(columns={'gadm_id': 'gadm_r263_id'})
+            df = df.rename(columns={'gadm_label': 'gadm_r263_label'})
+            df = df.rename(columns={'gadm_name': 'gadm_r263_name'})
+            df = df.rename(columns={'gadm_description': 'gadm_r263_description'})
+            
+            # Merge back in gtapv7_r50_label
+            # gtap_r50_labels = pd.read_csv(p.gtapv7_r160_r50_correspondence_path_
+            final_cols = [
+                'gadm_r263_id',
+                'gtapv7_r251_id',
+                'gtapv7_r160_id',
+                'gtapv7_r50_id',
+                'gadm_r263_label',
+                'gtapv7_r251_label',
+                'gtapv7_r160_label',            
+                'gtapv7_r50_label',            
+                'gadm_r263_name',
+                'gtapv7_r251_name',
+                'gtapv7_r160_name',                
+                'gtapv7_r50_name',
+                'gadm_r263_description',
+                'gtapv7_r251_description',
+                'gtapv7_r160_description',
+                'gtapv7_r50_description',
+            ]
+            df = df[final_cols]
+            
+            # Sort to ee spec
+            df = df.sort_values('gtapv7_r251_id')
+            df = df.sort_values('gtapv7_r160_id')
+            df = df.sort_values('gtapv7_r50_id')
+            
+            # Manually set dtype for two remaining cols. This was not possible to fix via the function
+            # df_convert_column_type for unknown reasons, but probably because the nan-value in gadm
+            # combined with Operation on a Copy Warning.
+            df['gadm_r263_id'] = df['gadm_r263_id'].astype('Int64')
+            df['gtapv7_r251_id'] = df['gtapv7_r251_id'].astype('Int64')
+
+            # Save the outer correspondence
+            df.to_csv(hb.suri(p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path, ''), index=False)
+            
+            # Make a final version with a simplified name
+            df.to_csv(p.gtapv7_aez_rd_correspondence_path, index=False)
+            
+    'gtap_aez_seals_correspondence_done is DONE'
+    
 
 def base_data_as_csv(p):
     """Take a GTAP data release from the project input_dir or base_data and extract it into user-editable "indexed CSVs". 

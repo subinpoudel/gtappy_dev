@@ -7,64 +7,6 @@ if __name__ == '__main__':
     
     ### ----- CHANGE LOG ---------------------------------
     """
-    
-1. In the release's Data folder, the aggregation label gtapaez11-50 should be renamed v11-s26-r50, correct?
-2. Also note that I have decided to have the most recent release always have NO timestamp whereas dated versions of same-named 
-models/aggregations should add on the timestamp of when they were first released
-3. Propose changing the names of the cmf files from cwon_bau.cmf to gtapv7-aez-rd_bau.cmf and cwon_bau-es.cmf to gtapv7-aez-rd_bau-es 
-(note difference between hyphens (which imply same-variable) and underscores, which are used to split into list.)
-4. Propose not using set PROJ=cwon in the CMF as that is defined by the projectflow object.
-5. propose changing SIMRUN to just 'experiment_name' ie "bau" rather than "projname" + "bau"
-    
-6. Reorganize this so that data is in the base_data_dir and the output is separated from the code release"
-set MODd=..\mod
-set CMFd=.\cmf
-
-# THESE TWO STAY OUTSIDE THE RELEASE
-set SOLd=..\out
-set DATd=..\data\%AGG%
-    
-    
-7. This basic idea now is that there is a release that someone downloads, and they could run it 
-either by calling the bat file or by calling the python run script. This means i'm trying to make
-the two different file types as similar as possible. However, note that the bat file is only going 
-to be able to replicate a rd run without ES, so technically the python script can contain a bat
-file but not vice versa.    
-
-8. Renamce command line cmf options as tehy're referenced in the cmf file:
-                    # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
-                    # p1: gtap_base_data_dir 
-                    # p2: starting_data_file_path # Rename points to the correct starting har
-                    # p3: output_dir # Rename
-                    # p4: starting_year # Rename
-                    # p5: ending_year # Rename
-                    
-9. Simple question: Is there any way to read the raw GEMPACK output to get a sense of how close to complete you are? I would like to make an approximate progress bar.
-
-- When you say "automatic accuracy", you can. 
-
-  +++>  Beginning subinterval number 4.
- 
-  --->  Beginning pass number 1 of 2-pass calculation, subinterval 4.
-  
-   Beginning pass number 6 of 6-pass calculation, subinterval 6
-  
-  
-
-10. Would it be possible to not put a Y in front of years like Y2018? This can mess up string->int conversions.
-
-keep Y, gempack can't have non-numeric characters at the start of a var
-
-11. There is no bau-SUM_Y2050 (but ther is for VOL and WEL). Is this intentional?
-
-NO! SUM describes the starting database.
-
-Welfare not possibly in RD because no discount rate eg
-
-12. Question: Is EVERYTHING stored in the SL4? I.e., are the other files redundant?
-
-
-No, apparently things like the converting the sl4 to volume terms is not stored in the sl4, so that needs to come in on sltht or in ViewSOL
 
     """
 
