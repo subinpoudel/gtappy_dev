@@ -54,7 +54,7 @@ def ndstack_indexed_csv(input_file_path, output_file_path, headers_to_stack='all
         
     # Iterate through headers, saving individual DFs into this list for concatenation later
     dfs_to_stack = []
-    for header_c, header in enumerate(headers_to_stack):
+    for header_c, header in enumerate([i.lower() for i in headers_to_stack]):
 
         # Analyze row in index for current header
         current_row = df[df['header'] == header]

@@ -15,6 +15,9 @@ import numpy as np
 def base_data_generation(p):
     pass 
 
+def results(p):
+    pass 
+
 
     
 def gadm_ingested(p):
@@ -738,7 +741,7 @@ def gtap_runs(p):
                 
         # Note bug. Currently even when done in parallel, only 1 run can be run per python run. Says it runs out of space to allocate results, which isn't true. I'm assuming is an unreleased shared asset, maybe gtap.exe
 
-def results_as_csv(p):
+def indexed_csvs(p):
     
     if p.run_this:
         
@@ -783,7 +786,7 @@ def results_as_csv(p):
                                 gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
 
 
-def results_as_stacked_csv(p):
+def stacked_csvs(p):
     
 
     if p.run_this:
@@ -796,7 +799,7 @@ def results_as_stacked_csv(p):
                         experiment_label + '_Y' + str(year) + '_sl4.csv',
                     ]
                     
-                    input_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, str(year))
+                    input_dir = os.path.join(p.indexed_csvs_dir, aggregation_label, experiment_label, str(year))
                     
                     for filename in filenames_to_extract:
                         
@@ -807,17 +810,20 @@ def results_as_stacked_csv(p):
                         # headers_to_stack = ['pds']
                         headers_to_exclude = 'default'
                         
+                        # TODOO Note the case sensitivity here
+                        headers_to_stack = ['pds', 'p_econland']
+                        
                         if not hb.path_exists(output_file_path):
                             gtappy_file_io.ndstack_indexed_csv(input_file_path, output_file_path, headers_to_stack)
                             
                             
-def single_year_variable_csvs(p):
+def single_year_tidy_variable_csvs(p):
     """Eventually will be integrated into the run file, but for now, just hard codes and alternative project 
     to compare against."""
     
     # Currently not incorporated into the run file.
-    comparison_dir = "C:/Users/jajohns/Files/gtappy/projects/test_gtappy_aez_project_all_years/intermediate/results_as_stacked_csv"
-    headers_to_simplify = ['pds', 'qgdp']
+    comparison_dir = "C:/Users/jajohns/Files/gtappy/projects/test_gtappy_aez_project_all_years/intermediate/stacked_csvs"
+    headers_to_simplify = ['pds', 'qgdp', 'lcovercom', 'lcoveraez', 'p_ECONLAND', 'p_ECONLANDW', 'p_LANDCOVER_L']
     
     if p.run_this:
 
@@ -829,13 +835,14 @@ def single_year_variable_csvs(p):
                         
                     last_output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_simplify[-1] + '_simple.csv')
                     if True or not hb.path_exists(last_output_path):
-                        src_csv_path = os.path.join(p.results_as_stacked_csv_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
+                        src_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
                         
                         # Use the custom read_ndstacked_csv function to read the stacked csv
                         src_df = gtappy_file_io.read_ndstacked_csv(src_csv_path)
                         # src_df = pd.read_csv(src_csv_path)                        
                         
-                        for header in headers_to_simplify:                                
+                        # START HERE: I made a mistake in how the sl4 function interperetes header names that have more than 4 letters. I also made a mistake here on whether it requires lower case. Address both.
+                        for header in [i.lower() for i in headers_to_simplify]:                                
                                 
                             output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv')
                             # select just where the header column equals header
@@ -852,19 +859,71 @@ def single_year_variable_csvs(p):
  
     pass                                   
 
-# STILL NEEDS TO BE DONE!
-# def extract_results_from_years(p):
-    
-#     if p.run_this:
+def combined_stacked_results_across_years(p):
+    """ Use teh stacked dfs directly. Is more brute-force but doesn't require having generated the correct simplified CSVs before."""
+    if p.run_this:
+        headers = ['pds', 'qgdp']
+        headers_to_extract_time_series = {}
+        for header in headers:
+            headers_to_extract_time_series[header] = []
         
-#         for aggregation_label in p.aggregation_labels:
+        for aggregation_label in p.aggregation_labels:
             
-#             for experiment_label in p.experiment_labels:
+            for experiment_label in p.experiment_labels:
                 
-#                 for year in p.years:
-#                     current_stacked_csv_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_comare[-1] + '_comparison.csv')
-
+                for year in p.years:
                     
+                    current_stacked_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
+                    # 
+                    
+
+                    df = pd.read_csv(current_stacked_csv_path)
+                    hb.log(df)
+                    for header in headers:
+                        subset = df.loc[df['header'] == header]
+                        subset.loc[:, 'year'] = year
+                        headers_to_extract_time_series[header].append(subset)
+                        
+                        
+                # concatenate each header into a single df
+                for header in headers:
+                    df = pd.concat(headers_to_extract_time_series[header])
+                    df.to_csv(os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_stacked_time_series.csv'), index=False)
+                    
+                        
+def single_variable_time_series(p):
+    """ Requires single_year_tidy_variable_csvs to be run for the same headers"""
+    if p.run_this:
+        headers = ['pds', 'qgdp', 'lcovercom', 'lcoveraez', 'p_ECONLAND', 'p_ECONLANDW', 'p_LANDCOVER_L']
+        headers_to_extract_time_series = {}
+        for header in headers:
+            headers_to_extract_time_series[header] = []
+        
+        for aggregation_label in p.aggregation_labels:
+            
+            for experiment_label in p.experiment_labels:
+                
+                for year in p.years:
+                    
+
+                    for header in headers:
+                        current_tidy_csv_path = os.path.join(p.single_year_tidy_variable_csvs_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv')
+                        df = pd.read_csv(current_tidy_csv_path)
+                        hb.log(df)                        
+                        
+                        subset = df.loc[df['header'] == header]
+                        subset['year'] = year
+                        headers_to_extract_time_series[header].append(subset)
+                        
+                        
+                # concatenate each header into a single df
+                for header in headers:
+                    df = pd.concat(headers_to_extract_time_series[header])
+                    df.to_csv(os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_time_series.csv'), index=False)
+                    
+                        
+                        
+                                     
 
 def vizualization(p):
     if p.run_this:
@@ -875,7 +934,7 @@ def vizualization(p):
         # DO INDIVIDUAL EXPERMINET PLOTS        
         for aggregation_label in p.aggregation_labels:            
             for experiment_label in p.experiment_labels:
-                current_sl4_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
+                current_sl4_dir = os.path.join(p.indexed_csvs_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
                 for c, var in enumerate(vars_to_plot):
                     output_csv_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, var + '.csv')
                     
@@ -897,7 +956,7 @@ def vizualization(p):
         for aggregation_label in p.aggregation_labels:    
             for c, var in enumerate(vars_to_plot):
                 for cc, experiment_label in enumerate(p.experiment_labels):
-                    current_sl4_dir = os.path.join(p.results_as_csv_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
+                    current_sl4_dir = os.path.join(p.indexed_csvs_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
                     current_var_path = os.path.join(current_sl4_dir, var + '.csv')
                     
                     if cc == 0:

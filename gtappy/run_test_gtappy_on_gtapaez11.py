@@ -33,14 +33,14 @@ if __name__ == '__main__':
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'test_gtappy_aez_project_3'
+    project_name = 'gtappy_gtap_aez_rd'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which
     # will either make the run fail or cause it to be very slow. The recommended place is (as coded above)
     # somewhere in the users's home directory.
     project_dir = os.path.join(user_dir, os.sep.join(extra_dirs), project_name)
-
+    
     p = hb.ProjectFlow(project_dir)
     p.test_mode = 1
     gtappy_initialize_project.build_extract_and_run_aez_task_tree(p)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     
     ### ------------- EVERYTHING BELOW IS DEFINED with RELATIVE PATHS -----------
     # define a list of years from 2018 to 2050
-    p.years = list(range(2018, 2020)) # Every 5 years but add the same terminal 2050
+    p.years = list(range(2018, 2051)) 
     # p.years = list(range(2018, 2051, 5)) + [2050] # Every 5 years but add the same terminal 2050
     # p.years = list(range(2018, 2051)) # Exclusive of base_year
     # p.years = [2018, 2019] # Exclusive of base_year
@@ -87,13 +87,6 @@ if __name__ == '__main__':
     # scenarios, specifically shockv7.har
     p.template_bau_oldschool_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau.cmf')
     p.template_bau_es_cmf_path = os.path.join(p.base_data_dir, 'gtappy', 'cge_releases', p.cge_model_release_string, 'cmf', 'gtapv7-aez-rd_bau_es.cmf')
-    
-    
-    
-
-
-    
-
     
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
