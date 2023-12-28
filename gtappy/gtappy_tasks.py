@@ -751,7 +751,7 @@ def indexed_csvs(p):
                 
                 for year in p.years:
                     
-                    hb.log('Extracting data via indexed_csvs for', aggregation_label, experiment_label, year, level=10)
+                    hb.log('Extracting data via indexed_csvs for', aggregation_label, experiment_label, year, level=100)
                     
                     expected_filenames = [experiment_label + '_Y' + str(year) + '.sl4', 
                                           experiment_label + '_Y' + str(year) + '.UPD', 
@@ -998,55 +998,70 @@ def econ_lcovercom(p):
             for experiment_label in p.experiment_labels:
                 for c, var in enumerate(vars_to_plot):
                     input_csv_path = os.path.join(p.single_variable_time_series_dir, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.csv')
-                    output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.png') 
-                    if True or not hb.path_exists(output_png_path):
-                        hb.create_directories(output_png_path)
-                        
-                        df = pd.read_csv(input_csv_path)
-                        
-                        hb.log('Plotting econ_lcovercom', level=10)
-                        hb.log('\n\nInput\n', df, level=10)
-                        # Pivot the table
-                        pivot_table = df.pivot_table(index='REG', columns=['year', 'PRODLCOV'], values='value')
+                    
 
-                        hb.log('\n\Pivoted\n', pivot_table, level=10)
-                       
-                        countries_to_plot = ['bgd', 'chn', 'gbr', 'bra']
+                    
+                    
+                    df = pd.read_csv(input_csv_path)
+                    
+                    hb.log('Plotting econ_lcovercom', level=10)
+                    hb.log('\n\nInput\n', df, level=10)
+                    # Pivot the table
+                    pivot_table = df.pivot_table(index='REG', columns=['year', 'PRODLCOV'], values='value')
+
+                    hb.log('\n\nPivoted\n', pivot_table, level=10)
+                    
+                    countries_to_plot = ['bgd', 'chn', 'gbr', 'bra']
+                    
+                    for country in countries_to_plot:
+                        output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_' + country + '_time_series.png') 
+                        hb.create_directories(output_png_path)
+                        hb.log('Plotting econ_lcovercom for ' + country, level=10)
+                        # Create a figure and plot the aggregated values
+                        fig, ax = plt.subplots()
+                        country_df = pivot_table.loc[country.rstrip()].unstack()
+                        country_df['Natural'] = 0 - country_df['Cropland'] - country_df['Pastureland'] - country_df['Forestland']
+                        hb.log('\n\nCountry\n', country_df, level=10)
                         
-                        for country in countries_to_plot:
-                            hb.log('Plotting econ_lcovercom for ' + country, level=10)
-                            # Create a figure and plot the aggregated values
-                            fig, ax = plt.subplots()
-                            ax = pivot_table.loc[country.rstrip()].plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
-                            
-                            # Select only the rows where the column REG is equal to 'bgd'
-                            # df[df['REG'] == 'bgd']
+                        # make a list of 15 possible colors in matplotlib using just the text
+                        color_list = []
+                        for i in range(15):
+                            color_list.append(plt.cm.tab20(i))
+
+                        for c_ltype, ltype in enumerate(country_df.columns):
+                            ax = country_df[ltype].plot(kind='line', rot=0,  figsize=(10, 6), label=ltype, color=color_list[c_ltype])
                             
                             # Set labels and title
                             ax.set_xlabel('Year')
-                            ax.set_ylabel('Percent change in ' + var)
-                            ax.set_title('Global percent change in ' + var + ' by year')
+                            ax.set_ylabel('Million hectares')
+                            ax.set_title('Global hectarage change in ' + var + ' by year')
                             # if legend_labels is not None:
                             #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
 
                             # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
 
                             # Save the png to output_png_path
-                            fig.savefig(output_png_path, dpi=300, bbox_inches='tight')
-                        # Create a figure and plot the aggregated values
-                        fig, ax = plt.subplots()
-                        ax = pivot_table.plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
+                            
+                        # Add a zero line
+                        plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
                         
-                        # Set labels and title
-                        ax.set_xlabel('Year')
-                        ax.set_ylabel('Percent change in ' + var)
-                        ax.set_title('Global percent change in ' + var + ' by year')
-                        # if legend_labels is not None:
-                        #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
+                        # Add a legend
+                        plt.legend(title='Land cover type', loc='upper right', labels=country_df.columns)
+                        fig.savefig(output_png_path, dpi=300, bbox_inches='tight')
+                        # # Create a figure and plot the aggregated values
+                        # fig, ax = plt.subplots()
+                        # ax = pivot_table.plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
+                        
+                        # # Set labels and title
+                        # ax.set_xlabel('Year')
+                        # ax.set_ylabel('Percent change in ' + var)
+                        # ax.set_title('Global percent change in ' + var + ' by year')
+                        # # if legend_labels is not None:
+                        # #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
 
-                        # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
+                        # # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
 
-                        # Save the png to output_png_path
-                        fig.savefig(output_png_path, dpi=300, bbox_inches='tight')               
+                        # # Save the png to output_png_path
+                        # fig.savefig(output_png_path, dpi=300, bbox_inches='tight')               
                                 
     5

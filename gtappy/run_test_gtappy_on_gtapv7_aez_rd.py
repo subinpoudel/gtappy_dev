@@ -190,6 +190,4 @@ if __name__ == '__main__':
     
     
     gtappy_initialize_project.run(p)
-    
-    
 
