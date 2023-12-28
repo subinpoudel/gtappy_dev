@@ -66,7 +66,7 @@ def ndstacked_df_to_tidy_df(nd_stacked_df):
     
     # Add values so it writes it too
     dim_names += ['value']
-    for dim_c in range(n_dims+1):
+    for dim_c in range(int(n_dims)+1):
         current_dim_name = dim_names[dim_c]
         current_values_column_label = 'dim' + str(dim_c) + '_value'
         df_out[current_dim_name] = nd_stacked_df.loc[:, current_values_column_label]

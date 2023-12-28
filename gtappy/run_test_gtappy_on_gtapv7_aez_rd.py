@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # 4. ensure that the input_bucket_name points to a cloud bucket you have access to, if relevant
 
     # A ProjectFlow object is created from the Hazelbean library to organize directories and enable parallel processing.
-    # project-level variables are assigned as attributes to the p object (such as in p.base_data_dir = ... below)
+    # project-level variables are assigned as attributes to the p object (such as iawful awful time stripping stringsn p.base_data_dir = ... below)
     # The only agrument for a project flow object is where the project directory is relative to the current_working_directory.
     user_dir = os.path.expanduser('~')
 
@@ -171,6 +171,7 @@ if __name__ == '__main__':
 
 
     # Define what cross-scenario comparisons to make
+    p.headers_to_extract = ['pds', 'pfactor', 'qgdp', 'lcovercom', 'lcoveraez', 'p_ECONLAND', 'p_ECONLANDW', 'p_LANDCOVER_L']
     p.reg_vars_to_plot = ['qgdp', 'pfactor']
     
 

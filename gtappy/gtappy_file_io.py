@@ -57,7 +57,9 @@ def ndstack_indexed_csv(input_file_path, output_file_path, headers_to_stack='all
     for header_c, header in enumerate([i.lower() for i in headers_to_stack]):
 
         # Analyze row in index for current header
-        current_row = df[df['header'] == header]
+
+        current_row = df[df['header'].str.lower() == header]
+
         hb.log(str(header_c/len(headers_to_stack) * 100), 'percent done. Converting header ', header, 'from', input_file_path, 'to', output_file_path, level=20)      
         
         # The logic below is CONVOLUTED AS HELL! But it works. It's just a lot of edge cases to consider.
@@ -253,8 +255,11 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
     # Iterate through individual HAR entires
     set_names_dict = {}
     set_names = sl4_object.setNames
-    hb.log('set_names', set_names)  
-    for header in sl4_object.setNames:
+
+    for header_c, header in enumerate(sl4_object.setNames):
+        if header.lower() == 'reg':
+            pass
+        # hb.log(str(header_c/len(sl4_object.setNames) * 100), 'percent done. Converting header ', header, 'from', input_har_path, 'to', output_index_path, level=20)
         
         # Get a specific header from the InFile
         DataHead = sl4_object.setHeaders[header]
@@ -296,11 +301,11 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
             if DataHead.setNames[0] and DataHead.setElements[0]: # check that it's not just a list of None
                 for c, set_name in enumerate(DataHead.setNames):
                     if set_name in set_names_dict:
-                        assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
+                        assert [i.strip() for i in DataHead.setElements[c]] == set_names_dict[set_name] # sets with same names have to have same elements.                        
                     elif len(DataHead.setElements) != len(DataHead.setNames):
                         raise NameError('There should be exactly 1 set name for each setElements list.')
                     else:
-                        set_names_dict[set_name] = DataHead.setElements[c]
+                        set_names_dict[set_name] = [i.strip() for i in DataHead.setElements[c]]
                 try:  
                     fstring = str(DataHead.setNames)[1:-1].replace('\'', '').replace(',', '*').replace(' ', '')
                     header_data['dim_names'].append(fstring) # The string manipulation here makes it look nice in excel
@@ -315,7 +320,7 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
         if isinstance(DataHead.setElements, list):   
             if len(DataHead.setNames) > 0:
                 if DataHead.setNames[0] is not None:
-                    dim_names = [i for i in DataHead.setNames]
+                    dim_names = [i.strip() for i in DataHead.setNames]
                 else:
                     dim_names = []
             else:
@@ -337,27 +342,56 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
         
         implied_numpy_type = ''
         
-            
+        if header.lower() == 'reg':
+            pass
+            # print(data_array)        
+             
         
         skip = False
         if len(shape) == 0:
             # row_index = DataHead.setElements[0]
-            columns = [header]
+            columns = [header.strip()]
             data_array = np.asarray([[DataHead.array]]).T # Pandas requires it to be a 2d array to write, even tho singular
             
+            # See if it's a string in there
+            try:
+                implied_numpy_type = 'string'
+                data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                data_array = np.char.strip(data_array)                  
+                if isinstance(data_array[[0]], str):
+                    implied_numpy_type = 'string'
+                    data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                    data_array = np.char.strip(data_array)                    
+            except:
+                pass
+                    
+                
             # Test to see if it can be coerced into a float or int
             try:
                 nt = np.float32(data_array[[0]])
                 implied_numpy_type = 'float32'
             except:
                 print ('unable to coerce')
-            
+            hb.log('not sure if i could get here', row_index)
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path, index=False)
         elif len(DataHead.array.shape) == 1:     
-            row_index = DataHead.setElements[0]
-            columns = [header]   
+            row_index = [i.strip() for i in DataHead.setElements[0]]
+            columns = [header.strip()]   
             data_array = np.asarray([DataHead.array]).T # Pandas requires it to be a 2d array to write, even tho 1dim
+            
+            # See if it's a string in there
+            try:
+                implied_numpy_type = 'string'
+                data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                data_array = np.char.strip(data_array)                     
+                if isinstance(data_array[[0]], str) or data_array[[0]].dtype is dtype('<U12'):
+                    implied_numpy_type = 'string'
+                    data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                    data_array = np.char.strip(data_array)                    
+            except:
+                pass            
+            
             # Test to see if it can be coerced into a float or int
             
             try:
@@ -369,7 +403,7 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
                 elif implied_length > 12:
                     implied_numpy_type = np.float64
                 else:
-                    implied_numpy_type = np.in64
+                    implied_numpy_type = np.int64
                 
             except:
                 implied_numpy_type = 'string'
@@ -383,28 +417,48 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
                 except:
                     implied_length = 12
             
-            
+            if header.lower() == 'reg':
+                pass
+                print(data_array)
             
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
-            
+            if header.lower() == 'reg':
+                pass
+                print(df_data)            
+                
+                
             dtype_dict = {header: implied_numpy_type}
             
             df_data.to_csv(current_header_data_path, index=False)
         elif len(DataHead.array.shape) == 2:          
-            row_index = DataHead.setElements[0]
-            columns = DataHead.setElements[1]
+            row_index = [i.strip() for i in DataHead.setElements[0]]
+            columns = [i.strip() for i in DataHead.setElements[1]]
             data_array = np.asarray(DataHead.array) # Pandas requires it to be a 2d array to write
+            
+            # See if it's a string in there
+            try:
+                implied_numpy_type = 'string'
+                data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                data_array = np.char.strip(data_array)                  
+                if isinstance(data_array[[0]], str) or data_array[[0]].dtype is '<U12':
+                    implied_numpy_type = 'string'
+                    data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+                    data_array = np.char.strip(data_array)                    
+            except:
+                pass
+            
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path)
         elif len(DataHead.array.shape) >= 3:   
             
             ### When going beyond 2 dims, add the leading n - 2 dimensions as a stacked multiindex.    
             # All but the last index will be uses as nested row_indices
-            row_indices = [i for i in DataHead.setElements[:-1]]
+            row_indices = [i.strip() for i in DataHead.setElements[:-1]]
             
             # The last index will be columns
-            columns = DataHead.setElements[-1]            
              
+            columns = DataHead.setElements[-1].strip()            
+            # columns = [i.strip() for i in DataHead.setElements[-1]]            
             # Read the raw 3dim array
             data_array = np.asarray(DataHead.array) 
             
@@ -415,6 +469,14 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
             # LEARNING POINT: -1 notation just means "whatever's left over". So when we take a 65*65*141 array and reshape using m * n = 4225, we call .reshape(4225, -1) which would have been equivilent to .reshape(4225, 141) but is more flexible.        
             array_2d = data_array.reshape(n_index_rows, -1)
             
+            # See if it's a string in there
+            try:
+                if isinstance(array_2d[[0]], str):
+                    implied_numpy_type = 'string'
+                    array_2d = array_2d.astype(str)  # Convert to string type if all elements can be safely converted
+                    array_2d = np.char.strip(array_2d)                    
+            except:
+                pass            
             # Create a pandas multiindex from the product of the two row indices.
             row_multi_index = pd.MultiIndex.from_product(row_indices, names=dim_names[:-1])
                              
@@ -437,7 +499,11 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
     # Iterate through individual HAR entires
     set_names_dict = {}
     for header, DataHead in sl4_object.variableDict.items():
-        
+        print('header', header)
+        if header.lower() == 'pds':
+            pass
+            print(data_array)        
+            
         # Get a specific header from the InFile
         # DataHead = sl4_object.setHeaders[header]
         
@@ -479,11 +545,11 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
                 for c, set_name in enumerate(DataHead.setNames):
                     
                     if set_name in set_names_dict:
-                        assert DataHead.setElements[c] == set_names_dict[set_name] # sets with same names have to have same elements.                        
+                        assert [i.strip() for i in DataHead.setElements[c]] == set_names_dict[set_name] # sets with same names have to have same elements.                        
                     elif len(DataHead.setElements) != len(DataHead.setNames):
                         raise NameError('There should be exactly 1 set name for each setElements list.')
                     else:
-                        set_names_dict[set_name] = DataHead.setElements[c]
+                        set_names_dict[set_name] = [i.strip() for i in DataHead.setElements[c]]
                 try:  
                     fstring = str(DataHead.setNames)[1:-1].replace('\'', '').replace(',', '*').replace(' ', '')
                     header_data['dim_names'].append(fstring) # The string manipulation here makes it look nice in excel
@@ -498,7 +564,7 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
         if isinstance(DataHead.setElements, list):   
             if len(DataHead.setNames) > 0:
                 if DataHead.setNames[0] is not None:
-                    dim_names = [i for i in DataHead.setNames]
+                    dim_names = [i.strip() for i in DataHead.setNames]
                 else:
                     dim_names = []
             else:
@@ -527,9 +593,10 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
         if len(shape) == 0:
             # row_index = DataHead.setElements[0]
             row_index = [1]
-            columns = [header]
+            columns = [header.strip() ]
             data_array = np.asarray([[DataHead.array]]).T # Pandas requires it to be a 2d array to write, even tho singular
-            
+            data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+            data_array = np.char.strip(data_array)     
             # Test to see if it can be coerced into a float or int
             try:
                 nt = np.float32(data_array[[0]])
@@ -540,11 +607,13 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path, index=False)
         elif len(DataHead.array.shape) == 1:     
-            row_index = DataHead.setElements[0]
-            columns = [header]   
+            row_index = [i.strip() for i in DataHead.setElements[0]]
+            columns = [header.strip() ]
+            # columns = [[i.strip() for i in header]]   
             data_array = np.asarray([DataHead.array]).T # Pandas requires it to be a 2d array to write, even tho 1dim
             # Test to see if it can be coerced into a float or int
-            
+            data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+            data_array = np.char.strip(data_array)   
             try:
                 nt = np.float32(data_array[0, 0])
                 
@@ -573,22 +642,26 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
             
             df_data.to_csv(current_header_data_path, index=True) # NOTE EXCEPTION TO WHEN I USUALLY DROP INDICES.
         elif len(DataHead.array.shape) == 2:          
-            row_index = DataHead.setElements[0]
-            columns = DataHead.setElements[1]
+            row_index = [i.strip() for i in DataHead.setElements[0]]
+            columns = [i.strip() for i in DataHead.setElements[1]]
             data_array = np.asarray(DataHead.array) # Pandas requires it to be a 2d array to write
+            data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+            data_array = np.char.strip(data_array)               
             df_data = pd.DataFrame(index=row_index, columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path)
         elif len(DataHead.array.shape) >= 3:   
             
             ### When going beyond 2 dims, add the leading n - 2 dimensions as a stacked multiindex.    
             # All but the last index will be uses as nested row_indices
-            row_indices = [i for i in DataHead.setElements[:-1]]
+            row_indices = [[j.strip() for j in i]for i in DataHead.setElements[:-1]]
             
             # The last index will be columns
-            columns = DataHead.setElements[-1]            
+            columns = [i.strip() for i in DataHead.setElements[-1]]          
              
             # Read the raw 3dim array
             data_array = np.asarray(DataHead.array) 
+            data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+            data_array = np.char.strip(data_array)               
             
             # The number of rows will be equal to the product of the length of all row indices
             n_index_rows = math.prod([len(i) for i in row_indices])
@@ -610,16 +683,22 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
         for set_name, set_elements in set_names_dict.items():
 
 
-            header_data['header'].append(set_name)
-            header_data['long_name'].append('Set ' + set_name) # NOTE: This is literally defined by ViewHAR and is used in TABLO that the first word set means the second word set_name is a set. Subsequent words are ignored.
-            header_data['shape'].append(len(set_elements))
-            header_data['dim_names'].append(set_name)
+            header_data['header'].append(set_name.strip())
+            header_data['long_name'].append('Set ' + set_name.strip()) # NOTE: This is literally defined by ViewHAR and is used in TABLO that the first word set means the second word set_name is a set. Subsequent words are ignored.
+            header_data['shape'].append(len([i.strip() for i in set_elements]))
+            header_data['dim_names'].append(set_name.strip())
             header_data['ndims'].append(1)
             header_data['dtype'].append('<U12')
             header_data['coefficient_name'].append('')
         
             columns = [set_name]   
-            data_array = np.asarray(set_elements).T # Pandas requires it to be a 2d array to write, even tho 1dim
+            data_array = np.asarray(set_elements).T
+            
+            data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
+            data_array = np.char.strip(data_array)  
+            
+            
+            # Pandas requires it to be a 2d array to write, even tho 1dim
             # Test to see if it can be coerced into a float or int
             
             # try:
@@ -648,7 +727,12 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
             current_header_data_path = os.path.join(har_csv_dir, set_name + '.csv')
             df_data = pd.DataFrame(columns=columns, data=data_array)
             df_data.to_csv(current_header_data_path, index=False)
-            
+
+        if header.lower() == 'pds':
+            pass
+
+
+
     df_index = pd.DataFrame(data=header_data)
     df_index.to_csv(har_index_path, index=False)
         

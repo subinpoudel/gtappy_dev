@@ -5,7 +5,7 @@ from gtappy import gtappy_file_io
 from gtappy import gtappy_cmf_generation
 from gtappy import gtappy_runner
 from gtappy import gtappy_utils
-
+import matplotlib.pyplot as plt
 
 import multiprocessing
 
@@ -15,7 +15,7 @@ import numpy as np
 def base_data_generation(p):
     pass 
 
-def results(p):
+def econ_results(p):
     pass 
 
 
@@ -751,6 +751,8 @@ def indexed_csvs(p):
                 
                 for year in p.years:
                     
+                    hb.log('Extracting data via indexed_csvs for', aggregation_label, experiment_label, year, level=10)
+                    
                     expected_filenames = [experiment_label + '_Y' + str(year) + '.sl4', 
                                           experiment_label + '_Y' + str(year) + '.UPD', 
                                         #   experiment_label + '-SUM'  + '_Y' + str(year) + '.har',  # CURRENTLY DEACTIVATED BECAUSE OF -1 BUG, waiting for Erwin response
@@ -790,6 +792,8 @@ def stacked_csvs(p):
     
 
     if p.run_this:
+        
+        headers_to_stack = p.headers_to_extract
         for aggregation_label in p.aggregation_labels:
             
             for experiment_label in p.experiment_labels:
@@ -811,20 +815,20 @@ def stacked_csvs(p):
                         headers_to_exclude = 'default'
                         
                         # TODOO Note the case sensitivity here
-                        headers_to_stack = ['pds', 'p_econland']
+                        
                         
                         if not hb.path_exists(output_file_path):
                             gtappy_file_io.ndstack_indexed_csv(input_file_path, output_file_path, headers_to_stack)
                             
                             
 def single_year_tidy_variable_csvs(p):
-    """Eventually will be integrated into the run file, but for now, just hard codes and alternative project 
-    to compare against."""
+    # """Eventually will be integrated into the run file, but for now, just hard codes and alternative project 
+    # to compare against."""
     
-    # Currently not incorporated into the run file.
-    comparison_dir = "C:/Users/jajohns/Files/gtappy/projects/test_gtappy_aez_project_all_years/intermediate/stacked_csvs"
-    headers_to_simplify = ['pds', 'qgdp', 'lcovercom', 'lcoveraez', 'p_ECONLAND', 'p_ECONLANDW', 'p_LANDCOVER_L']
+    # # Currently not incorporated into the run file.
+    # comparison_dir = "C:/Users/jajohns/Files/gtappy/projects/test_gtappy_aez_project_all_years/intermediate/stacked_csvs"
     
+    headers_to_extract = p.headers_to_extract
     if p.run_this:
 
         for aggregation_label in p.aggregation_labels:
@@ -833,27 +837,29 @@ def single_year_tidy_variable_csvs(p):
                 
                 for year in p.years:
                         
-                    last_output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_simplify[-1] + '_simple.csv')
-                    if True or not hb.path_exists(last_output_path):
+                    last_output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_extract[-1] + '_simple.csv')
+                    if not hb.path_exists(last_output_path):
                         src_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
                         
                         # Use the custom read_ndstacked_csv function to read the stacked csv
                         src_df = gtappy_file_io.read_ndstacked_csv(src_csv_path)
                         # src_df = pd.read_csv(src_csv_path)                        
                         
-                        # START HERE: I made a mistake in how the sl4 function interperetes header names that have more than 4 letters. I also made a mistake here on whether it requires lower case. Address both.
-                        for header in [i.lower() for i in headers_to_simplify]:                                
+                        for header in [i.lower() for i in headers_to_extract]:                                
                                 
                             output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv')
-                            # select just where the header column equals header
-                            src_df_header = src_df.loc[src_df['header'] == header]
                             
-                            src_simplified_df = gtappy_utils.ndstacked_df_to_tidy_df(src_df_header)
-                            
-                            src_simplified_df.to_csv(output_path, index=False)
-                            
-                            hb.log('Summing all values in ', header, 'from', output_path, level=9)
-                            hb.log(src_simplified_df['value'].sum(), level=9)
+                            if not hb.path_exists(output_path):
+                                hb.log('Making single_year_tidy_variable_csvs for ', aggregation_label, experiment_label, year, header, level=100)
+                                # select just where the header column equals header
+                                src_df_header = src_df.loc[src_df['header'] == header]
+                                
+                                src_simplified_df = gtappy_utils.ndstacked_df_to_tidy_df(src_df_header)
+                                
+                                src_simplified_df.to_csv(output_path, index=False)
+                                
+                                hb.log('Summing all values in ', header, 'from', output_path, level=9)
+                                hb.log(src_simplified_df['value'].sum(), level=9)
                             
                             # SWITCHED HERE to converting run_test_cwon to be up to date and be the "comparative static" run mode.
  
@@ -862,39 +868,52 @@ def single_year_tidy_variable_csvs(p):
 def combined_stacked_results_across_years(p):
     """ Use teh stacked dfs directly. Is more brute-force but doesn't require having generated the correct simplified CSVs before."""
     if p.run_this:
-        headers = ['pds', 'qgdp']
+        headers = p.headers_to_extract
         headers_to_extract_time_series = {}
-        for header in headers:
+        for header in p.headers_to_extract:
             headers_to_extract_time_series[header] = []
         
         for aggregation_label in p.aggregation_labels:
             
             for experiment_label in p.experiment_labels:
                 
-                for year in p.years:
-                    
-                    current_stacked_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
-                    # 
-                    
+                # check if last exists:
+                check_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_stacked_time_series.csv')
+                if not hb.path_exists(check_path):
+                
+                    for year in p.years:
+                        
+                        current_stacked_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
+                        # 
+                        
+                        
 
-                    df = pd.read_csv(current_stacked_csv_path)
-                    hb.log(df)
+                        df = pd.read_csv(current_stacked_csv_path)
+                        hb.log(header, aggregation_label, experiment_label, year, df)
+
+                        for header in headers:
+
+
+                            if header.lower() == 'p_landcover_l':
+                                pass
+
+                            subset = df.loc[df['header'].str.lower() == header.lower()]
+                            subset['year'] = year
+                            # subset.loc['year'] = year
+                            headers_to_extract_time_series[header].append(subset)
+                        
+                        
+                    # concatenate each header into a single df
                     for header in headers:
-                        subset = df.loc[df['header'] == header]
-                        subset.loc[:, 'year'] = year
-                        headers_to_extract_time_series[header].append(subset)
-                        
-                        
-                # concatenate each header into a single df
-                for header in headers:
-                    df = pd.concat(headers_to_extract_time_series[header])
-                    df.to_csv(os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_stacked_time_series.csv'), index=False)
+                        output_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_stacked_time_series.csv')
+                        df = pd.concat(headers_to_extract_time_series[header])
+                        df.to_csv(output_path, index=False)
                     
                         
 def single_variable_time_series(p):
     """ Requires single_year_tidy_variable_csvs to be run for the same headers"""
     if p.run_this:
-        headers = ['pds', 'qgdp', 'lcovercom', 'lcoveraez', 'p_ECONLAND', 'p_ECONLANDW', 'p_LANDCOVER_L']
+        headers = p.headers_to_extract
         headers_to_extract_time_series = {}
         for header in headers:
             headers_to_extract_time_series[header] = []
@@ -902,65 +921,132 @@ def single_variable_time_series(p):
         for aggregation_label in p.aggregation_labels:
             
             for experiment_label in p.experiment_labels:
+                last_path = os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_time_series.csv')
+                if not hb.path_exists(last_path):
                 
-                for year in p.years:
-                    
+                
+                    for year in p.years:
+                        
 
+                        for header in headers:
+                            current_tidy_csv_path = os.path.join(p.single_year_tidy_variable_csvs_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv')
+                            df = pd.read_csv(current_tidy_csv_path)
+                            hb.log(df)                        
+                            
+                            subset = df.loc[df['header'].str.lower() == header.lower()]
+                            subset['year'] = year
+                            headers_to_extract_time_series[header].append(subset)
+                            
+                            
+                    # concatenate each header into a single df
                     for header in headers:
-                        current_tidy_csv_path = os.path.join(p.single_year_tidy_variable_csvs_dir, aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv')
-                        df = pd.read_csv(current_tidy_csv_path)
-                        hb.log(df)                        
+                        df = pd.concat(headers_to_extract_time_series[header])
+                        df.to_csv(os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_time_series.csv'), index=False)
                         
-                        subset = df.loc[df['header'] == header]
-                        subset['year'] = year
-                        headers_to_extract_time_series[header].append(subset)
-                        
-                        
-                # concatenate each header into a single df
-                for header in headers:
-                    df = pd.concat(headers_to_extract_time_series[header])
-                    df.to_csv(os.path.join(p.cur_dir, aggregation_label + '_' + experiment_label + '_' + header + '_time_series.csv'), index=False)
-                    
-                        
+                            
                         
                                      
 
-def vizualization(p):
+def econ_vizualization(p):
+    pass
+
+def econ_time_series(p):
     if p.run_this:
-        plots = {}
 
-        vars_to_plot = p.reg_vars_to_plot
-
-        # DO INDIVIDUAL EXPERMINET PLOTS        
+        # vars_to_plot = ['qgdp', 'p_ECONLAND']
+        vars_to_plot = p.headers_to_extract
+   
         for aggregation_label in p.aggregation_labels:            
             for experiment_label in p.experiment_labels:
-                current_sl4_dir = os.path.join(p.indexed_csvs_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
                 for c, var in enumerate(vars_to_plot):
-                    output_csv_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, var + '.csv')
-                    
-                    if hb.path_exists(output_csv_path):
-                        current_var_path = os.path.join(current_sl4_dir, var + '.csv')
-                        df = pd.read_csv(current_var_path)
-
+                    input_csv_path = os.path.join(p.single_variable_time_series_dir, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.csv')
+                    output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.png') 
+                    if not hb.path_exists(output_png_path):
+                        hb.create_directories(output_png_path)
                         
-                        hb.create_directories(output_csv_path)
-                        output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, var + '.png')
-
-                        hb.df_plot(df, output_png_path, type='bar')
+                        df = pd.read_csv(input_csv_path)
+                        hb.log(df, level=100)
+                       
+                        annual_aggregated_values = df.groupby('year')['value'].sum()
+                        hb.log(annual_aggregated_values, level=100)
                         
-                        # Write csv
-                        df.to_csv(output_csv_path, index=False)
+                        # Create a figure and plot the aggregated values
+                        fig, ax = plt.subplots()
+                        ax = annual_aggregated_values.plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
+                        
+                        # Set labels and title
+                        ax.set_xlabel('Year')
+                        ax.set_ylabel('Percent change in ' + var)
+                        ax.set_title('Global percent change in ' + var + ' by year')
+                        # if legend_labels is not None:
+                        #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
 
+                        # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
 
-        # DO CROSS-EXPERIMENT PLOTS
-        for aggregation_label in p.aggregation_labels:    
-            for c, var in enumerate(vars_to_plot):
-                for cc, experiment_label in enumerate(p.experiment_labels):
-                    current_sl4_dir = os.path.join(p.indexed_csvs_dir, aggregation_label, experiment_label, experiment_label + '_sl4')
-                    current_var_path = os.path.join(current_sl4_dir, var + '.csv')
-                    
-                    if cc == 0:
-                        df = pd.read_csv(current_var_path)
-                    else:
-                        new_df = pd.read_csv(current_var_path)
-                        df = hb.df_merge(df, new_df)
+                        # Save the png to output_png_path
+                        fig.savefig(output_png_path, dpi=300, bbox_inches='tight')               
+                                
+    5
+    
+def econ_lcovercom(p):
+    if p.run_this:
+
+        vars_to_plot = ['lcovercom']
+        # vars_to_plot = p.headers_to_extract
+   
+        for aggregation_label in p.aggregation_labels:            
+            for experiment_label in p.experiment_labels:
+                for c, var in enumerate(vars_to_plot):
+                    input_csv_path = os.path.join(p.single_variable_time_series_dir, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.csv')
+                    output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.png') 
+                    if True or not hb.path_exists(output_png_path):
+                        hb.create_directories(output_png_path)
+                        
+                        df = pd.read_csv(input_csv_path)
+                        
+                        hb.log('Plotting econ_lcovercom', level=10)
+                        hb.log('\n\nInput\n', df, level=10)
+                        # Pivot the table
+                        pivot_table = df.pivot_table(index='REG', columns=['year', 'PRODLCOV'], values='value')
+
+                        hb.log('\n\Pivoted\n', pivot_table, level=10)
+                       
+                        countries_to_plot = ['bgd', 'chn', 'gbr', 'bra']
+                        
+                        for country in countries_to_plot:
+                            hb.log('Plotting econ_lcovercom for ' + country, level=10)
+                            # Create a figure and plot the aggregated values
+                            fig, ax = plt.subplots()
+                            ax = pivot_table.loc[country.rstrip()].plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
+                            
+                            # Select only the rows where the column REG is equal to 'bgd'
+                            # df[df['REG'] == 'bgd']
+                            
+                            # Set labels and title
+                            ax.set_xlabel('Year')
+                            ax.set_ylabel('Percent change in ' + var)
+                            ax.set_title('Global percent change in ' + var + ' by year')
+                            # if legend_labels is not None:
+                            #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
+
+                            # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
+
+                            # Save the png to output_png_path
+                            fig.savefig(output_png_path, dpi=300, bbox_inches='tight')
+                        # Create a figure and plot the aggregated values
+                        fig, ax = plt.subplots()
+                        ax = pivot_table.plot(kind='line', rot=0, colormap='viridis', figsize=(10, 6))
+                        
+                        # Set labels and title
+                        ax.set_xlabel('Year')
+                        ax.set_ylabel('Percent change in ' + var)
+                        ax.set_title('Global percent change in ' + var + ' by year')
+                        # if legend_labels is not None:
+                        #     plt.legend(title='Shock', loc='upper left', labels=legend_labels)
+
+                        # plt.axhline(y=0, color='gray', linestyle='dotted', linewidth=1, label='100%')
+
+                        # Save the png to output_png_path
+                        fig.savefig(output_png_path, dpi=300, bbox_inches='tight')               
+                                
+    5
