@@ -440,7 +440,7 @@ def sl4_to_ndindexed_dfs(input_har_path, output_index_path):
                 implied_numpy_type = 'string'
                 data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
                 data_array = np.char.strip(data_array)                  
-                if isinstance(data_array[[0]], str) or data_array[[0]].dtype is '<U12':
+                if isinstance(data_array[[0]], str):
                     implied_numpy_type = 'string'
                     data_array = data_array.astype(str)  # Convert to string type if all elements can be safely converted
                     data_array = np.char.strip(data_array)                    

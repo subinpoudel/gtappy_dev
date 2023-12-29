@@ -1,6 +1,6 @@
 import os
 import hazelbean as hb
-import gtappy_tasks
+from gtappy import gtappy_tasks
 
 def run(p):
 
@@ -9,7 +9,7 @@ def run(p):
     
     # build_task_tree_by_name(p, p.run_type)
 
-    p.L.info('Created ProjectFlow object at ' + p.project_dir + '\n    from script ' + p.calling_script + '\n    with base_data set at ' + p.base_data_dir)
+    hb.log('Created ProjectFlow object at ' + p.project_dir + '\n    from script ' + p.calling_script + '\n    with base_data set at ' + p.base_data_dir)
     p.script_dir = os.path.dirname(os.path.realpath(__file__))
     p.execute()
 
