@@ -124,7 +124,7 @@ def gtap_aez_seals_correspondences(p):
     
     if p.run_this:
            
-        if not hb.path_all_exist([p.gtapv7_r251_labels_path, p.gtapv7_r160_labels_path, p.gtapv7_r251_r160_correspondence_path]):
+        if not hb.path_all_exist([p.gtapv7_r251_labels_path, p.gtapv7_r160_labels_path, p.gtapv7_r251_r160_correspondence_path], verbose=True):
             
             # Process tine Legend worksheet in the input into two listings of the labels and ids from iso3 (as defined by gtap11 and gtap11 regions)
             gtap11_region_correspondence_input_legend = pd.read_excel(p.gtapv7_r251_r160_correspondence_input_path, sheet_name='Legend', header=1, index_col=None)
@@ -389,7 +389,7 @@ def gtap_aez_seals_correspondences(p):
             gtapv7_r160_r50_correspondence.to_csv(p.gtapv7_r160_r50_correspondence_path, index=False)
             
        
-        if not hb.path_exists(p.gtapv7_r251_r160_r50_correspondence):
+        if not hb.path_exists(p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path):
             # BNow combine gadm label, gtapiso3, gtapregion, and gtapaezregion.v
             gadm_gid0_gtap11_iso3_correspondence = pd.read_csv(p.gadm_r263_gtapv7_r251_correspondence_path)   
             gtap11_iso3_gtap11_regions_correspondence = pd.read_csv(p.gtapv7_r251_r160_correspondence_path)
@@ -1004,24 +1004,24 @@ def econ_lcovercom(p):
                     
                     df = pd.read_csv(input_csv_path)
                     
-                    hb.log('Plotting econ_lcovercom', level=10)
-                    hb.log('\n\nInput\n', df, level=10)
+                    hb.log('Plotting econ_lcovercom', level=100)
+                    hb.log('\n\nInput\n', df, level=100)
                     # Pivot the table
                     pivot_table = df.pivot_table(index='REG', columns=['year', 'PRODLCOV'], values='value')
 
-                    hb.log('\n\nPivoted\n', pivot_table, level=10)
+                    hb.log('\n\nPivoted\n', pivot_table, level=100)
                     
                     countries_to_plot = ['bgd', 'chn', 'gbr', 'bra']
                     
                     for country in countries_to_plot:
                         output_png_path = os.path.join(p.cur_dir, aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_' + country + '_time_series.png') 
                         hb.create_directories(output_png_path)
-                        hb.log('Plotting econ_lcovercom for ' + country, level=10)
+                        hb.log('Plotting econ_lcovercom for ' + country, level=100)
                         # Create a figure and plot the aggregated values
                         fig, ax = plt.subplots()
                         country_df = pivot_table.loc[country.rstrip()].unstack()
                         country_df['Natural'] = 0 - country_df['Cropland'] - country_df['Pastureland'] - country_df['Forestland']
-                        hb.log('\n\nCountry\n', country_df, level=10)
+                        hb.log('\n\nCountry\n', country_df, level=100)
                         
                         # make a list of 15 possible colors in matplotlib using just the text
                         color_list = []
