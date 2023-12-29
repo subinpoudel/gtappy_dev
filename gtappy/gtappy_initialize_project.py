@@ -32,10 +32,10 @@ def build_process_aez_results_task_tree(p):
     p.process_aez_results_task = p.add_task(gtappy_tasks.process_aez_results)
     
 def build_extract_and_run_aez_task_tree(p):
-    p.base_data_generation_task = p.add_task(gtappy_tasks.base_data_generation)                
-    p.gadm_ingested_task = p.add_task(gtappy_tasks.gadm_ingested, parent=p.base_data_generation_task)                
-    p.gtap_aez_seals_correspondences_task = p.add_task(gtappy_tasks.gtap_aez_seals_correspondences, parent=p.base_data_generation_task)         
-    p.base_data_as_csv_task = p.add_task(gtappy_tasks.base_data_as_csv, parent=p.base_data_generation_task)                
+    p.gtappy_gtappy_base_data_task = p.add_task(gtappy_tasks.gtappy_gtappy_base_data)                
+    p.gadm_ingested_task = p.add_task(gtappy_tasks.gadm_ingested, parent=p.gtappy_base_data_task)                
+    p.gtap_aez_seals_correspondences_task = p.add_task(gtappy_tasks.gtap_aez_seals_correspondences, parent=p.gtappy_base_data_task)         
+    p.base_data_as_csv_task = p.add_task(gtappy_tasks.base_data_as_csv, parent=p.gtappy_base_data_task)                
     # p.mapfile_task = p.add_task(gtappy_tasks.mapfile)                
     p.gtap_runs_task = p.add_task(gtappy_tasks.gtap_runs)
     p.econ_results_task = p.add_task(gtappy_tasks.econ_results)

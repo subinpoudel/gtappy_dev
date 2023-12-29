@@ -12,7 +12,7 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 
-def base_data_generation(p):
+def gtappy_base_data(p):
     pass 
 
 def econ_results(p):
