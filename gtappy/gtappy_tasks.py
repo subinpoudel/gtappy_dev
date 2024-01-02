@@ -146,8 +146,8 @@ def gtap_aez_seals_correspondences(p):
     p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gadm_r263_gtapv7_r251_r160_r50_correspondence.csv'))
     
     # Identical to the full previous one but handy for shorter naming, based on the cge release string
-    p.gtapv7_aez_rd_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_aez_rd_correspondence.csv'))
-    hb.create_directories(p.gtapv7_aez_rd_correspondence_path)
+    p.ee_r264_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'ee_r264_correspondence.csv'))
+    hb.create_directories(p.ee_r264_correspondence_path)
     
     if p.run_this:
         
@@ -379,11 +379,11 @@ def gtap_aez_seals_correspondences(p):
             # Convert all floats to ints
             df2 = hb.df_convert_column_type(df, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
             
-            df2 = df2[df2['gadm_r263_label'] != 'xca']
+            
         
+            df2.to_csv(p.gadm_r263_gtapv7_r251_correspondence_path, index=False)
             # df2.loc[:, 'gadm_r263_description'] = df2['gadm_r263_name']
 
-            df2.to_csv(p.gadm_r263_gtapv7_r251_correspondence_path, index=False)
             
                    
            
@@ -623,8 +623,59 @@ def gtap_aez_seals_correspondences(p):
             # Save the outer correspondence
             df.to_csv(hb.suri(p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path, ''), index=False)
             
+            # Now add a superset layer that combines the inconsistencies of r263 and r251
+            hb.log('\nStart', df, level=10)
+            
+            df = df[df['gadm_r263_label'] != 'xca']
+            df = df[df['gtapv7_r251_label'] != 'sar']
+            
+            df['ee_r264_label'] = df['gadm_r263_label'].copy()
+            df['ee_r264_name'] = df['gadm_r263_name'].copy()
+            df['ee_r264_description'] = df['gadm_r263_description'].copy()
+            
+            df.loc[df['gtapv7_r251_label'] == 'hkg', 'ee_r264_label'] = 'hkg'
+            df.loc[df['gtapv7_r251_label'] == 'hkg', 'ee_r264_name'] = 'Hong Kong'
+            df.loc[df['gtapv7_r251_label'] == 'hkg', 'ee_r264_description'] = 'China, Hong Kong Special Administrative Region'
+            
+            df.loc[df['gtapv7_r251_label'] == 'mac', 'ee_r264_label'] = 'mac'
+            df.loc[df['gtapv7_r251_label'] == 'mac', 'ee_r264_name'] = 'Macao'
+            df.loc[df['gtapv7_r251_label'] == 'mac', 'ee_r264_description'] = 'China, Macao Special Administrative Region'
+            
+            # Sorty by label
+            df = df.sort_values('ee_r264_label')
+            
+            # assign an id using a range starting at 1
+            df['ee_r264_id'] = range(1, len(df) + 1)
+            
+            final_cols  = [
+                'ee_r264_id',	
+                'gadm_r263_id',	
+                'gtapv7_r251_id',	
+                'gtapv7_r160_id',	
+                'gtapv7_r50_id',	
+                'ee_r264_label',	
+                'gadm_r263_label',	
+                'gtapv7_r251_label',	
+                'gtapv7_r160_label',	
+                'gtapv7_r50_label',	
+                'ee_r264_name',	
+                'gadm_r263_name',	
+                'gtapv7_r251_name',	
+                'gtapv7_r160_name',	
+                'gtapv7_r50_name',	
+                'gadm_r263_description',	
+                'gtapv7_r251_description',	
+                'gtapv7_r160_description',	
+                'gtapv7_r50_description',	
+                'ee_r264_description',
+            ]
+
+
+            df = df[final_cols]
+            
+
             # Make a final version with a simplified name
-            df.to_csv(p.gtapv7_aez_rd_correspondence_path, index=False)
+            df.to_csv(p.ee_r264_correspondence_path, index=False)
             
     'gtap_aez_seals_correspondence_done is DONE'
     
