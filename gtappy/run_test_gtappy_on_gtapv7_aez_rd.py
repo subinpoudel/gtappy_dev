@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # ProjectFlow only calculates tasks that haven't been done yet, so adding 
     # a new project_name will give a fresh directory and ensure all parts
     # are run.
-    project_name = 'gtappy_gtap_aez_rd'
+    project_name = 'gtappy_gtap_aez_rd_3'
 
     # The project-dir is where everything will be stored, in particular in an input, intermediate, or output dir
     # IMPORTANT NOTE: This should not be in a cloud-synced directory (e.g. dropbox, google drive, etc.), which

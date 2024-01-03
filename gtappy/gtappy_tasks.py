@@ -881,7 +881,8 @@ def gtap_runs(p):
                     else:
                         starting_year = p.years[n_years_counter - 1]
                         
-                    output_dir = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(ending_year)))
+                    output_dir = p.get_path(os.path.join(aggregation_label, experiment_label, str(ending_year)))
+                    # output_dir = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(ending_year)))
                     expected_sl4_path = os.path.join(output_dir, experiment_label + '_Y' + str(ending_year) + '.sl4')
                     
                     if not hb.path_exists(expected_sl4_path):
@@ -893,7 +894,7 @@ def gtap_runs(p):
                         if n_years_counter == 0:
                             current_cge_data_dir = os.path.join(p.cge_data_dir, aggregation_label)
                         else:
-                            current_cge_data_dir = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(starting_year)))
+                            current_cge_data_dir = p.get_path(os.path.join(aggregation_label, experiment_label, str(starting_year)))
                         
                         # CMF: experiment_label # Rename BUT I understand this one might not be changeable because it appears to be defined by the filename of the CMF?
                         # p1: gtap_base_data_dir # EXCLUDE THIS, because we only use it for p2
@@ -922,8 +923,8 @@ def gtap_runs(p):
                         if n_years_counter == 0:
                             scenario_replace_dict['<^starting_data_file_path^>'] = os.path.join(scenario_replace_dict['<^gtap_base_data_dir^>'], 'basedata.har') 
                         else:
-                            scenario_replace_dict['<^starting_data_file_path^>'] = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(starting_year), experiment_label + '_Y' + str(starting_year) + '.upd') )
-                        scenario_replace_dict['<^output_dir^>'] = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(ending_year)))
+                            scenario_replace_dict['<^starting_data_file_path^>'] = p.get_path(os.path.join(aggregation_label, experiment_label, str(starting_year), experiment_label + '_Y' + str(starting_year) + '.upd') )
+                        scenario_replace_dict['<^output_dir^>'] = p.get_path(os.path.join(aggregation_label, experiment_label, str(ending_year)))
                         scenario_replace_dict['<^starting_year^>'] = 'Y' + str(starting_year)
                         scenario_replace_dict['<^ending_year^>'] = 'Y' + str(ending_year)
                         
