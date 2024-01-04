@@ -992,7 +992,7 @@ def indexed_csvs(p):
                         if not hb.path_exists(expected_path, verbose=False):
                             raise NameError('Cannot find file: ' + str(expected_path))
                         
-                        output_dir = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, str(year)))
+                        output_dir = p.get_path(os.path.join(aggregation_label, experiment_label, str(year)))
                         indexed_df_path = os.path.join(output_dir, filename.replace('.', '_') + '.csv')
                         if not hb.path_exists(indexed_df_path):     
                             
@@ -1006,7 +1006,7 @@ def indexed_csvs(p):
                         also_write_validation_hars = False
                         if also_write_validation_hars:
                             # Write a har for validation
-                            # har_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, experiment_label + '.har'))
+                            # har_path = p.get_path(os.path.join(aggregation_label, experiment_label, experiment_label + '.har'))
                             har_path = hb.path_replace_extension(indexed_df_path, '.har')
                             if not hb.path_exists(har_path) and os.path.splitext(filename)[1] != '.sl4'  and os.path.splitext(filename)[1] != '.UPD':
                                 gtappy_file_io.indexed_dfs_to_har(indexed_df_path, har_path) 
@@ -1033,7 +1033,7 @@ def stacked_csvs(p):
                         
                         input_file_path = os.path.join(input_dir, filename)
                         hb.log('Making stacked data  for ', aggregation_label, experiment_label, input_file_path, level=100)
-                        output_file_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', hb.file_root(filename) + '_stacked.csv'))
+                        output_file_path = p.get_path(os.path.join(hb.file_root(filename) + '_stacked.csv'))
                         headers_to_stack = 'all'
                         # headers_to_stack = ['pds']
                         headers_to_exclude = 'default'
@@ -1061,7 +1061,7 @@ def single_year_tidy_variable_csvs(p):
                 
                 for year in p.years:
                         
-                    last_output_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_extract[-1] + '_simple.csv'))
+                    last_output_path = p.get_path(os.path.join(aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + headers_to_extract[-1] + '_simple.csv'))
                     if not hb.path_exists(last_output_path):
                         src_csv_path = os.path.join(p.stacked_csvs_dir, experiment_label + '_Y' + str(year) + '_sl4_stacked.csv')
                         
@@ -1071,7 +1071,7 @@ def single_year_tidy_variable_csvs(p):
                         
                         for header in [i.lower() for i in headers_to_extract]:                                
                                 
-                            output_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv'))
+                            output_path = p.get_path(os.path.join(aggregation_label + '_' + experiment_label + '_' + str(year) + '_' + header + '_simple.csv'))
                             
                             if not hb.path_exists(output_path):
                                 hb.log('Making single_year_tidy_variable_csvs for ', aggregation_label, experiment_label, year, header, level=100)
@@ -1102,7 +1102,7 @@ def combined_stacked_results_across_years(p):
             for experiment_label in p.experiment_labels:
                 
                 # check if last exists:
-                check_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_stacked_time_series.csv'))
+                check_path = p.get_path(os.path.join(aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_stacked_time_series.csv'))
                 if not hb.path_exists(check_path):
                 
                     for year in p.years:
@@ -1129,7 +1129,7 @@ def combined_stacked_results_across_years(p):
                         
                     # concatenate each header into a single df
                     for header in headers:
-                        output_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + header + '_stacked_time_series.csv'))
+                        output_path = p.get_path(os.path.join(aggregation_label + '_' + experiment_label + '_' + header + '_stacked_time_series.csv'))
                         df = pd.concat(headers_to_extract_time_series[header])
                         df.to_csv(output_path, index=False)
                     
@@ -1145,7 +1145,7 @@ def single_variable_time_series(p):
         for aggregation_label in p.aggregation_labels:
             
             for experiment_label in p.experiment_labels:
-                last_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_time_series.csv'))
+                last_path = p.get_path(os.path.join(aggregation_label + '_' + experiment_label + '_' + headers[-1] + '_time_series.csv'))
                 if not hb.path_exists(last_path):
                 
                 
@@ -1165,7 +1165,7 @@ def single_variable_time_series(p):
                     # concatenate each header into a single df
                     for header in headers:
                         df = pd.concat(headers_to_extract_time_series[header])
-                        df.to_csv(os.path.join('gtappy', 'aggregation_mappings', aggregation_label + '_' + experiment_label + '_' + header + '_time_series.csv'), index=False)
+                        df.to_csv(os.path.join(aggregation_label + '_' + experiment_label + '_' + header + '_time_series.csv'), index=False)
                         
                             
                         
@@ -1184,7 +1184,7 @@ def econ_time_series(p):
             for experiment_label in p.experiment_labels:
                 for c, var in enumerate(vars_to_plot):
                     input_csv_path = os.path.join(p.single_variable_time_series_dir, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.csv')
-                    output_png_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.png') )
+                    output_png_path = p.get_path(os.path.join(aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_time_series.png') )
                     if not hb.path_exists(output_png_path):
                         hb.create_directories(output_png_path)
                         
@@ -1238,7 +1238,7 @@ def econ_lcovercom(p):
                     countries_to_plot = ['bgd', 'chn', 'gbr', 'bra']
                     
                     for country in countries_to_plot:
-                        output_png_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_' + country + '_time_series.png') )
+                        output_png_path = p.get_path(aggregation_label, experiment_label, aggregation_label + '_' + experiment_label + '_' + var + '_' + country + '_time_series.png')
                         hb.create_directories(output_png_path)
                         hb.log('Plotting econ_lcovercom for ' + country, level=100)
                         # Create a figure and plot the aggregated values

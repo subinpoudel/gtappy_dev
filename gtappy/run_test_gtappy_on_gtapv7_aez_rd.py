@@ -138,6 +138,15 @@ if __name__ == '__main__':
         'shock pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";',
         'shock qe(ENDWL,REG) = file <p1>\BaseScen.har header \"LAB2\" slice \"<p5>\";'
     ]
+    p.shocks['v11-s26-r50']['with_air_quality_damages'] = [
+        'swap qe(\"capital\",REG) = capadd(REG);'
+        'swap afelabreg = qgdppcfisher;'
+        'swap qesf = qesfsupply;'
+        'shock del_unity = 1;',
+        'shock qgdppcfisher = file <p1>\BaseScen.har header \"OGP2\" slice "<p5>";'
+        'shock pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";',
+        'shock qe(ENDWL,REG) = uniform -2.5;'
+    ]
 
 
 #     ! (A1) Activate year-on-year capital accumulation equation
