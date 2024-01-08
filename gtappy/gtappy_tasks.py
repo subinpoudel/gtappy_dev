@@ -10,20 +10,29 @@ import matplotlib.pyplot as plt
 import multiprocessing
 
 import pandas as pd
+# Set pandas to show all rows
+pd.set_option('display.max_rows', 500)
+
 import numpy as np
 
 def gtappy_base_data(p):
-    pass 
+    task_note = """
+GTAPpy includes base_data that will (assuming you have correct permissions) download 
+into your p.base_data_directory, or failing that, generate it from scratch using this tasks' child functions.
+    """
+
 
 def econ_results(p):
-    pass 
-
+    task_documentation = """ Groups together all of the GTAPPy preparation code (including getting the base data). 
+    
+    This task only generates a folder for child tasks .  
+    """
 
     
 def gadm_ingested(p):
-    p.current_task_documentation = """
+    task_documentation = """
 Input the GADM v 4.10 ADM0 layer and use shapely to simplify it so we can create multiple
-resolutions of GADM.
+resolutions of GADM. This will 
     """    
     # hb.log(p.current_task_documentation)
     
@@ -34,25 +43,26 @@ resolutions of GADM.
     p.gadm_adm0_10sec_vector_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_410_adm0_10sec.gpkg'))
     p.gadm_adm0_100sec_vector_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_410_adm0_100sec.gpkg'))
     
+    # These were generated for overall base=data usage, but were eventually replaced by GTAP-InVEST specific tasks that 
+    # defined the actual name correspondence.
     p.gadm_adm0_labels_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_410_adm0_labels.csv'))
-
     p.gadm_adm0_raster_path = p.get_path(os.path.join('cartographic', 'gadm', 'gadm_410_adm0.tif'))
     
-
-    # the local variable gadm is either a string (if unloaded) or the gdf (if loaded). This ensures we
+    # EE Spec trick: the local variable gadm is either a string (if unloaded) or the gdf (if loaded). This ensures we
     # only load it once.
     gadm = p.gadm_adm0_vector_input_path    
       
     
     # Note EE Spec validates by the existence of the LAST path generated.
     if not hb.path_exists(p.gadm_adm0_100sec_vector_path):
+        hb.create_directories(p.gadm_adm0_100sec_vector_path)
         ten_sec_size = 0.002777777777777777884
         sizes = {1: ten_sec_size * .1, 10: ten_sec_size, 100: 10 * ten_sec_size, } # Tried 1000: 100 * ten_sec_size but with the simplification algorithm used, it just was a jaggy mess and wasn't much smaller cause we're not dropping islands.
         template_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gadm_adm0.gpkg')) 
         
         for sec, deg in sizes.items():
             
-            # Just load it on first pass
+            # Load GADM vector file if not yet used.
             if type(gadm) is str:
                 gadm = hb.read_vector(p.gadm_adm0_vector_input_path)
             
@@ -67,24 +77,13 @@ resolutions of GADM.
     if not hb.path_exists(p.gadm_adm0_labels_path):
         gdf = hb.read_vector(p.gadm_adm0_100sec_vector_path)
         df = gdf[[i for i in gdf.columns if i != 'geometry']]
-        
-        # # Sort based on value of label
-        # df2 = df.sort_values('label')
-        
-        # Set pandas to show all rows
-        pd.set_option('display.max_rows', 500)
-        
-        # print(df)
-        # print(df2)
-        
-        
+
         # Add new column with integers starting at 1 and incrementing up
         df['id'] = np.arange(1, len(df) + 1).astype(np.int64)
         
         # Put the 'id' column first
         new_cols = ['id'] + [i for i in df.columns if i != 'id']
         df = df[new_cols]
-        print(df)
     
         # Convert all floats to ints
         df = hb.df_convert_column_type(df, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
@@ -108,9 +107,8 @@ resolutions of GADM.
         hb.make_path_global_pyramid(p.gadm_adm0_raster_path)
                 
     
-
 def gtap_aez_seals_correspondences(p):
-    p.current_task_documentation = """
+    task_documentation = """
     Create correspondence CSVs from ISO3 countries to GTAPv11 160
     regions, and then to gtapaezv11 50ish regions, also put the classification
     for seals simplification and luh.  
@@ -119,23 +117,20 @@ def gtap_aez_seals_correspondences(p):
     but the column header is region
     """
     
-    # TODOO Note that only the actual file strings are made EE spec. The variable names themselves still need to,
-    
-    # These are teh two input paths I receive from Erwin. They are unmodified except for adding honduras as separate.
+    # These are teh two input paths I receive from Erwin, modified only to have a good name.
     p.gtapv7_r251_r160_correspondence_input_path = os.path.join(p.base_data_dir, 'gtappy', 'aggregation_mappings', 'gtapv7_r251_r160_correspondence.xlsx') # Erwin's naming
     p.gtapv7_r251_s65_r50_s26_correspondence_input_path = os.path.join(p.base_data_dir, 'gtappy', 'aggregation_mappings', 'gtapv7_r251_s65_r50_s26_correspondence.xlsx') # Erwin's naming
     
-    # Project level paths that initialize even without running this task
-    
-    # Usually I don't have to write out the non-correspondence files, but here I do because the full labels weren't in the inputs
-    # so I write them to merge them in.
+    # Define all the correspondence and labels paths. A _labels file is the minimum set for a single dimension in a single domain, whereas
+    # tcorrespondences below match corresponding label entries.
     # Also note that I chose not to have the word _regions or similar attached because this is a singular thing and its label is defined by r251
     p.gtapv7_r251_labels_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r251_labels.csv'))
     p.gtapv7_r160_labels_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r160_labels.csv'))
     p.gtapv7_r50_labels_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r50_labels.csv'))
     p.gtapv7_r251_r160_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r251_r160_correspondence.csv'))
         
-    # Activities and commodities are separate. Activiteis have 24 total, subset of commodities, which have 26
+    # Activities and commodities are separate. Activiteis have 24 total, subset of commodities, which have 26.
+    # This is specific to GTAP
     p.gtapv7_s65_a24_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_s65_a24_correspondence.csv'))
     p.gtapv7_s65_c26_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_s65_c26_correspondence.csv'))
     p.gtapv7_r160_r50_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r160_r50_correspondence.csv'))
@@ -145,14 +140,15 @@ def gtap_aez_seals_correspondences(p):
     p.gtapv7_r251_r160_r50_correspondence = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gtapv7_r251_r160_r50_correspondence.csv'))
     p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gadm_r263_gtapv7_r251_r160_r50_correspondence.csv'))
     
-    # Identical to the full previous one but handy for shorter naming, based on the cge release string
+    # gadm_r263_gtapv7_r251_r160_r50_correspondence_path is the fully-inclusive version but doesn't yet include geometry. ee domain included geometry
+    # and also drops some of the extra labels.
     p.ee_r264_correspondence_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'ee_r264_correspondence.csv'))
-    hb.create_directories(p.ee_r264_correspondence_path)
+    
     
     if p.run_this:
         
-        
         if not hb.path_all_exist([p.gtapv7_r251_labels_path, p.gtapv7_r160_labels_path, p.gtapv7_r251_r160_correspondence_path], verbose=True):
+            hb.create_directories(p.gtapv7_r251_labels_path)
             
             # Process tine Legend worksheet in the input into two listings of the labels and ids from iso3 (as defined by gtap11 and gtap11 regions)
             gtap11_region_correspondence_input_legend = pd.read_excel(p.gtapv7_r251_r160_correspondence_input_path, sheet_name='Legend', header=1, index_col=None)
@@ -170,7 +166,7 @@ def gtap_aez_seals_correspondences(p):
             gtapv7_r251_naming = gtap11_iso3_2.rename(columns={'gtapv7_r251_description': 'gtapv7_r251_name'})
             gtapv7_r251_naming['gtapv7_r251_description'] = gtapv7_r251_naming['gtapv7_r251_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
 
-            # Rename Reunion
+            # Rename coutries with non-ascii characters
             gtapv7_r251_naming.loc[gtapv7_r251_naming['gtapv7_r251_label'] == 'reu', 'gtapv7_r251_name'] = 'Reunion'
             gtapv7_r251_naming.loc[gtapv7_r251_naming['gtapv7_r251_label'] == 'reu', 'gtapv7_r251_description'] = 'Réunion'
             gtapv7_r251_naming.loc[gtapv7_r251_naming['gtapv7_r251_label'] == 'ala', 'gtapv7_r251_name'] = 'Aland'
@@ -196,13 +192,9 @@ def gtap_aez_seals_correspondences(p):
             gtap11_regions_1 = gtap11_region_correspondence_legend[['gtapv7_r160_id', 'gtapv7_r160_label', 'gtapv7_r160_description']].copy()
             gtap11_regions = gtap11_regions_1.copy().dropna()
             gtap11_regions['gtapv7_r160_name'] = gtap11_regions['gtapv7_r160_description'].copy()
-            # gtap11_regions = gtap11_regions_2.rename(columns={'gtapv7_r160_description': 'gtapv7_r160_name'})
-            # gtap11_regions['gtapv7_r160_description'] = gtap11_regions['gtapv7_r160_name'] # Set as a copy because the description in the input is actually a name but we still need an entry for the description
             
             # Note for input No., it was interpretted as a float. fix that here.
             gtap11_regions['gtapv7_r160_id'] = gtap11_regions['gtapv7_r160_id'].astype(np.int64)
-            
-            # show all pandas rows
 
             gtap11_regions.loc[gtap11_regions['gtapv7_r160_label'] == 'civ', 'gtapv7_r160_name'] = 'Cote d\'lvoire'
             gtap11_regions.loc[gtap11_regions['gtapv7_r160_label'] == 'civ', 'gtapv7_r160_description'] = 'Côte d\'lvoire'
@@ -229,9 +221,7 @@ def gtap_aez_seals_correspondences(p):
             df2a = hb.df_merge(df2, gtap11_regions, left_on='gtapv7_r160_label', right_on='gtapv7_r160_label', verbose=False)
             df2a['gtapv7_r251_description'] = df2a['gtapv7_r251_name']
             df2a['gtapv7_r160_description'] = df2a['gtapv7_r160_name']
-            
-            pd.set_option('display.max_rows', 500)
-            print(gtap11_regions)
+
             # Reorder
             df4 = df2a[['gtapv7_r251_id', 'gtapv7_r160_id', 'gtapv7_r251_label', 'gtapv7_r160_label', 'gtapv7_r251_name', 'gtapv7_r160_name', 'gtapv7_r251_description', 'gtapv7_r160_description']] 
                         
@@ -239,7 +229,6 @@ def gtap_aez_seals_correspondences(p):
 
             # Convert all floats to ints
             gtap11_iso3_gtap11_region_correspondence = hb.df_convert_column_type(gtap11_iso3_gtap11_region_correspondence, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
-            
             
             gtap11_iso3_gtap11_region_correspondence.loc[gtap11_iso3_gtap11_region_correspondence['gtapv7_r160_label'] == 'civ', 'gtapv7_r160_name'] = 'Cote d\'lvoire'
             gtap11_iso3_gtap11_region_correspondence.loc[gtap11_iso3_gtap11_region_correspondence['gtapv7_r160_label'] == 'civ', 'gtapv7_r160_description'] = 'Côte d\'lvoire'
@@ -250,7 +239,6 @@ def gtap_aez_seals_correspondences(p):
             gtap11_iso3_gtap11_region_correspondence.loc[gtap11_iso3_gtap11_region_correspondence['gtapv7_r251_label'] == 'tur', 'gtapv7_r251_name'] = 'Turkey'        
             gtap11_iso3_gtap11_region_correspondence.loc[gtap11_iso3_gtap11_region_correspondence['gtapv7_r251_label'] == 'tur', 'gtapv7_r251_description'] = 'Türkiye'        
 
-            
             # Write it to a csv while dropping the index
             gtap11_iso3_gtap11_region_correspondence.to_csv(p.gtapv7_r251_r160_correspondence_path, index=False)
         
@@ -260,7 +248,7 @@ def gtap_aez_seals_correspondences(p):
             gadm = pd.read_csv(p.gadm_adm0_labels_path)
             gtapv7_r251_naming = pd.read_csv(p.gtapv7_r251_labels_path)
                         
-            # Make gadm lowercase
+            # Make gadm lowercase. This was done to match gtap-database style iso3 code but I might want to switch it back to caps to match GADM et al.
             gadm['GID_0'] = gadm['GID_0'].str.lower()
 
             # TODOO Figure out how to make this a HB level choice.
@@ -285,15 +273,13 @@ def gtap_aez_seals_correspondences(p):
             gadm.loc[gadm['gadm_r263_label'] == 'mex', 'gadm_r263_name'] = 'Mexico'
             gadm.loc[gadm['gadm_r263_label'] == 'mex', 'gadm_r263_description'] = 'Mexico'            
             gadm.loc[gadm['gadm_r263_label'] == 'stp', 'gadm_r263_name'] = 'Sao Tome and Principe'
-            gadm.loc[gadm['gadm_r263_label'] == 'stp', 'gadm_r263_description'] = 'São Tomé and Príncipe'            
-            
+            gadm.loc[gadm['gadm_r263_label'] == 'stp', 'gadm_r263_description'] = 'São Tomé and Príncipe'
             
             gadm_r263_labels_path = p.get_path(os.path.join('gtappy', 'aggregation_mappings', 'gadm_r263_labels.csv'))
             gadm.to_csv(gadm_r263_labels_path, index=False)
             
             # Do an outer merge
-            df = hb.df_merge(gadm, gtapv7_r251_naming, left_on='gadm_r263_label', right_on='gtapv7_r251_label', verbose=False)
-            
+            df = hb.df_merge(gadm, gtapv7_r251_naming, left_on='gadm_r263_label', right_on='gtapv7_r251_label', verbose=False)            
             
             # fill in missing that ARE in r251 but not in r263] 
             df.loc[df['gtapv7_r251_label'] == 'hkg', 'gadm_r263_id'] = 44
@@ -310,8 +296,6 @@ def gtap_aez_seals_correspondences(p):
             # Kosovo (both have it, but have different iso3) and GTAPv7 has a weird typo? Override with gadm.
             df = df[df['gtapv7_r251_label'] != 'xkx']
             df.loc[df['gadm_r263_label'] == 'xko', 'gtapv7_r251_label'] = 'xkx'
-
-
             
             # Sark fix (both have it, but have different iso3)
             df.loc[df['gtapv7_r251_label'] == 'sar', 'gadm_r263_id'] = 192
@@ -319,29 +303,13 @@ def gtap_aez_seals_correspondences(p):
             df.loc[df['gtapv7_r251_label'] == 'sar', 'gadm_r263_name'] = 'Guernsey'
             df.loc[df['gtapv7_r251_label'] == 'sar', 'gadm_r263_description']= 'Guernsey'
 
-            hb.log('Adding fixes to GADM\n\n', df, level=100)
+            hb.debug('Adding fixes to GADM\n\n', df, level=100)
             
             # Clean            
             new_cols = ['gadm_r263_id', 'gtapv7_r251_id', 'gadm_r263_label', 'gtapv7_r251_label', 'gadm_r263_name', 'gtapv7_r251_name', 'gadm_r263_description', 'gtapv7_r251_description']
             df = df[new_cols]     
             
-            # Drop any row with a missing value in id, label or name
-            # df = df.dropna(subset=['gadm_r263_id', 'gadm_r263_label', 'gadm_r263_name', 'gtapv7_r251_id', 'gtapv7_r251_label', 'gtapv7_r251_name'])    
-            # Drop the polygon of the caspian sea (XCA)
-            # Drop a row where GID_0 = XCA
-            # merged_df = merged_df[merged_df['GID_0'] != 'XCA']
-            
-            # Choose whichever adjacent or nearby GTAP country is biggest among the people claiming sogerignty to assign. no politics implied.
-            # df.loc[df['gtapv7_r251_label'] == 'hmd', 'gadm_r263_id'] = 97 
-            # df.loc[df['gtapv7_r251_label'] == 'hmd', 'gadm_r263_label'] = 'hmd'
-            # df.loc[df['gtapv7_r251_label'] == 'hmd', 'gadm_r263_name'] = 'Heard Island and McDonald Island'
-            # df.loc[df['gtapv7_r251_label'] == 'hmd', 'gadm_r263_description'] = 'Heard Island and McDonald Island' 
-            
-            # Increase the number of rows printed by pandas when you print a df
-            pd.set_option('display.max_rows', 500)
-            
-            
-            hb.log('hmd\n', df, level=100)
+            #  Fill in GADM contetsted regions
             replacements = {}
             replacements['HMD'] = [98, 'HMD', 'Heard Island and McDonald Island', 'Heard Island and McDonald Island']
             replacements['XAD'] = [80, 'GBR', 'United Kingdom', 'United Kingdom of Great Britain and Northern Ireland']
@@ -367,24 +335,15 @@ def gtap_aez_seals_correspondences(p):
             
             # Use replacements to fill missing values in the merged_df
             for key, value in replacements_lower.items():
-
                 df.loc[df['gadm_r263_label'] == key, 'gtapv7_r251_id'] = value[0]          
                 df.loc[df['gadm_r263_label'] == key, 'gtapv7_r251_label'] = value[1]           
                 df.loc[df['gadm_r263_label'] == key, 'gtapv7_r251_name'] = value[2]            
-                df.loc[df['gadm_r263_label'] == key, 'gtapv7_r251_description'] = value[3]            
-
-
-
-            hb.log('AFTER FIX\n\n', df, level=100)
+                df.loc[df['gadm_r263_label'] == key, 'gtapv7_r251_description'] = value[3]       
+                
             # Convert all floats to ints
             df2 = hb.df_convert_column_type(df, np.float64, np.int64, columns='all', ignore_nan=True, verbose=False)
             
-            
-        
             df2.to_csv(p.gadm_r263_gtapv7_r251_correspondence_path, index=False)
-            # df2.loc[:, 'gadm_r263_description'] = df2['gadm_r263_name']
-
-            
                    
            
         if not hb.path_all_exist([p.gtapv7_s65_a24_correspondence_path, p.gtapv7_s65_c26_correspondence_path, p.gtapv7_r160_r50_correspondence_path]):
@@ -475,6 +434,7 @@ def gtap_aez_seals_correspondences(p):
             gtapv7_s65_a24_correspondence = gtapv7_s65_a24_correspondence.drop(columns=['gtapv7_s65_name', 'gtapv7_s65_description', 'gtapv7_s65_id'])
             gtapv7_s65_a24_correspondence = hb.df_merge(gtapv7_s65_a24_correspondence, df_s65_sectors_legend, left_on='gtapv7_s65_label', right_on='gtapv7_s65_label', verbose=False)
             gtapv7_s65_a24_correspondence['gtapv7_a24_description'] = gtapv7_s65_a24_correspondence['gtapv7_a24_name']
+            
             # Reorder so it matches the EE spec
             gtapv7_s65_a24_correspondence = gtapv7_s65_a24_correspondence[['gtapv7_s65_id', 'gtapv7_a24_id', 'gtapv7_s65_label', 'gtapv7_a24_label', 'gtapv7_s65_name', 'gtapv7_a24_name', 'gtapv7_s65_description', 'gtapv7_a24_description']]
             
@@ -513,8 +473,6 @@ def gtap_aez_seals_correspondences(p):
             
             # Reorder so it matches the EE spec
             gtapv7_s65_c26_correspondence = gtapv7_s65_c26_correspondence[['gtapv7_s65_id', 'gtapv7_c26_id', 'gtapv7_s65_label', 'gtapv7_c26_label', 'gtapv7_s65_name', 'gtapv7_c26_name', 'gtapv7_s65_description', 'gtapv7_c26_description']]
-            
-            
 
             # Write it to a csv while dropping the index
             gtapv7_s65_c26_correspondence.to_csv(p.gtapv7_s65_c26_correspondence_path, index=False)
@@ -551,6 +509,7 @@ def gtap_aez_seals_correspondences(p):
             
        
         if not hb.path_exists(p.gadm_r263_gtapv7_r251_r160_r50_correspondence_path):
+            hb.create_directories(p.ee_r264_correspondence_path)
             # BNow combine gadm label, gtapiso3, gtapregion, and gtapaezregion.v
             gadm_gid0_gtap11_iso3_correspondence = pd.read_csv(p.gadm_r263_gtapv7_r251_correspondence_path)   
             gtap11_iso3_gtap11_regions_correspondence = pd.read_csv(p.gtapv7_r251_r160_correspondence_path)
@@ -672,7 +631,6 @@ def gtap_aez_seals_correspondences(p):
 
 
             df = df[final_cols]
-            
 
             # Make a final version with a simplified name
             df.to_csv(p.ee_r264_correspondence_path, index=False)
@@ -855,7 +813,7 @@ def mapfile(p):
                           
  
 def gtap_runs(p):
-    """Run a precompiled gtap exe file by creating a cmf file and calling it.
+    task_dcoumentation = """Run a precompiled gtap exe file by creating a cmf file and calling it.
     
     The current general approach to ingesting a new gtap-aez release from Purdue is:
     
@@ -1172,7 +1130,7 @@ def single_variable_time_series(p):
                                      
 
 def econ_vizualization(p):
-    pass
+    task_documentation = """Autoploting stuff."""
 
 def econ_time_series(p):
     if p.run_this:
@@ -1213,6 +1171,7 @@ def econ_time_series(p):
     5
     
 def econ_lcovercom(p):
+    task_documentation = """Autoploting stuff."""
     if p.run_this:
 
         vars_to_plot = ['lcovercom']
