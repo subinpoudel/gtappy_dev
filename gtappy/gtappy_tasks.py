@@ -673,8 +673,8 @@ def base_data_as_csv(p):
                         gtappy_file_io.har_to_ndindexed_dfs(input_har_path, har_index_path)                    
                         
                         # # For validation (and actual use in the model), create a new har from the indexed dir.
-                        # local_har_path = hb.path_rename_change_dir(input_har_path, output_dir)
-                        # gtappy_file_io.indexed_dfs_to_har(har_index_path, local_har_path)
+                        local_har_path = hb.path_rename_change_dir(input_har_path, output_dir)
+                        gtappy_file_io.indexed_dfs_to_har(har_index_path, local_har_path)
 
 
 

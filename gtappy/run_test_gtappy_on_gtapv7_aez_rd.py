@@ -129,7 +129,7 @@ if __name__ == '__main__':
     
  
     # Define SCENARIO specific information
-    p.shocks['v11-s26-r50']['bau'] = [
+    p.shocks['v11-s26-r50']['bau_ssp2'] = [
         'swap qe(\"capital\",REG) = capadd(REG);'
         'swap afelabreg = qgdppcfisher;'
         'swap qesf = qesfsupply;'
@@ -138,17 +138,24 @@ if __name__ == '__main__':
         'shock pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";',
         'shock qe(ENDWL,REG) = file <p1>\BaseScen.har header \"LAB2\" slice \"<p5>\";'
     ]
-    p.shocks['v11-s26-r50']['with_air_quality_damages'] = [
+    p.shocks['v11-s26-r50']['bau_ssp3'] = [
+        'swap qe(\"capital\",REG) = capadd(REG);'
+        'swap afelabreg = qgdppcfisher;'
+        'swap qesf = qesfsupply;'
+        'shock del_unity = 1;',
+        'shock qgdppcfisher = file <p1>\BaseScen.har header \"OGP2\" slice "<p5>";'
+        'shock pop = file <p1>\BaseScen.har header "POP3" slice "<p5>";',
+        'shock qe(ENDWL,REG) = file <p1>\BaseScen.har header \"LAB2\" slice \"<p5>\";'
+    ]
+    p.shocks['v11-s26-r50']['bau_ssp2_with_fire'] = [
         'swap qe(\"capital\",REG) = capadd(REG);'
         'swap afelabreg = qgdppcfisher;'
         'swap qesf = qesfsupply;'
         'shock del_unity = 1;',
         'shock qgdppcfisher = file <p1>\BaseScen.har header \"OGP2\" slice "<p5>";'
         'shock pop = file <p1>\BaseScen.har header "POP2" slice "<p5>";',
-        'shock qe(ENDWL,REG) = uniform -2.5;'
+        'shock qe(ENDWL,REG) = file <p1>\NewHarFileWithPOP2AIR_Column.har header \"LAB2_fire\" slice \"<p5>\";'
     ]
-
-
 #     ! (A1) Activate year-on-year capital accumulation equation
 # swap qe("capital",REG) = capadd(REG);
 
