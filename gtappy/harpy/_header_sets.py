@@ -25,7 +25,8 @@ class _HeaderSet:
         self.dim_desc = dim_desc
         if not dim_desc is None:
             if any([len(el) > 12 for el in dim_desc]):
-                raise ValueError("Set Element too long (maximum 12 Characters for set Elements)")
+                print("WARNING Set Element too long (maximum 12 Characters for set Elements)")
+                # raise ValueError("Set Element too long (maximum 12 Characters for set Elements)")
         self.elemPosDict={} if self.dim_desc is None else dict(zip( [elem.strip().lower() for elem in dim_desc], range(0,len(self.dim_desc))))
         self.dim_size = dim_size
 

@@ -1,7 +1,7 @@
 import os
 import hazelbean as hb
 import food_systems_initialize_project
-import utils
+import gtappy.gtappy_utils as gtappy_utils
 
 if __name__ == '__main__':
         
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # Additionally, if you're clever, you can move files generated in your tasks to the right base_data_dir
     # directory so that they are available for future projects and avoids redundant processing.
     # NOTE THAT the final directory has to be named base_data to match the naming convention on the google cloud bucket.
-    p.base_data_dir = os.path.join('G:/My Drive/Files/Research/base_data')
+    p.base_data_dir = os.path.join('G:/My Drive/Files/base_data')
 
     # Define which aggregations will be used when GTAP is run.    
     fully_disaggregated_label = '65x141'
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # Generate a nested dictionary for all permutations of aggregations and experiments. 
     # This will set xsets, xsubsets, and shocks attributes of the ProjectFlow object p.
-    utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
+    gtappy_utils.set_attributes_based_on_aggregation_and_experiments(p, p.aggregation_labels, p.experiment_labels)
 
 
     ###------- Write the unique information that defines how each scenario's CMF is different.

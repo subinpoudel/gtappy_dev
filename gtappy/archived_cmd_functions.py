@@ -178,7 +178,7 @@ def extract_raw_csv_from_sl4(sl4_path, csv_path, vars_to_extract=None, additiona
     return
 
 
-def har_to_indexed_dfs(input_har_path, output_index_path):
+def har_to_ndindexed_dfs(input_har_path, output_index_path):
     """Convert all information in input_har_path into several CSVs that can be programatically rewritten back to a conformant har.
     All paths are written relative to output_index_path (either parallel to or in a newly created output dir)
     
