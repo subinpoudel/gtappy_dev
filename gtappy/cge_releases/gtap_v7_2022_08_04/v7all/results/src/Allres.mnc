@@ -1,0 +1,796 @@
+#FILES
+Logical Name         In/Out Ud  Type Actual Name
+GTAPDATA              In     n  HAR
+ Basedata
+GTAPSETS              In     n  HAR
+ Sets file
+SOLFILE               In     n  HAR
+ Results file from ViewSol
+AGGRSETS              In     n  HAR
+ Aggregate sets file to summarize simulation results
+GTAPVIEW              In     n  HAR
+ GTAPView summary file
+ALLRES                Out    n  HAR
+ Output file: all simulation results
+(Display)             Out    n  DIS
+(Solution)            Out    n  SL4
+(Equations)           Out    n  EQ4
+#TABFILE
+Allres.tab
+#TMDATE
+at 18:18:42 on 21-JUL-2022
+#STIFILE
+TABmate.sif
+#SETS
+   26
+    1 SCEN                 2  k All Scenarios
+agpr20      
+rtms5       
+    2 COMM                -1  u commodities
+    3 ACTS                -1  u activities
+    4 REG                 -1  u regions
+    5 ENDW                -1  u endowments
+    6 ENDWM               -1  u mobile endowments
+    7 ENDWS               -1  u sluggish endowments
+    8 ENDWMS              -1  u mobile & slug endw
+    9 DEMD                -1  u endw & comm
+   10 MARG                -1  u margin commodities
+   11 NMRG                -1  u non-margin commodities
+   12 ENDWC                1  k Capital Endowment Commodity
+capital     
+   13 ACOM                -1  u aggregate commodities
+   14 AACT                -1  u aggregate activities
+   15 AREG                -1  u aggregate regions
+   16 ADEMD               -1  u agg endw & comm
+   17 GDPEXPEND            5  k description
+cons        
+inv         
+gov         
+exp         
+imp         
+   18 GDPSOURCE            3  k description
+fact        
+tax         
+depr        
+   19 MACRES              14  k regional macro
+rEV         
+rqgdp       
+rqprv       
+rqinv       
+rqgov       
+rqexp       
+rqimp       
+rpgdp       
+rpprv       
+rpinv       
+rpgov       
+rpexp       
+rpimp       
+rvgdp       
+   20 GDPEXPEND2           6  k GDP expenditure side with total
+cons        
+inv         
+gov         
+exp         
+imp         
+GDP         
+   21 GLOBRES              8  k global results
+wEV         
+wqgdp       
+winc        
+wqinv       
+wpgdp       
+wpinv       
+wqexp       
+wpexp       
+   22 RCOMRES              8  k Regional commodity variables
+qc          
+qds         
+qxw         
+qmw         
+pds         
+pxw         
+pmw         
+pms         
+   23 RACTRES              2  k Regional production summary
+po          
+qo          
+   24 TRADERES             4  k Regional bilateral trade variables
+qxs         
+pfob        
+pcif        
+pmds        
+   25 ENDWRES              2  k Regional endowment summary
+pe          
+qe          
+   26 FACRES               3  k Regional endowment summary
+pfe         
+qfe         
+qes         
+#VARIABLES
+         0
+#SUBSETS
+    23
+     1     6     8
+     2     7     8
+     3     5     9
+     4     2     9
+     5    10     2
+     6    10     9
+     7     8     5
+     8     8     9
+     9     6     5
+    10     7     5
+    11     6     9
+    12     7     9
+    13    11     2
+    14    11     9
+    15    12     5
+    16    12     9
+    17     5    16
+    18    13    16
+    19     6    16
+    20     7    16
+    21     8    16
+    22    12    16
+    23    17    20
+#COEFFICIENTS
+  109
+    1 MAPREG          1 i y n
+    4 m    4   15
+    2 MAPCOM          1 i y n
+    2 m    2   13
+    3 MAPACT          1 i y n
+    3 m    3   14
+    4 GDPEXP          2 r y n  GDP from the expenditure side
+    4   17
+    5 GDP             1 r n n  GDP from the expenditure side
+    4
+    6 GDPAGG          1 r n n  GDP by aggregate region
+   15
+    7 GDPEXPAGG       2 r n n  GDP expenditure by aggregate region
+   15   17
+    8 GDPSHR          1 r n n  GDP share relative to aggregate region
+    4
+    9 GDPEXPSHR       2 r n n  GDP expenditure by aggregate region
+    4   17
+   10 GDPWLD          0 r n n  World GDP from the expenditure side
+   11 WLDGDPSHR       1 r n n  World GDP shares
+    4
+   12 VDFB            3 r y n  expenditure on domestic c by act. a in r at basic prices
+    2    3    4
+   13 VDPB            2 r y n  private household expenditure on dom. c in r at basic prices
+    2    4
+   14 VDGB            2 r y n  government expenditure on domestic c in r at basic prices
+    2    4
+   15 VDIB            2 r y n  investment expenditure on domestic c in r at basic prices
+    2    4
+   16 VST             2 r y n  value of exports of margin m from r for int'l transport at basic prices
+   10    4
+   17 VDFP            3 r y n  expenditure on domestic c by act. a in r at purch prices
+    2    3    4
+   18 VMFP            3 r y n  expenditure on imported c by act. a in r at purch prices
+    2    3    4
+   19 EVFP            3 r y n  expenditure on endowment e by a in r at producer prices
+    5    3    4
+   20 EVOS            3 r y n  expenditure on endowment e by a in r at supply prices
+    5    3    4
+   21 VXSB            3 r y n  value of exports of  c from s to d at basic prices (tradeables only)
+    2    4    4
+   22 VFOB            3 r y n  value of exports of  c from s to d at FOB prices (tradeables only)
+    2    4    4
+   23 VCIF            3 r y n  value of imports of c from s to d at CIF prices (tradeables only)
+    2    4    4
+   24 VMSB            3 r y n  value of imports of c from s to d at domestic (basic) prices
+    2    4    4
+   25 VDB             2 r n n  domestic sales of c in r at basic prices (tradeables only)
+    2    4
+   26 VCB             2 r n n  supply of commodity c in region r valued at basic prices
+    2    4
+   27 VXW             2 r n n  value of exports by commodity c and region r at FOB prices
+    2    4
+   28 VMW             2 r n n  value of exports by commodity c and region r at CIF prices
+    2    4
+   29 VMB             2 r n n  value of exports by commodity c and region r at basic prices
+    2    4
+   30 VFP             3 r n n  expenditure on d by act. a in r valued at producer prices
+    9    3    4
+   31 VOS             2 r n n  output of act. a in r valued at supplier's prices
+    3    4
+   32 VES             2 r n n  endowment supply in region r, at supplier's (after tax) prices
+    5    4
+   33 EV              2 r y n  regional EV, $USMillion
+    4    1
+   34 vgdp            2 r y n  % change in value of GDP
+    4    1
+   35 qgdp            2 r y n  % change in GDP quantity index
+    4    1
+   36 pgdp            2 r y n  % change in GDP price index
+    4    1
+   37 qprv            2 r y n  % change in consumption quantity index
+    4    1
+   38 pprv            2 r y n  % change in consumption price index
+    4    1
+   39 qinv            2 r y n  % change in investment demand
+    4    1
+   40 pinv            2 r y n  % change in investment price index
+    4    1
+   41 qgov            2 r y n  % change in government demand
+    4    1
+   42 pgov            2 r y n  % change in government price index
+    4    1
+   43 qexp            2 r y n  % change in exports
+    4    1
+   44 pexp            2 r y n  % change in export price index
+    4    1
+   45 qimp            2 r y n  % change in imports (CIF)
+    4    1
+   46 pimp            2 r y n  % change in import price index (CIF)
+    4    1
+   47 RMAC            3 r n n  regional macroeconomic results
+    4   19    1
+   48 RMACAGG         3 r n n  macroeconomic results by aggregate region
+   15   19    1
+   49 RGDPAGG         3 r n n  GDP expenditure results by aggregate region
+   15   20    1
+   50 WEV             1 r y n  equivalent variation for the world
+    1
+   51 ywld            1 r y n  world income
+    1
+   52 globalcgds      1 r y n  global supply of capital goods for NET investment
+    1
+   53 pcgdswld        1 r y n  world average price of capital goods
+    1
+   54 qxwwld          1 r y n  volume of world trade
+    1
+   55 pxwwld          1 r y n  price index of world trade
+    1
+   56 GLOB            2 r n n  Global results summary
+   21    1
+   57 qc              3 r y n  total commodity supply in r
+    2    4    1
+   58 qds             3 r y n  total domestic commodity supply in r
+    2    4    1
+   59 qxw             3 r y n  aggregate exports of c from r, FOB weights
+    2    4    1
+   60 qmw             3 r y n  aggregate imports of c into r, CIF weights
+    2    4    1
+   61 pds             3 r y n  price of domestically supplied commodity c in r
+    2    4    1
+   62 pxw             3 r y n  exports price of c from region r (FOB price)
+    2    4    1
+   63 pmw             3 r y n  price of composite import c into r (CIF price)
+    2    4    1
+   64 pms             3 r y n  tariff-incl price of composite import c in r (basic price)
+    2    4    1
+   65 VCBAGG          2 r n n  VCB by aggregate commodity and region
+   13   15
+   66 VCBSHR          2 r n n  VCB share
+    2    4
+   67 VDBAGG          2 r n n  VDB by aggregate commodity and region
+   13   15
+   68 VDBSHR          2 r n n  VDB share
+    2    4
+   69 VXWAGG          2 r n n  VXW by aggregate commodity and region
+   13   15
+   70 VXWSHR          2 r n n  VXW share
+    2    4
+   71 VMWAGG          2 r n n  VMW by aggregate commodity and region
+   13   15
+   72 VMWSHR          2 r n n  VMW share
+    2    4
+   73 VMBAGG          2 r n n  VMB by aggregate commodity and region
+   13   15
+   74 VMBSHR          2 r n n  VMB share
+    2    4
+   75 RCOM            4 r n n  Regional commodity results
+    2    4   22    1
+   76 RCOMAGG         4 r n n  Regional commodity results
+   13   15   22    1
+   77 qo              3 r y n  qo: output of activity a in region r
+    3    4    1
+   78 po              3 r y n  po: unit cost/revenue of activity a in region r
+    3    4    1
+   79 VOSAGG          2 r n n  VOS by aggregate commodity and region
+   14   15
+   80 VOSSHR          2 r n n  VOS share
+    3    4
+   81 RACT            4 r n n  Regional activity results
+    3    4   23    1
+   82 RACTAGG         4 r n n  Regional activity results
+   14   15   23    1
+   83 qxs             4 r y n  export sales of commodity c from source s to destination d
+    2    4    4    1
+   84 pfob            4 r y n  FOB world price of com. c from source s to destination d
+    2    4    4    1
+   85 pcif            4 r y n  CIF world price of imported com. c from source s to dest. d
+    2    4    4    1
+   86 pmds            4 r y n  price of imported c supplied by source region s to dest. d
+    2    4    4    1
+   87 VFOBAGG         3 r n n  FOB value of aggregate exports of c from s to d
+   13   15   15
+   88 VFOBSHR         3 r n n  VFOB share
+    2    4    4
+   89 VCIFAGG         3 r n n  CIF value of aggregate exports of c from s to d
+   13   15   15
+   90 VCIFSHR         3 r n n  CIF share
+    2    4    4
+   91 VMSBAGG         3 r n n  tariff-incl value of aggregate exports of c from s to d
+   13   15   15
+   92 VMSBSHR         3 r n n  VMSB share
+    2    4    4
+   93 TRADE           5 r n n  bilateral trade results
+    2    4    4   24    1
+   94 TRADEAGG        5 r n n  bilateral trade results
+   13   15   15   24    1
+   95 pe              3 r y n  price of mobile and sluggish endowment e in region r
+    8    4    1
+   96 qe              3 r y n  supply of mobile and sluggish endowment e in region r
+    8    4    1
+   97 VESAGG          2 r n n  VES value for aggregate region
+    8   15
+   98 VESSHR          2 r n n  VES share
+    8    4
+   99 ENDWSUP         4 r n n  aggregate factor results
+    8    4   25    1
+  100 ENDWSUPAGG      4 r n n  aggregate factor results
+    8   15   25    1
+  101 pfe             4 r y n  price of endowment e purchased by activity a region r
+    5    3    4    1
+  102 qfe             4 r y n  endowment demand by activity a region r
+    5    3    4    1
+  103 qes             4 r y n  supply of endowment e for use by activity a in region r
+    5    3    4    1
+  104 EVFPAGG         3 r n n  endowment by aggregate activity and region, purch price
+    5   14   15
+  105 EVFPSHR         3 r n n  EVFP share
+    5    3    4
+  106 EVOSAGG         3 r n n  endowment by aggregate activity and region, supply price
+    5   14   15
+  107 EVOSSHR         3 r n n  EVOS share
+    5    3    4
+  108 FACS            5 r n n  factor results
+    5    3    4   26    1
+  109 FACSAGG         5 r n n  aggregate factor results
+    5   14   15   26    1
+#EQUATIONS
+    0
+#READS
+   56
+    1     1 MAPREG            4 AGGRSETS             MREG a h     1
+     4
+    2     2 MAPCOM            4 AGGRSETS             MCOM a h     1
+     2
+    3     3 MAPACT            4 AGGRSETS             MACT a h     1
+     3
+    4     4 GDPEXP            5 GTAPVIEW             AG01 a h     2
+     4    17
+    5    13 VDPB              1 GTAPDATA             VDPB a h     2
+     2     4
+    6    14 VDGB              1 GTAPDATA             VDGB a h     2
+     2     4
+    7    15 VDIB              1 GTAPDATA             VDIB a h     2
+     2     4
+    8    12 VDFB              1 GTAPDATA             VDFB a h     3
+     2     3     4
+    9    17 VDFP              1 GTAPDATA             VDFP a h     3
+     2     3     4
+   10    18 VMFP              1 GTAPDATA             VMFP a h     3
+     2     3     4
+   11    19 EVFP              1 GTAPDATA             EVFP a h     3
+     5     3     4
+   12    20 EVOS              1 GTAPDATA             EVOS a h     3
+     5     3     4
+   13    16 VST               1 GTAPDATA             VST  a h     2
+    10     4
+   14    22 VFOB              1 GTAPDATA             VFOB a h     3
+     2     4     4
+   15    21 VXSB              1 GTAPDATA             VXSB a h     3
+     2     4     4
+   16    23 VCIF              1 GTAPDATA             VCIF a h     3
+     2     4     4
+   17    24 VMSB              1 GTAPDATA             VMSB a h     3
+     2     4     4
+   18    33 EV                3 SOLFILE              EV   a h     2
+     4     1
+   19    34 vgdp              3 SOLFILE              VGDP a h     2
+     4     1
+   20    35 qgdp              3 SOLFILE              QGDP a h     2
+     4     1
+   21    36 pgdp              3 SOLFILE              PGDP a h     2
+     4     1
+   22    37 qprv              3 SOLFILE              QPRV a h     2
+     4     1
+   23    38 pprv              3 SOLFILE              PPRV a h     2
+     4     1
+   24    39 qinv              3 SOLFILE              QINV a h     2
+     4     1
+   25    40 pinv              3 SOLFILE              PINV a h     2
+     4     1
+   26    41 qgov              3 SOLFILE              QGOV a h     2
+     4     1
+   27    42 pgov              3 SOLFILE              PGOV a h     2
+     4     1
+   28    43 qexp              3 SOLFILE              QEXP a h     2
+     4     1
+   29    44 pexp              3 SOLFILE              PEXP a h     2
+     4     1
+   30    45 qimp              3 SOLFILE              QIMP a h     2
+     4     1
+   31    46 pimp              3 SOLFILE              PIMP a h     2
+     4     1
+   32    50 WEV               3 SOLFILE              WEV  a h     1
+     1
+   33    51 ywld              3 SOLFILE              YWLD a h     1
+     1
+   34    52 globalcgds        3 SOLFILE              QCGW a h     1
+     1
+   35    53 pcgdswld          3 SOLFILE              PCGW a h     1
+     1
+   36    54 qxwwld            3 SOLFILE              QXWD a h     1
+     1
+   37    55 pxwwld            3 SOLFILE              PXWD a h     1
+     1
+   38    57 qc                3 SOLFILE              QC   a h     3
+     2     4     1
+   39    58 qds               3 SOLFILE              QDS  a h     3
+     2     4     1
+   40    59 qxw               3 SOLFILE              QXW  a h     3
+     2     4     1
+   41    60 qmw               3 SOLFILE              QMW  a h     3
+     2     4     1
+   42    61 pds               3 SOLFILE              PDS  a h     3
+     2     4     1
+   43    62 pxw               3 SOLFILE              PXW  a h     3
+     2     4     1
+   44    63 pmw               3 SOLFILE              PMW  a h     3
+     2     4     1
+   45    64 pms               3 SOLFILE              PMS  a h     3
+     2     4     1
+   46    77 qo                3 SOLFILE              QO   a h     3
+     3     4     1
+   47    78 po                3 SOLFILE              PO   a h     3
+     3     4     1
+   48    84 pfob              3 SOLFILE              PFOB a h     4
+     2     4     4     1
+   49    85 pcif              3 SOLFILE              PCIF a h     4
+     2     4     4     1
+   50    86 pmds              3 SOLFILE              PMDS a h     4
+     2     4     4     1
+   51    83 qxs               3 SOLFILE              QXS  a h     4
+     2     4     4     1
+   52    95 pe                3 SOLFILE              PE   a h     3
+     8     4     1
+   53    96 qe                3 SOLFILE              QE   a h     3
+     8     4     1
+   54   101 pfe               3 SOLFILE              PFE  a h     4
+     5     3     4     1
+   55   102 qfe               3 SOLFILE              QFE  a h     4
+     5     3     4     1
+   56   103 qes               3 SOLFILE              QES  a h     4
+     5     3     4     1
+#READ(EXTRA)
+   10
+    1 el
+ COMM         GTAPSETS             COMM
+    2 el
+ ACTS         GTAPSETS             ACTS
+    3 el
+ REG          GTAPSETS             REG 
+    4 el
+ ENDW         GTAPSETS             ENDW
+    5 el
+ ENDWM        GTAPSETS             ENDM
+    6 el
+ ENDWS        GTAPSETS             ENDS
+    7 el
+ MARG         GTAPSETS             MARG
+    8 el
+ ACOM         AGGRSETS             ACOM
+    9 el
+ AACT         AGGRSETS             AACT
+   10 el
+ AREG         AGGRSETS             AREG
+#NCVARIABLES
+    0
+#STATEMENTS
+      10   1 fl                                                 11  27    0 n
+      12   5 fl                                                 12  27    0 n
+      13   5 fl                                                 13  43    0 n
+      14   5 fl                                                 14  69    0 n
+      15   5 fl                                                 15  39    0 n
+      16   1 fl                                                 17  53    0 n
+      23   1 st SCEN                                            24  39    0 n
+      26   1 st COMM                                            27  80    0 n
+      28   2 st ACTS                                            28  80    0 n
+      29   2 st REG                                             29  79    0 n
+      30   2 st ENDW                                            30  80    0 n
+      31   2 st ENDWM                                           31  80    0 n
+      32   2 st ENDWS                                           32  80    0 n
+      33   2 st ENDWMS                                          33  49    0 n
+      33   2 ss                                                 33  49    0 n
+      33   2 ss                                                 33  49    0 n
+      34   2 st DEMD                                            34  47    0 n
+      34   2 ss                                                 34  47    0 n
+      34   2 ss                                                 34  47    0 n
+      35   2 st MARG                                            35  80    0 n
+      36   1 ss                                                 37  26    0 n
+      36   1 ss                                                 37  26    0 n
+      38   2 ss                                                 38  26    0 n
+      38   2 ss                                                 38  26    0 n
+      38   2 ss                                                 38  26    0 n
+      38   2 ss                                                 38  26    0 n
+      38   2 ss                                                 38  26    0 n
+      38   2 ss                                                 38  26    0 n
+      39   1 st NMRG                                            40  47    0 n
+      39   1 ss                                                 40  47    0 n
+      39   1 ss                                                 40  47    0 n
+      41   1 st ENDWC                                           42  49    0 n
+      43   1 ss                                                 44  25    0 n
+      43   1 ss                                                 44  25    0 n
+      45   1 st ACOM                                            46  80    0 n
+      47   2 st AACT                                            47  80    0 n
+      48   2 st AREG                                            48  80    0 n
+      49   2 st ADEMD                                           49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      49   2 ss                                                 49  49    0 n
+      54   1 cs MAPREG                                          54  32    0 n
+      55   1 rd MAPREG               a                          55  59    0 n
+      57   1 cs MAPCOM                                          57  33    0 n
+      58   1 rd MAPCOM               a                          58  59    0 n
+      60   1 cs MAPACT                                          60  33    0 n
+      61   1 rd MAPACT               a                          61  59    0 n
+      72   1 st GDPEXPEND                                       73  54    0 n
+      74   2 st GDPSOURCE                                       74  45    0 n
+      75   1 cs GDPEXP                                          76  76    0 n
+      78   1 rd GDPEXP               a                          79  41    0 n
+      81   1 cs GDP                                             82  54    0 n
+      83   1 fm                                                 84  52    0 n
+      87   1 cs GDPAGG                                          88  54    0 n
+      89   2 cs GDPEXPAGG                                       89  88    0 n
+      91   1 fm                                                 92  60    0 n
+      93   2 fm                                                 93  87    0 n
+      96   1 cs GDPSHR                                          97  67    0 n
+      98   2 cs GDPEXPSHR                                       98  85    0 n
+     100   1 fm                                                101  53    0 n
+     102   2 fm                                                102  84    0 n
+     105   1 cs GDPWLD                                         106  48    0 n
+     107   1 cs WLDGDPSHR                                      107  46    0 n
+     108   1 fm                                                109  29    0 n
+     110   1 fm                                                110  43    0 n
+     125   1 cs VDFB                                           126 110    0 n
+     127   2 cs VDPB                                           127 100    0 n
+     128   2 cs VDGB                                           128  97    0 n
+     129   2 cs VDIB                                           129  97    0 n
+     130   2 cs VST                                            130 111    0 n
+     131   2 cs VDFP                                           131 110    0 n
+     132   2 cs VMFP                                           132 110    0 n
+     144   2 cs EVFP                                           144 109    0 n
+     145   2 cs EVOS                                           145 107    0 n
+     149   2 cs VXSB                                           149 123    0 n
+     150   2 cs VFOB                                           150 121    0 n
+     151   2 cs VCIF                                           151 120    0 n
+     152   2 cs VMSB                                           152 115    0 n
+     154   1 rd VDPB                 a                         155  40    0 n
+     156   2 rd VDGB                 a                         156  40    0 n
+     157   2 rd VDIB                 a                         157  40    0 n
+     158   2 rd VDFB                 a                         158  40    0 n
+     159   2 rd VDFP                 a                         159  40    0 n
+     160   2 rd VMFP                 a                         160  40    0 n
+     172   2 rd EVFP                 a                         172  39    0 n
+     173   2 rd EVOS                 a                         173  39    0 n
+     175   2 rd VST                  a                         175  39    0 n
+     178   2 rd VFOB                 a                         178  40    0 n
+     179   2 rd VXSB                 a                         179  40    0 n
+     180   2 rd VCIF                 a                         180  40    0 n
+     181   2 rd VMSB                 a                         181  40    0 n
+     183   1 cs VDB                                            184  97    0 n
+     185   2 cs VCB                                            185  95    0 n
+     186   2 cs VXW                                            186  97    0 n
+     187   2 cs VMW                                            187  97    0 n
+     188   2 cs VMB                                            188  99    0 n
+     189   1 fm                                                190  97    0 n
+     192   2 mf                                                192  97    0 n
+     192   2 mf                                                192  97    0 n
+     192   2 fm                                                192  97    0 n
+     193   2 fm                                                193  86    0 n
+     194   2 fm                                                194  60    0 n
+     195   2 fm                                                195  60    0 n
+     197   1 cs VFP                                            198 110    0 n
+     199   1 fm                                                200  61    0 n
+     201   1 fm                                                201  75    0 n
+     203   1 cs VOS                                            204  88    0 n
+     205   1 fm                                                206  60    0 n
+     208   1 cs VES                                            209  80    0 n
+     210   1 fm                                                211  40    0 n
+     223   1 st MACRES                                         226  59    0 n
+     228   1 cs EV                                             229  65    0 n
+     230   2 cs vgdp                                           230  66    0 n
+     231   2 cs qgdp                                           231  72    0 n
+     232   2 cs pgdp                                           232  69    0 n
+     233   2 cs qprv                                           233  80    0 n
+     234   2 cs pprv                                           234  77    0 n
+     235   2 cs qinv                                           235  71    0 n
+     236   2 cs pinv                                           236  76    0 n
+     237   2 cs qgov                                           237  71    0 n
+     238   2 cs pgov                                           238  76    0 n
+     239   2 cs qexp                                           239  61    0 n
+     240   2 cs pexp                                           240  72    0 n
+     241   2 cs qimp                                           241  67    0 n
+     242   2 cs pimp                                           242  78    0 n
+     243   1 rd EV                   a                         244  36    0 n
+     245   2 rd vgdp                 a                         245  38    0 n
+     246   2 rd qgdp                 a                         246  38    0 n
+     247   2 rd pgdp                 a                         247  38    0 n
+     248   2 rd qprv                 a                         248  38    0 n
+     249   2 rd pprv                 a                         249  38    0 n
+     250   2 rd qinv                 a                         250  38    0 n
+     251   2 rd pinv                 a                         251  38    0 n
+     252   2 rd qgov                 a                         252  38    0 n
+     253   2 rd pgov                 a                         253  38    0 n
+     254   2 rd qexp                 a                         254  38    0 n
+     255   2 rd pexp                 a                         255  38    0 n
+     256   2 rd qimp                 a                         256  38    0 n
+     257   2 rd pimp                 a                         257  38    0 n
+     259   1 cs RMAC                                           260  49    0 n
+     261   1 fm                                                277  15    0 n
+     278   1 wr RMAC                 a                         279  35    0 n
+     285   1 cs RMACAGG                                        286  64    0 n
+     287   1 fm                                                303  25    0 n
+     305   1 st GDPEXPEND2                                     305  71    0 n
+     305   1 ss                                                305  71    0 n
+     306   1 cs RGDPAGG                                        307  67    0 n
+     308   1 fm                                                316  24    0 n
+     318   1 wr RMACAGG              a                         319  38    0 n
+     320   2 wr RGDPAGG              a                         320  38    0 n
+     326   1 st GLOBRES                                        328  58    0 n
+     330   1 cs WEV                                            331  69    0 n
+     332   2 cs ywld                                           332  47    0 n
+     333   2 cs globalcgds                                     333  84    0 n
+     334   2 cs pcgdswld                                       334  71    0 n
+     335   2 cs qxwwld                                         335  56    0 n
+     336   2 cs pxwwld                                         336  61    0 n
+     337   1 rd WEV                  a                         338  43    0 n
+     339   2 rd ywld                 a                         339  44    0 n
+     340   2 rd globalcgds           a                         340  44    0 n
+     341   2 rd pcgdswld             a                         341  44    0 n
+     342   2 rd qxwwld               a                         342  44    0 n
+     343   2 rd pxwwld               a                         343  44    0 n
+     345   1 cs GLOB                                           346  68    0 n
+     347   1 fm                                                357  13    0 n
+     358   1 wr GLOB                 a                         359  34    0 n
+     365   1 st RCOMRES                                        367  44    0 n
+     369   1 cs qc                                             370  82    0 n
+     371   2 cs qds                                            371  91    0 n
+     372   2 cs qxw                                            372  97    0 n
+     373   2 cs qmw                                            373  97    0 n
+     374   2 cs pds                                            374 102    0 n
+     375   2 cs pxw                                            375  99    0 n
+     376   2 cs pmw                                            376 102    0 n
+     377   2 cs pms                                            377 113    0 n
+     378   1 rd qc                   a                         379  43    0 n
+     380   2 rd qds                  a                         380  44    0 n
+     381   2 rd qxw                  a                         381  44    0 n
+     382   2 rd qmw                  a                         382  44    0 n
+     383   2 rd pds                  a                         383  44    0 n
+     384   2 rd pxw                  a                         384  44    0 n
+     385   2 rd pmw                  a                         385  44    0 n
+     386   2 rd pms                  a                         386  44    0 n
+     392   1 cs VCBAGG                                         393  84    0 n
+     394   2 cs VCBSHR                                         394  56    0 n
+     395   1 fm                                                396 104    0 n
+     397   2 fm                                                397  83    0 n
+     398   1 cs VDBAGG                                         399  84    0 n
+     400   2 cs VDBSHR                                         400  56    0 n
+     401   1 fm                                                402 104    0 n
+     403   2 fm                                                403  83    0 n
+     404   1 cs VXWAGG                                         405  84    0 n
+     406   2 cs VXWSHR                                         406  56    0 n
+     407   1 fm                                                408 104    0 n
+     409   2 fm                                                409  83    0 n
+     410   1 cs VMWAGG                                         411  84    0 n
+     412   2 cs VMWSHR                                         412  56    0 n
+     413   1 fm                                                414 104    0 n
+     415   2 fm                                                415  83    0 n
+     416   1 cs VMBAGG                                         417  84    0 n
+     418   2 cs VMBSHR                                         418  56    0 n
+     419   1 fm                                                420 104    0 n
+     421   2 fm                                                421  83    0 n
+     428   1 cs RCOM                                           429  47    0 n
+     430   1 fm                                                439  17    0 n
+     441   1 cs RCOMAGG                                        442  52    0 n
+     443   1 fm                                                453  29    0 n
+     454   1 wr RCOM                 a                         455  38    0 n
+     456   2 wr RCOMAGG              a                         456  38    0 n
+     462   1 st RACTRES                                        462  53    0 n
+     464   1 cs qo                                             465  89    0 n
+     466   1 cs po                                             466 100    0 n
+     467   1 rd qo                   a                         468  43    0 n
+     469   2 rd po                   a                         469  43    0 n
+     475   1 cs VOSAGG                                         476  84    0 n
+     477   2 cs VOSSHR                                         477  56    0 n
+     478   1 fm                                                479 104    0 n
+     480   2 fm                                                480  83    0 n
+     487   1 cs RACT                                           488  46    0 n
+     489   1 fm                                                491  42    0 n
+     493   1 cs RACTAGG                                        494  51    0 n
+     495   1 fm                                                499  29    0 n
+     500   1 wr RACT                 a                         501  38    0 n
+     502   2 wr RACTAGG              a                         502  38    0 n
+     508   1 st TRADERES                                       508  76    0 n
+     510   1 cs qxs                                            511 127    0 n
+     512   2 cs pfob                                           512 125    0 n
+     513   2 cs pcif                                           513 128    0 n
+     514   2 cs pmds                                           514 127    0 n
+     515   1 rd pfob                 a                         516  45    0 n
+     517   2 rd pcif                 a                         517  45    0 n
+     518   2 rd pmds                 a                         518  45    0 n
+     519   2 rd qxs                  a                         519  44    0 n
+     525   1 cs VFOBAGG                                        526 111    0 n
+     527   2 cs VFOBSHR                                        527  74    0 n
+     528   1 fm                                                530 112    0 n
+     531   1 fm                                                533  74    0 n
+     535   1 cs VCIFAGG                                        536 111    0 n
+     537   2 cs VCIFSHR                                        537  73    0 n
+     538   1 fm                                                540 112    0 n
+     541   1 fm                                                543  74    0 n
+     545   1 cs VMSBAGG                                        546 119    0 n
+     547   2 cs VMSBSHR                                        547  74    0 n
+     548   1 fm                                                550 112    0 n
+     551   1 fm                                                553  74    0 n
+     560   1 cs TRADE                                          561  47    0 n
+     562   1 fm                                                567  20    0 n
+     569   1 cs TRADEAGG                                       570  53    0 n
+     571   1 fm                                                578  18    0 n
+     580   1 wr TRADE                a                         581  39    0 n
+     582   2 wr TRADEAGG             a                         582  39    0 n
+     588   1 st ENDWRES                                        588  52    0 n
+     589   1 cs pe                                             590 108    0 n
+     591   2 cs qe                                             591 109    0 n
+     592   1 rd pe                   a                         593  34    0 n
+     594   2 rd qe                   a                         594  34    0 n
+     600   1 cs VESAGG                                         601  77    0 n
+     602   2 cs VESSHR                                         602  56    0 n
+     603   1 fm                                                604  78    0 n
+     605   2 fm                                                605  76    0 n
+     612   1 cs ENDWSUP                                        613  48    0 n
+     614   1 fm                                                617  20    0 n
+     618   1 cs ENDWSUPAGG                                     619  52    0 n
+     620   1 fm                                                624  29    0 n
+     625   1 wr ENDWSUP              a                         626  41    0 n
+     627   2 wr ENDWSUPAGG           a                         627  41    0 n
+     634   1 st FACRES                                         634  58    0 n
+     635   1 cs pfe                                            636 123    0 n
+     637   2 cs qfe                                            637 109    0 n
+     638   2 cs qes                                            638 124    0 n
+     639   1 rd pfe                  a                         640  36    0 n
+     641   2 rd qfe                  a                         641  36    0 n
+     642   2 rd qes                  a                         642  36    0 n
+     648   1 cs EVFPAGG                                        649 117    0 n
+     650   2 cs EVFPSHR                                        650  72    0 n
+     651   1 fm                                                652  83    0 n
+     653   1 fm                                                654  63    0 n
+     656   1 cs EVOSAGG                                        657 118    0 n
+     658   2 cs EVOSSHR                                        658  72    0 n
+     659   1 fm                                                660  83    0 n
+     661   1 fm                                                662  63    0 n
+     669   1 cs FACS                                           670  37    0 n
+     671   1 fm                                                675  20    0 n
+     677   1 cs FACSAGG                                        678  52    0 n
+     679   1 fm                                                684  31    0 n
+     685   1 wr FACS                 a                         686  38    0 n
+     687   2 wr FACSAGG              a                         687  38    0 n
+     687   2 en FACSAGG              a                         687  38    0 n
+#GPVER
+  121004
+#PRVER
+    7000
+#FINAL_LEVEL
+#CSPSIM
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnn

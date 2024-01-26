@@ -1,0 +1,32 @@
+GTAPv7 model
+
+********************************
+Version: v7GEC
+Model: Standard GTAPv7 model
+Data: GTAP Data Base version 10A
+********************************
+
+I.   SUMMARY
+
+Version folder for Global Environmental Change paper (July 2022)
+
+II.   REGIONS AND COMMODITIES
+
+The regions are: 141 regions
+The sectors are: 65 sectors
+
+III.   EXPERIMENT FILES: SHOCKS, CLOSURES AND SOLUTION METHOD- :
+The basic experiments in this version include:
+- numeraire shock (gtapv7.exp)
+- agpr20
+- rtms5
+- beef50
+
+IV.    Model changes
+- tpdall and tpmall were taken out of condensation and added to exogenous list  
+ 
+ 
+CLOSURES
+Standard Multiregional GE closure
+Alternative Multiregional GE closure with tax replacement and slack unskilled labor supply in SSA
+

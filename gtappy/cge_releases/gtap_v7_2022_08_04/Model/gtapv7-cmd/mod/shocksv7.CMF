@@ -1,0 +1,24 @@
+auxiliary files = shocksv7;
+check-on-read elements = warn;
+cpu=yes ;
+log file = yes;  ! Optional
+
+! Input files:
+File GTAPSETS = <p1>\sets.har; ! File with set specification
+File GTAPDATA = <p1>\basedata.har; ! File containing base data
+! Output files:
+File TOHAT    = <p2>\TOHAT.txt;    ! The file with shocks to obtain TO = 1
+File TFHAT    = <p2>\TFHAT.txt;    ! The file with shocks to obtain TFE = 1
+File TFDHAT   = <p2>\TFDHAT.txt;   ! The file with shocks to obtain TFD = 1
+File TFIHAT   = <p2>\TFIHAT.txt;   ! The file with shocks to obtain TFM = 1
+File TPDHAT   = <p2>\TPDHAT.txt;   ! The file with shocks to obtain TPM = 1
+File TPIHAT   = <p2>\TPIHAT.txt;   ! The file with shocks to obtain TPD = 1
+File TGDHAT   = <p2>\TGDHAT.txt;   ! The file with shocks to obtain TGD = 1
+File TGIHAT   = <p2>\TGIHAT.txt;   ! The file with shocks to obtain TGM = 1
+File TXSHAT   = <p2>\TXSHAT.txt;   ! The file with shocks to obtain TXS = 1
+File TMSHAT   = <p2>\TMSHAT.txt;   ! The file with shocks to obtain TMS = 1
+File TINCHAT  = <p2>\TINCHAT.txt;  ! The file with shocks to obtain TINC = 1
+File TIDHAT   = <p2>\TIDHAT.txt;   ! The file with shocks to obtain TID = 1
+File TIMHAT   = <p2>\TIMHAT.txt;   ! The file with shocks to obtain TIM = 1
+File SHOCKSv7 = <p2>\SCHOCKv7.har; ! File containing all shocks
+

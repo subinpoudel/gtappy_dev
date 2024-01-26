@@ -1,0 +1,13 @@
+auxiliary files = gtpvewv7;
+check-on-read elements = warn; 
+cpu=yes ;
+log file = yes;  ! Optional
+
+! Input files:
+File GTAPDATA = <p1>\Basedata.har; ! File containing all base data
+File GTAPSETS = <p1>\SETS.har;     ! File with set specification
+File GTAPPARM = <p1>\default.prm;  ! File containing behavioral prameters
+! Output files:
+File GTAPVIEW = <p2>\GTAPVIEW.har; ! File with headers for viewing
+File TAXRATES = <p2>\TAXRATES.har; ! File with headers for viewing initial tax rates
+

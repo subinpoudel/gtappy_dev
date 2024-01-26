@@ -1,0 +1,14 @@
+auxiliary files = Allres;
+check-on-read elements = warn;
+cpu=yes;
+log file = yes; 
+
+! Input files:
+File GTAPDATA = <p1>\basedata.har; ! Basedata
+File GTAPSETS = <p1>\sets.har;     ! Sets file
+File SOLFILE  = <p2>\SOLFILES.har; ! Results file from ViewSol
+File AGGRSETS = <p3>\AggMap.har;   ! Aggregate sets file to summarize simulation results
+File GTAPVIEW = <p2>\GTAPVIEW.har; ! GTAPView summary file
+! Output files:
+File ALLRES = <p4>\ALLRES.har; ! Output file: all simulation results
+

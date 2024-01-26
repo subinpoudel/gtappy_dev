@@ -1,0 +1,1542 @@
+#TMDATE
+at 20:17:08 on 22-JUL-2022              
+#AVAIL
+y n y     0
+#LEV4
+#NSOL
+    1    0    0    3
+#VBDSC
+    3
+50% tpd and tpm on cmt                                                         
+[Solution method is gragg. Steps = 2,4,6.]                                     
+[CMF file: Beef50.cmf]                                                         
+#SETS
+   43
+    1 REG            141  k regions
+aus         
+nzl         
+xoc         
+chn         
+hkg         
+jpn         
+kor         
+mng         
+twn         
+xea         
+brn         
+khm         
+idn         
+lao         
+mys         
+phl         
+sgp         
+tha         
+vnm         
+xse         
+bgd         
+ind         
+npl         
+pak         
+lka         
+xsa         
+can         
+usa         
+mex         
+xna         
+arg         
+bol         
+bra         
+chl         
+col         
+ecu         
+pry         
+per         
+ury         
+ven         
+xsm         
+cri         
+gtm         
+hnd         
+nic         
+pan         
+slv         
+xca         
+dom         
+jam         
+pri         
+tto         
+xcb         
+aut         
+bel         
+bgr         
+hrv         
+cyp         
+cze         
+dnk         
+est         
+fin         
+fra         
+deu         
+grc         
+hun         
+irl         
+ita         
+lva         
+ltu         
+lux         
+mlt         
+nld         
+pol         
+prt         
+rou         
+svk         
+svn         
+esp         
+swe         
+gbr         
+che         
+nor         
+xef         
+alb         
+blr         
+rus         
+ukr         
+xee         
+xer         
+kaz         
+kgz         
+tjk         
+xsu         
+arm         
+aze         
+geo         
+bhr         
+irn         
+isr         
+jor         
+kwt         
+omn         
+qat         
+sau         
+tur         
+are         
+xws         
+egy         
+mar         
+tun         
+xnf         
+ben         
+bfa         
+cmr         
+civ         
+gha         
+gin         
+nga         
+sen         
+tgo         
+xwf         
+xcf         
+xac         
+eth         
+ken         
+mdg         
+mwi         
+mus         
+moz         
+rwa         
+tza         
+uga         
+zmb         
+zwe         
+xec         
+bwa         
+nam         
+zaf         
+xsc         
+xtw         
+    2 COMM            65  k commodities
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+frs         
+fsh         
+coa         
+oil         
+gas         
+oxt         
+cmt         
+omt         
+vol         
+mil         
+pcr         
+sgr         
+ofd         
+b_t         
+tex         
+wap         
+lea         
+lum         
+ppp         
+p_c         
+chm         
+bph         
+rpp         
+nmm         
+i_s         
+nfm         
+fmp         
+ele         
+eeq         
+ome         
+mvh         
+otn         
+omf         
+ely         
+gdt         
+wtr         
+cns         
+trd         
+afs         
+otp         
+wtp         
+atp         
+whs         
+cmn         
+ofi         
+ins         
+rsa         
+obs         
+ros         
+osg         
+edu         
+hht         
+dwe         
+    3 MARG             3  k margin commodities
+otp         
+wtp         
+atp         
+    4 NMRG            62  k non-margin commodities
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+frs         
+fsh         
+coa         
+oil         
+gas         
+oxt         
+cmt         
+omt         
+vol         
+mil         
+pcr         
+sgr         
+ofd         
+b_t         
+tex         
+wap         
+lea         
+lum         
+ppp         
+p_c         
+chm         
+bph         
+rpp         
+nmm         
+i_s         
+nfm         
+fmp         
+ele         
+eeq         
+ome         
+mvh         
+otn         
+omf         
+ely         
+gdt         
+wtr         
+cns         
+trd         
+afs         
+whs         
+cmn         
+ofi         
+ins         
+rsa         
+obs         
+ros         
+osg         
+edu         
+hht         
+dwe         
+    5 ACTS            65  k Activities
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+frs         
+fsh         
+coa         
+oil         
+gas         
+oxt         
+cmt         
+omt         
+vol         
+mil         
+pcr         
+sgr         
+ofd         
+b_t         
+tex         
+wap         
+lea         
+lum         
+ppp         
+p_c         
+chm         
+bph         
+rpp         
+nmm         
+i_s         
+nfm         
+fmp         
+ele         
+eeq         
+ome         
+mvh         
+otn         
+omf         
+ely         
+gdt         
+wtr         
+cns         
+trd         
+afs         
+otp         
+wtp         
+atp         
+whs         
+cmn         
+ofi         
+ins         
+rsa         
+obs         
+ros         
+osg         
+edu         
+hht         
+dwe         
+    6 ENDW             8  k endowments
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+    7 ENDWC            1  k capital endowment
+capital     
+    8 ENDWT            3  k endowment types
+mobile      
+sluggish    
+fixed       
+    9 ENDWM            6  k mobile endowments
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+   10 ENDWS            1  k sluggish endowment
+Land        
+   11 ENDWMS           7  k mobile and sluggish endowments
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+Land        
+   12 ENDWF            1  k Sector-specific endowment
+NatRes      
+   13 DEMD            73  k demanded commodities and endowments
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+frs         
+fsh         
+coa         
+oil         
+gas         
+oxt         
+cmt         
+omt         
+vol         
+mil         
+pcr         
+sgr         
+ofd         
+b_t         
+tex         
+wap         
+lea         
+lum         
+ppp         
+p_c         
+chm         
+bph         
+rpp         
+nmm         
+i_s         
+nfm         
+fmp         
+ele         
+eeq         
+ome         
+mvh         
+otn         
+omf         
+ely         
+gdt         
+wtr         
+cns         
+trd         
+afs         
+otp         
+wtp         
+atp         
+whs         
+cmn         
+ofi         
+ins         
+rsa         
+obs         
+ros         
+osg         
+edu         
+hht         
+dwe         
+   14 GDPEX            6  k
+Household   
+Investment  
+Government  
+Exports     
+IntnlMargins
+Imports     
+   15 DIR              2  k
+domestic    
+imported    
+   16 CTAX             9  k
+prodtax     
+pfacttax    
+inctax      
+inputtax    
+contax      
+invtax      
+govtax      
+xtax        
+mtax        
+   17 TECHTYPE         7  k
+output      
+primfac     
+v_added     
+ininput     
+invest      
+transp      
+import      
+   18 COLUMN           7  k
+alloc_A1    
+ENDWB1      
+tech_C1     
+pop_D1      
+tot_E1      
+IS_F1       
+pref_G1     
+   19 UNITA            1  k dummy (unit) set for activities
+a           
+   20 UNITC            1  k dummy (unit) set for commodities
+c           
+   21 UACT            65  k
+a_pdr       
+a_wht       
+a_gro       
+a_v_f       
+a_osd       
+a_c_b       
+a_pfb       
+a_ocr       
+a_ctl       
+a_oap       
+a_rmk       
+a_wol       
+a_frs       
+a_fsh       
+a_coa       
+a_oil       
+a_gas       
+a_oxt       
+a_cmt       
+a_omt       
+a_vol       
+a_mil       
+a_pcr       
+a_sgr       
+a_ofd       
+a_b_t       
+a_tex       
+a_wap       
+a_lea       
+a_lum       
+a_ppp       
+a_p_c       
+a_chm       
+a_bph       
+a_rpp       
+a_nmm       
+a_i_s       
+a_nfm       
+a_fmp       
+a_ele       
+a_eeq       
+a_ome       
+a_mvh       
+a_otn       
+a_omf       
+a_ely       
+a_gdt       
+a_wtr       
+a_cns       
+a_trd       
+a_afs       
+a_otp       
+a_wtp       
+a_atp       
+a_whs       
+a_cmn       
+a_ofi       
+a_ins       
+a_rsa       
+a_obs       
+a_ros       
+a_osg       
+a_edu       
+a_hht       
+a_dwe       
+   22 UCOM            65  k
+c_pdr       
+c_wht       
+c_gro       
+c_v_f       
+c_osd       
+c_c_b       
+c_pfb       
+c_ocr       
+c_ctl       
+c_oap       
+c_rmk       
+c_wol       
+c_frs       
+c_fsh       
+c_coa       
+c_oil       
+c_gas       
+c_oxt       
+c_cmt       
+c_omt       
+c_vol       
+c_mil       
+c_pcr       
+c_sgr       
+c_ofd       
+c_b_t       
+c_tex       
+c_wap       
+c_lea       
+c_lum       
+c_ppp       
+c_p_c       
+c_chm       
+c_bph       
+c_rpp       
+c_nmm       
+c_i_s       
+c_nfm       
+c_fmp       
+c_ele       
+c_eeq       
+c_ome       
+c_mvh       
+c_otn       
+c_omf       
+c_ely       
+c_gdt       
+c_wtr       
+c_cns       
+c_trd       
+c_afs       
+c_otp       
+c_wtp       
+c_atp       
+c_whs       
+c_cmn       
+c_ofi       
+c_ins       
+c_rsa       
+c_obs       
+c_ros       
+c_osg       
+c_edu       
+c_hht       
+c_dwe       
+   23 ALLOCEFF       138  k
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+a_pdr       
+a_wht       
+a_gro       
+a_v_f       
+a_osd       
+a_c_b       
+a_pfb       
+a_ocr       
+a_ctl       
+a_oap       
+a_rmk       
+a_wol       
+a_frs       
+a_fsh       
+a_coa       
+a_oil       
+a_gas       
+a_oxt       
+a_cmt       
+a_omt       
+a_vol       
+a_mil       
+a_pcr       
+a_sgr       
+a_ofd       
+a_b_t       
+a_tex       
+a_wap       
+a_lea       
+a_lum       
+a_ppp       
+a_p_c       
+a_chm       
+a_bph       
+a_rpp       
+a_nmm       
+a_i_s       
+a_nfm       
+a_fmp       
+a_ele       
+a_eeq       
+a_ome       
+a_mvh       
+a_otn       
+a_omf       
+a_ely       
+a_gdt       
+a_wtr       
+a_cns       
+a_trd       
+a_afs       
+a_otp       
+a_wtp       
+a_atp       
+a_whs       
+a_cmn       
+a_ofi       
+a_ins       
+a_rsa       
+a_obs       
+a_ros       
+a_osg       
+a_edu       
+a_hht       
+a_dwe       
+c_pdr       
+c_wht       
+c_gro       
+c_v_f       
+c_osd       
+c_c_b       
+c_pfb       
+c_ocr       
+c_ctl       
+c_oap       
+c_rmk       
+c_wol       
+c_frs       
+c_fsh       
+c_coa       
+c_oil       
+c_gas       
+c_oxt       
+c_cmt       
+c_omt       
+c_vol       
+c_mil       
+c_pcr       
+c_sgr       
+c_ofd       
+c_b_t       
+c_tex       
+c_wap       
+c_lea       
+c_lum       
+c_ppp       
+c_p_c       
+c_chm       
+c_bph       
+c_rpp       
+c_nmm       
+c_i_s       
+c_nfm       
+c_fmp       
+c_ele       
+c_eeq       
+c_ome       
+c_mvh       
+c_otn       
+c_omf       
+c_ely       
+c_gdt       
+c_wtr       
+c_cns       
+c_trd       
+c_afs       
+c_otp       
+c_wtp       
+c_atp       
+c_whs       
+c_cmn       
+c_ofi       
+c_ins       
+c_rsa       
+c_obs       
+c_ros       
+c_osg       
+c_edu       
+c_hht       
+c_dwe       
+   24 ENDWACTS        73  k
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+frs         
+fsh         
+coa         
+oil         
+gas         
+oxt         
+cmt         
+omt         
+vol         
+mil         
+pcr         
+sgr         
+ofd         
+b_t         
+tex         
+wap         
+lea         
+lum         
+ppp         
+p_c         
+chm         
+bph         
+rpp         
+nmm         
+i_s         
+nfm         
+fmp         
+ele         
+eeq         
+ome         
+mvh         
+otn         
+omf         
+ely         
+gdt         
+wtr         
+cns         
+trd         
+afs         
+otp         
+wtp         
+atp         
+whs         
+cmn         
+ofi         
+ins         
+rsa         
+obs         
+ros         
+osg         
+edu         
+hht         
+dwe         
+   25 TAXSUM           3  k
+pfacttax    
+prodtax     
+comtax      
+   26 TYPE             2  k
+xtax        
+mtax        
+   27 PRICES           3  k
+pworld      
+pexport     
+pimport     
+   28 ACTIVITY         4  k
+firm        
+private     
+investment  
+govt        
+   29 COL              4  k
+welcnt      
+dvol        
+taxrateb    
+taxrateu    
+   30 DIREC            2  k
+import      
+export      
+   31 FORM             2  k
+percent     
+value       
+   32 COLM             3  k
+ISbal       
+p_cgds      
+p_save      
+   33 COSTS           11  k industry cost summary
+IntDom      
+IntImp      
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+PTAX        
+   34 GDPIN            9  k income-side GDP
+Land        
+clerks      
+service_shop
+off_mgr_pros
+ag          
+tech        
+Capital     
+NatRes      
+IndTaxes    
+   35 SALES            6  k Commodity Sales Summary
+Intermediate
+Household   
+Investment  
+Government  
+Exports     
+IntnlMargins
+   36 S@IntDom         1  kSet with one element IntDom, a subset of COSTS
+IntDom      
+   37 S@IntImp         1  kSet with one element IntImp, a subset of COSTS
+IntImp      
+   38 S@PTAX           1  kSet with one element PTAX, a subset of COSTS
+PTAX        
+   39 S@IndTaxes       1  kSet with one element IndTaxes, a subset of GDPIN
+IndTaxes    
+   40 beef             1  kjust_beef
+cmt         
+   41 agcom           12  kkey_ag_comm
+pdr         
+wht         
+gro         
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+   42 agcom_sm         3  ksmaller_set
+pdr         
+wht         
+gro         
+   43 xagcom_sm        9  k
+v_f         
+osd         
+c_b         
+pfb         
+ocr         
+ctl         
+oap         
+rmk         
+wol         
+#VARIABLES
+       259
+    1 pds                   9165     2 N price of domestically supplied commodity c in region r
+    2    1
+    2 qfd                 595725     3 N demand for domestic commodity c by activity a in region r
+    2    5    1
+    3 pms                   9165     2 N price of aggregate commodity import bundle c in region r
+    2    1
+    4 qfm                 595725     3 N imported commodity c for use by activity a in region r
+    2    5    1
+    5 pfd                 595725     3 N price of domestic com. c purchased by act. a in region r
+    2    5    1
+    6 pfm                 595725     3 N price of imported com. c purchased by act. a in region r
+    2    5    1
+    7 pes                  73320     3 N supply (after income tax) price of e for use by a in r
+    6    5    1
+    8 qes                  73320     3 N supply of endowment e for use by activity a in region r
+    6    5    1
+    9 peb                  73320     3 N basic price of endowment e in act. a in region r
+    6    5    1
+   10 qfe                  73320     3 N demand for endowment e by act. a in region r
+    6    5    1
+   11 pfe                  73320     3 N price of endowment e purchased by activity a region r
+    6    5    1
+   12 ps                  595725     3 N supply price of commodity c produced by activity a in r
+    2    5    1
+   13 qca                 595725     3 N supply of commodity c by activity a in r
+    2    5    1
+   14 pca                 595725     3 N basic price of commodity c produced by activity a in r
+    2    5    1
+   15 qgd                   9165     2 N government demand for domestic commodity c in region r
+    2    1
+   16 qgm                   9165     2 N government demand for imported commodity c in region r
+    2    1
+   17 pgd                   9165     2 N price of domestic com. c purchased by government in region r
+    2    1
+   18 pgm                   9165     2 N price of imported com. c purchased by government in region r
+    2    1
+   19 qpd                   9165     2 N private household demand for domestic commodity c in region r
+    2    1
+   20 qpm                   9165     2 N private household demand for imported commodity c in region r
+    2    1
+   21 ppd                   9165     2 N price of domestic com. c purchased by private household in r
+    2    1
+   22 ppm                   9165     2 N price of imported com. c purchased by private household in r
+    2    1
+   23 qid                   9165     2 N investment demand for domestic commodity c in region r
+    2    1
+   24 qim                   9165     2 N investment demand for imported commodity c in region r
+    2    1
+   25 pid                   9165     2 N price of domestic com. c purchased by investment agent in r
+    2    1
+   26 pim                   9165     2 N price of imported com. c purchased by investment agent in r
+    2    1
+   27 psave                  141     1 N price of saving in region r
+    1
+   28 qsave                  141     1 N regional demand for NET saving
+    1
+   29 pinv                   141     1 N price index of investment goods
+    1
+   30 kb                     141     1 N beginning-of-period capital stock in r
+    1
+   31 qxs                1292265     3 N export sales of commodity c from source s to destination d
+    2    1    1
+   32 pfob               1292265     3 N FOB world price of com. c from source s to destination d
+    2    1    1
+   33 pcif               1292265     3 N CIF world price of imported com. c from source s to dest. d
+    2    1    1
+   34 pmds               1292265     3 N price of imported c supplied by source region s to dest. d
+    2    1    1
+   35 qst                    423     2 N supply of margin m from region r for international transport
+    3    1
+   36 y                      141     1 N regional household income in region r
+    1
+   37 pop                    141     1 X regional population
+    1
+   38 pgov                   141     1 N price index for govt expenditure in region r
+    1
+   39 yg                     141     1 N regional government consumption expenditure in region r
+    1
+   40 ug                     141     1 N per capita utility from govt expend. in region r
+    1
+   41 ppriv                  141     1 N price index for priv. household cons. expenditure in region r
+    1
+   42 yp                     141     1 N regional private consumption expenditure in region r
+    1
+   43 uepriv                 141     1 N elasticity of cost wrt utility from private consumption
+    1
+   44 up                     141     1 N per capita utility from private expend. in region r
+    1
+   45 to                  595725     3 X power of tax on com. c supplied by act. a in region r
+    2    5    1
+   46 tinc                 73320     3 X power of income tax on endowment e supplied to act. a in r
+    6    5    1
+   47 endwslack             1128     2 X slack variable in endowment market clearing condition
+    6    1
+   48 qms                   9165     2 N aggregate imports of c in region r, basic price weights
+    2    1
+   49 globalcgds               1     0 N global supply of capital goods for NET investment
+   50 pcgdswld                 1     0 N world average price of capital goods (net investment weights)
+   51 po                    9165     2 N unit cost/revenue of activity a in region r
+    5    1
+   52 qo                    9165     2 N output of activity a in region r
+    5    1
+   53 ao                    9165     2 N output augmenting technical change by activity a in region r
+    5    1
+   54 pint                  9165     2 N Price of composite intermediate input c by activity a in r
+    5    1
+   55 qint                  9165     2 N Composite intermediate input c by activity a in r
+    5    1
+   56 aint                  9165     2 N Composite interm. input augmenting tech change by act. a in r
+    5    1
+   57 pva                   9165     2 N firms price of value added in act. a of region r
+    5    1
+   58 qva                   9165     2 N value added in act. a of region r
+    5    1
+   59 ava                   9165     2 N value added augmenting tech change by act. a in region r
+    5    1
+   60 pfa                 595725     3 N firms price for commodity c for use by act. a in r
+    2    5    1
+   61 qfa                 595725     3 N demand for commodity c for use by act. a in region r
+    2    5    1
+   62 afa                 595725     3 N composite intermed. inpt c augmenting tech ch. by act. a in r
+    2    5    1
+   63 afe                  73320     3 N primary factor e augmenting tech change by act. a in r
+    6    5    1
+   64 profitslack           9165     2 X slack variable in the zero profit equation
+    5    1
+   65 aosec                   65     1 X output tech change for act. a, worldwide
+    5
+   66 aoreg                  141     1 X specific output tech change in region r
+    1
+   67 aoall                 9165     2 X output augmenting technical change in act. a of r
+    5    1
+   68 afcom                   65     1 X intermediate tech change of input c, worldwide
+    2
+   69 afsec                   65     1 X intermediate tech change of act. a, worldwide
+    5
+   70 afreg                  141     1 X intermediate tech change in region r
+    1
+   71 afall               595725     3 X intermediate input c augmenting tech change by act. a in r
+    2    5    1
+   72 avasec                  65     1 X value added tech change for act. a, worldwide
+    5
+   73 avareg                 141     1 X value added tech change in region r
+    1
+   74 afecom                   8     1 X factor input tech change of endowwment e, worldwide
+    6
+   75 afesec                  65     1 X factor input tech change of act. a, worldwide
+    5
+   76 afereg                 141     1 X factor input tech change in region r
+    1
+   77 afeall               73320     3 X primary factor e augmenting tech change for act. a in r
+    6    5    1
+   78 aintsec                 65     1 X composite interm. input augmenting tech change, worldwide
+    5
+   79 aintreg                141     1 X composite interm. input augmenting tech change in region r
+    1
+   80 aintall               9165     2 X comp. interm. input augmenting tech change of act. a in r
+    5    1
+   81 pb                    9165     2 N price index: basic (tax-inclusive) price of output of act. a
+    5    1
+   82 qc                    9165     2 N total commodity supply in region r
+    2    1
+   83 fincome                141     1 N factor income at basic prices net of depreciation
+    1
+   84 incomeslack            141     1 X slack variable in the expression for regional income
+    1
+   85 del_indtaxr            141     1 N change in ratio of indirect taxes to INCOME in r
+    1
+   86 uelas                  141     1 N elasticity of cost of utility wrt utility
+    1
+   87 dpsave                 141     1 X saving distribution parameter
+    1
+   88 dpgov                  141     1 X government consumption distribution parameter
+    1
+   89 dppriv                 141     1 X private consumption distribution parameter
+    1
+   90 dpav                   141     1 N average distribution parameter shift, for EV calc.
+    1
+   91 p                      141     1 N price index for disposition of income by regional household
+    1
+   92 au                     141     1 X input-neutral shift in utility function
+    1
+   93 dpsum                  141     1 N sum of the distribution parameters
+    1
+   94 u                      141     1 N per capita utility from aggregate hhld expend. in region r
+    1
+   95 ppa                   9165     2 N private consumption price for commodity c in region r
+    2    1
+   96 qpa                   9165     2 N private hhld demand for commodity c in region r
+    2    1
+   97 pga                   9165     2 N government consumption price for commodity c in region r
+    2    1
+   98 qga                   9165     2 N government hhld demand for commodity c in region r
+    2    1
+   99 pia                   9165     2 N price of investment commodity in region r
+    2    1
+  100 qia                   9165     2 N demand for investment commodity c in region r
+    2    1
+  101 qinv                   141     1 N demand for investment/capital goods in region r
+    1
+  102 ams                1292265     3 X commodity c augmenting tech change from s to d
+    2    1    1
+  103 ptrans             1292265     3 N cost index for international transport of c from s to d
+    2    1    1
+  104 qtmfsd             3876795     4 N international usage margin m on c from s to d
+    3    2    1    1
+  105 pt                       3     1 N price index of composite margins services, by margin mode m
+    3
+  106 qtm                      3     1 N global margin usage
+    3
+  107 atmfsd             3876795     4 N tech change in ms shipping of c from region s to d
+    3    2    1    1
+  108 atm                     65     1 X tech change in mode m, worldwide
+    2
+  109 atf                     65     1 X tech change shipping of c, worldwide
+    2
+  110 ats                    141     1 X tech change shipping from region r
+    1
+  111 atd                    141     1 X tech change shipping to d
+    1
+  112 tx                    9165     2 X dest.-gen. change in subsidy on exports of c from r
+    2    1
+  113 txs                1292265     3 X dest.-spec. change in subsidy on exports of c from s to d
+    2    1    1
+  114 tm                    9165     2 X source-gen. change in tax on imports of c into r
+    2    1
+  115 tms                1292265     3 X source-spec. change in tax on imports of c from s to d
+    2    1    1
+  116 pr                    9165     2 N ratio of domestic to imported prices in r
+    2    1
+  117 qds                   9165     2 N domestic sales of commodity c in r
+    2    1
+  118 tradslack             9165     2 X slack variable in tradeables market clearing condition
+    2    1
+  119 tpd                   9165     2 N power of tax on domestic c purchased by private hhld in r
+    2    1
+  120 tpm                   9165     2 N power of tax on imported c purchased by private hhld in r
+    2    1
+  121 tpdall                9165     2 X comm.-, source-spec. shifter in private cons. tax of dom. c
+    2    1
+  122 tpmall                9165     2 X comm.-, source-spec. shifter in private cons. tax of imp. c
+    2    1
+  123 tpreg                  141     1 X source-generic tax shifter on private cons.
+    1
+  124 tpall                 9165     2 X comm.-specific shift in tax on private cons.
+    2    1
+  125 del_HTAX              9165     2 N change in tax revenue, private consumption of good c in r
+    2    1
+  126 del_TOTHTAX            141     1 N change in tax revenue, all private consumption in r
+    1
+  127 pe                     987     2 N price of mobile and sluggish endowment e in region r
+   11    1
+  128 qe                     987     2 X supply of mobile and sluggish endowment e in region r
+   11    1
+  129 qesf                  9165     3 X fixed endowment e in act. a in region r
+   12    5    1
+  130 ke                     141     1 N end-of-period capital stock in r
+    1
+  131 rore                   141     1 N expected net rate of return on capital stock in r
+    1
+  132 rorc                   141     1 N current net rate of return on capital stock in r
+    1
+  133 rental                 141     1 N rental rate on capital = ps("capital",r)
+    1
+  134 rorg                     1     0 N global net rate of return on capital stock
+  135 cgdslack               141     1 X slack variable for qinv(r)
+    1
+  136 expand                 141     2 N change in investment relative to endowment stock
+    7    1
+  137 psaveslack             141     1 X slack variable for the saving price equation
+    1
+  138 del_taxrout            141     1 N change in ratio of output tax to INCOME
+    1
+  139 del_taxrfu             141     1 N change in ratio of tax on primary factor usage to INCOME
+    1
+  140 del_taxriu             141     1 N change in ratio of tax on intermediate usage to INCOME
+    1
+  141 del_taxrpc             141     1 N change in ratio of private consumption tax to INCOME
+    1
+  142 del_taxrgc             141     1 N change in ratio of government consumption tax to INCOME
+    1
+  143 del_taxric             141     1 N change in ratio of investment consumption tax to INCOME
+    1
+  144 del_taxrexp            141     1 N change in ratio of export tax to INCOME
+    1
+  145 del_taxrimp            141     1 N change in ratio of import tax to INCOME
+    1
+  146 del_taxrinc            141     1 N change in ratio of income tax to INCOME
+    1
+  147 del_ttaxr              141     1 N change in ratio of taxes to INCOME in r
+    1
+  148 pfactor                141     1 N price index (at basic prices) of primary factors, by region
+    1
+  149 pfactwld                 1     0 X world price index of primary factors
+  150 walras_sup               1     0 N supply in omitted market--global supply of cgds composite
+  151 walras_dem               1     0 N demand in the omitted market--global demand for saving
+  152 walraslack               1     0 N slack variable in the omitted market
+  153 vxwfob                9165     2 N value of merchandise regional exports, by commodity, FOB
+    2    1
+  154 vmwcif                9165     2 N value of merchandise regional imports, by commodity, CIF
+    2    1
+  155 vxwreg                 141     1 N value of merchandise exports, by region
+    1
+  156 vmwreg                 141     1 N value of merchandise imports, by region, at world prices
+    1
+  157 pfactreal            73320     3 N ratio of return to primary factor e to CPI in r
+    6    5    1
+  158 pebfactreal            987     2 N ratio of (tax-inclusive) return to mobile and sluggish factor e in r
+   11    1
+  159 pefactreal             987     2 N ratio of (tax-exclusive) return to mobile and sluggish factor e in r
+   11    1
+  160 psw                    141     1 N index of prices received for tradeables produced in region r
+    1
+  161 pdw                    141     1 N index of prices paid for tradeables used in importing region r
+    1
+  162 tot                    141     1 N terms of trade for region r: tot(r) = psw(r) - pdw(r)
+    1
+  163 vgdp                   141     1 N change in value of GDP
+    1
+  164 pgdp                   141     1 N GDP price index
+    1
+  165 qgdp                   141     1 N GDP quantity index
+    1
+  166 compvalad             9165     2 N composition of value added for good c and region r
+    5    1
+  167 pxw                   9165     2 N aggregate exports price index of c from region r
+    2    1
+  168 vxwcom                  65     1 N value of global merchandise exports by commodity
+    2
+  169 vxwwld                   1     0 N value of world trade
+  170 vmwcom                  65     1 N value of global merchandise imports c, at world prices
+    2
+  171 valuew                  65     1 N value of world supply of good c
+    2
+  172 valuewu                 65     1 N value of world supply of good c at user prices
+    2
+  173 pxwreg                 141     1 N price index of merchandise exports, by region
+    1
+  174 pxwcom                  65     1 N price index of global merchandise exports by commodity
+    2
+  175 pxwwld                   1     0 N price index of world trade
+  176 pmw                   9165     2 N world price of composite import c in region r
+    2    1
+  177 pmwreg                 141     1 N price index of merchandise imports, by region
+    1
+  178 pmwcom                  65     1 N price index of global merchandise imports by commodity
+    2
+  179 pw                      65     1 N world price index for total good c supplies
+    2
+  180 pwu                     65     1 N world price index for total good c supplies at user prices
+    2
+  181 qxw                   9165     2 N aggregate exports of c from region r, FOB weights
+    2    1
+  182 qxwreg                 141     1 N volume of merchandise exports, by region
+    1
+  183 qxwcom                  65     1 N volume of global merchandise exports by commodity
+    2
+  184 qxwwld                   1     0 N volume of world trade
+  185 qmw                   9165     2 N aggregate imports of c into region s, CIF weights
+    2    1
+  186 qmwreg                 141     1 N volume of merchandise imports, by region
+    1
+  187 qmwcom                  65     1 N volume of global merchandise imports by commodity
+    2
+  188 qow                     65     1 N quantity index for world supply of good c
+    2
+  189 qowu                    65     1 N quantity index for world supply of good c at user prices
+    2
+  190 del_tbalc             9165     2 N change in trade balance by c and by r, $ US million
+    2    1
+  191 del_tbal               141     1 N change in trade balance X - M, $ US million
+    1
+  192 ywld                     1     0 N world income
+  193 del_tbalry             141     1 N change in trade bal. of r as a percentage of world income
+    1
+  194 pm_cr                 9165     2 N imports price index for good c and region r
+    2    1
+  195 c1_cr                 9165     2 N contribution of world price, px_c, to ToT
+    2    1
+  196 c2_cr                 9165     2 N contribution of regional export price, px_cr, to ToT
+    2    1
+  197 c3_cr                 9165     2 N contribution of regional import price, pm_cr, to ToT
+    2    1
+  198 c1_r                   141     1 N contribution of world prices for all goods to ToT
+    1
+  199 c2_r                   141     1 N contribution of regional export prices to ToT
+    1
+  200 c3_r                   141     1 N contribution of regional import prices to ToT
+    1
+  201 tot2                   141     1 N trade terms for region r, computed from components
+    1
+  202 uelasev                141     1 N elasticity of cost of utility wrt utility, for EV calc.
+    1
+  203 ueprivev               141     1 N utility elast. of private consn expenditure, for EV calc.
+    1
+  204 ugev                   141     1 N per capita utility from govt expend., for EV calc.
+    1
+  205 upev                   141     1 N per capita utility from private expend., for EV calc.
+    1
+  206 qsaveev                141     1 N total quantity of saving demanded, for EV calc.
+    1
+  207 yev                    141     1 N regional household income in region r, for EV calc.
+    1
+  208 ypev                   141     1 N private consumption expenditure in region r, for EV calc.
+    1
+  209 ygev                   141     1 N government consumption expenditure in region r, for EV calc.
+    1
+  210 qpev                  9165     2 N private hhld demand for commodity c in region r, for EV calc.
+    2    1
+  211 ysaveev                141     1 N NET saving expenditure, for EV calc.
+    1
+  212 dpavev                 141     1 N average distribution parameter shift, for EV calc.
+    1
+  213 EV                     141     1 N equivalent variation, $ US million
+    1
+  214 WEV                      1     0 N equivalent variation for the world
+  215 EV_ALT                 141     1 N regional EV computed in alternative way
+    1
+  216 WEV_ALT                  1     0 N expression for WEV computed in alternative way
+  217 CNTdpar                141     1 N contribution to EV of change in distribution parameters
+    1
+  218 CNTpop                 141     1 N contribution to EV in region r of change in population
+    1
+  219 CNTqor                 141     1 N contribution to EV in region r of output changes
+    1
+  220 CNTqo                 9165     2 N contribution to EV of changes in industry output of act. a in region r
+    5    1
+  221 CNTqca              595725     3 N contribution to EV of changes in output c of act. a in region r
+    2    5    1
+  222 CNTqe                 1128     2 N contribution to EV of changes in supply of ENDW e in reg. r
+    6    1
+  223 CNTqea               73320     3 N contribution to EV of changes in supply of ENDW e to act. a in reg. r
+    6    5    1
+  224 CNTqfer                141     1 N contribution to EV of changes in use of all ENDW in r
+    1
+  225 CNTqfeer              1128     2 N contribution to EV of changes in use of ENDW e in all firms in r
+    6    1
+  226 CNTqfe               73320     3 N contribution to EV of changes in use of ENDW e in a in r
+    6    5    1
+  227 CNTqfr                 282     2 N cont. to EV of changes in use of dom. and imp. intermediates in r
+    1   15
+  228 CNTqfm              595725     3 N cont. to EV of changes in use of imported intermediates by a in r
+    2    5    1
+  229 CNTqfd              595725     3 N cont. to EV of changes in use of domestic intermediates by a in r
+    2    5    1
+  230 CNTqpm                9165     2 N contribution to EV of changes in consumption of imported good c in r
+    2    1
+  231 CNTqpd                9165     2 N contribution to EV of changes in consumption of domestic good c in r
+    2    1
+  232 CNTqpr                 282     2 N cont. to EV of changes in consumption of dom. and imp. goods in r
+    1   15
+  233 CNTqia                 282     2 N contribution to EV of changes in dom. and imp. investment goods in r
+    1   15
+  234 CNTqim                9165     2 N contribution to EV of changes in imported investment good c in r
+    2    1
+  235 CNTqid                9165     2 N contribution. to EV of changes in domestic investment good c in r
+    2    1
+  236 CNTqgr                 282     2 N cont. to EV of changes in govt consumption of dom. and imp goods in r
+    1   15
+  237 CNTqgm                9165     2 N contribution to EV of changes in govt consumption of import c in r
+    2    1
+  238 CNTqgd                9165     2 N contribution to EV of changes in govt consumption of domestic c in r
+    2    1
+  239 CNTqxsr                141     1 N cont. to EV of changes in exports of all goods from SRCE r to all DEST
+    1
+  240 CNTqxs             1292265     3 N contribution to EV of changes in exports of c from SRCE s to DEST d
+    2    1    1
+  241 CNTqmsr                141     1 N cont. to EV of changes in imports of all goods from all SRCE to DEST r
+    1
+  242 CNTqms             1292265     3 N contribution to EV of changes in imports of c from SRCE s to DEST d
+    2    1    1
+  243 CNTalleffr            1269     2 N total contribution to regional EV of allocative effects
+    1   16
+  244 CNTalleffcr           9165     2 N total contribution to regional EV of allocative effects
+    2    1
+  245 CNTtotr                141     1 N contribution to regional EV of changes in its terms of trade
+    1
+  246 CNTpinv                141     1 N contribution to regional EV of changes in investment price
+    1
+  247 CNTendwr               141     1 N contribution to regional EV of changes in all ENDW
+    1
+  248 CNTendw               1128     2 N contribution to regional EV of changes in ENDW e in r
+    6    1
+  249 CNTtechr               987     2 N contribution to regional EV of all technical change
+   17    1
+  250 CNTtech_ao            9165     2 N cont. to regional EV of output augmenting tech change in a
+    5    1
+  251 CNTtech_afe          73320     3 N cont. to EV of primary factor e augmenting tech change in a
+    6    5    1
+  252 CNTtech_ava           9165     2 N cont. to EV of value added augmenting tech change in act. a
+    5    1
+  253 CNTtech_aint          9165     2 N cont. to EV of composite c input augmenting tech change in act. a
+    5    1
+  254 CNTtech_af          595725     3 N cont. to EV of composite c input augmenting tech change in act. a
+    2    5    1
+  255 CNTtech_atmfsd     3876795     4 N cont. to EV of tech change in transportation efficiency
+    3    2    1    1
+  256 CNTtech_ams        1292265     3 N cont. to EV of bilateral import augmenting tech change for COMM c
+    2    1    1
+  257 CNTkb                  141     1 N cont. to EV of changes to beg. period capital stock and depreciation
+    1
+  258 qpriv                  141     1 N percent change in private consumption
+    1
+  259 qgov                   141     1 N percent change in government consumption
+    1
+#VCSTAT
+cbcbbbbccbbbbbbbbbbbbbbbcccccccbbbcccccc
+cccccccccccccbbbbbcbbbbccccccccccccccccc
+cccccccccccccccccccbccbbccbccccccccccccc
+ccccccccccccccccccccccccccccccccccccbccc
+cccccbccccccccccccccccccbcccccccccbbbccc
+cccccccccbcccccccccbbbccbbbbbbbccbbbbbcb
+cbbbcccbbbbbbbbbccc
+#VCTP
+pppppppppppppppppppppppppppppppppppppppp
+pppppppppppppppppppppppppppppppppppppppp
+ppppcppppppppppppppppppppppppppppppppppp
+ppppccpppppppppppccccccccccppppppppppppp
+pppppppppppppppppppppppppppppccpcppppppp
+ppppppppppppcccccccccccccccccccccccccccc
+cccccccccccccccccpp
+#SUBSETS
+    69
+     1     3     2
+     2     4     2
+     3     7     6
+     4     9     6
+     5     9     6
+     6    10     6
+     7    10     6
+     8     9    11
+     9    10    11
+    10    11     6
+    11     7    11
+    12    12     6
+    13     6    13
+    14     2    13
+    15     7    13
+    16     9    13
+    17    10    13
+    18    11    13
+    19    12    13
+    20     3    13
+    21     4    13
+    22     6    23
+    23    21    23
+    24    22    23
+    25     7    23
+    26     9    23
+    27    10    23
+    28    11    23
+    29    12    23
+    30     6    24
+    31     5    24
+    32     7    24
+    33     9    24
+    34    10    24
+    35    11    24
+    36    12    24
+    37    26    16
+    38     6    33
+    39     7    33
+    40     9    33
+    41    10    33
+    42    11    33
+    43    12    33
+    44     6    34
+    45     7    34
+    46     9    34
+    47    10    34
+    48    11    34
+    49    12    34
+    50    36    33
+    51    37    33
+    52    38    33
+    53    39    34
+    54    40     2
+    55    40    13
+    56    41     5
+    57    41    24
+    58    41     2
+    59    41    13
+    60    42     5
+    61    42    24
+    62    42    41
+    63    42     2
+    64    42    13
+    65    43    41
+    66    43     2
+    67    43     5
+    68    43    13
+    69    43    24
+#TMDATEAXT
+at 11:39:09 on 22-JUL-2022              
+#NCVARIABLES
