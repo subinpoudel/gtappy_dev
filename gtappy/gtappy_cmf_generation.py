@@ -212,9 +212,9 @@ def generate_cmf_file_for_scenario(inputs_dict,
             if '<^output_dir^>' in v:
                 v = v.replace('<^output_dir^>', output_dir)         
             if len(v) > 0:
-                output_list.append(str(k) + '=' + str(v) + '\n')
+                output_list.append(str(k) + '=' + str(v) + ';\n')
             else:
-                output_list.append(str(k) + '\n')
+                output_list.append(str(k) + ';\n')
                 
         elif k == 'xSets':
             for xset_name, xset_values_list in v.items():                    
